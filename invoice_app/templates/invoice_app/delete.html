@@ -1,0 +1,12 @@
+{% extends "base_bootstrap.html" %}
+{% block content %}
+<h1>Delete Invoice</h1>
+
+<p>Are you sure you want to delete: {{ invoice }}?</p>
+
+<form action="" method="POST">
+  {% csrf_token %}
+  <button type="submit" class="btn btn-danger btn-sm" value="Yes, delete.">Yes, delete <i class="fa fa-trash"></i></button>
+  <button type="submit" class="btn btn-secondary btn-sm" value="Cancel" onclick="window.location.href='{% url 'invoice_app:invoice-list' %}';return false;">Cancel <i class="fa fa-times"></i></button>
+</form>
+{% endblock %}

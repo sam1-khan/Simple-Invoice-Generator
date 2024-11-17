@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Invoice #{{ invoice.pk }}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body style='font-family: Arial, sans-serif;' >
+    <div class="container my-4">
+        <!-- Company Details -->
+        <div class="text-center mb-4">
+            <h1 class="fw-bold">{{ invoice.company.name }}</h1>
+            <h4 class="mb-1">{{ invoice.company.address }}</h4>
+            <h4 class="mb-1">Phone: {{ invoice.company.phone }}</h4>
+            <h4><strong>NTN No: {{ invoice.company.ntn_number }}</strong></h4>
+        </div>
+
+        <!-- Client and Invoice Details -->
+        <div class="row mb-4">
+            <div class="col-6">
+                <p class="fw-bold mb-0">Client:</p>
+                <p class="mb-0">{{ invoice.client.name }}</p>
+                {% if invoice.client.phone %}
+                    <p class="mb-0">{{ invoice.client.phone }}</p>
+                {% endif %}
+            </div>
+            <div class="col-6 text-end">
+                <p class="fw-bold mb-0">Invoice:</p>
+                <p class="mb-0"><strong>Ref #:</strong> {{ invoice.reference_number }}</p>
+                <p class="mb-0"><strong>Date:</strong> {{ invoice.created_at }}</p>
+            </div>
+        </div>
+
+        <!-- Invoice Table -->
+        <table class="table table-bordered border-dark mt-4">
+            <thead class="table-light table-bordered border-dark">
+                <tr class="text-center">
+                    <th class="col-1">Quantity</th>
+                    <th class="col-6">Description</th>
+                    <th class="col-2">Unit Price</th>
+                    <th class="col-2">Total Price</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="text-center">{{ invoice.quantity }}</td>
+                    <td>{{ invoice.description }}</td>
+                    <td class="text-center">{{ invoice.unit_price }}</td>
+                    <td class="text-center">{{ invoice.total_price }}</td>
+                </tr>
+            </tbody>
+            <tfoot class="text-center">
+                <tr>
+                    <td colspan="3"><strong>Total (Rs):</strong></td>
+                    <td>{{ invoice.total_price }}</td>
+                </tr>
+                <tr>
+                    <td colspan="3"><strong>Tax:</strong></td>
+                    <td>{{ invoice.tax_percentage }}%</td>
+                </tr>
+                <tr>
+                    <td colspan="3"><strong>Grand Total (Rs):</strong></td>
+                    <td>{{ invoice.grand_total }}</td>
+                </tr>
+            </tfoot>
+        </table>
+
+        <!-- Footer -->
+        <div class="text-end mt-3">
+            <p><strong>Last Updated:</strong> {{ invoice.updated_at }}</p>
+        </div>
+    </div>
+</body>
+</html>
