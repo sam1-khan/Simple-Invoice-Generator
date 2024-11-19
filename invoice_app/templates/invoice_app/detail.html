@@ -2,27 +2,72 @@
 {% load humanize %} <!-- https://docs.djangoproject.com/en/4.2/ref/contrib/humanize -->
 {% block content %}
 <div class='border-bottom border-2 border-success d-flex align-items-center p-3'>
-    <h2>Invoice for {{ invoice.client }}</h2>
+    <h2 class="fw-bold">Invoice for {{ invoice.client }}</h2>
     <span class='float-end ms-auto'>
     <small>
         ({{ invoice.updated_at|naturaltime }})
     </small>
-    <a href="{% url 'invoice_app:invoice-update' invoice.pk %}" class="btn btn-secondary btn-sm"><i class="fa fa-pencil"></i></a>
-    <a href="{% url 'invoice_app:invoice-delete' invoice.pk %}" class="btn btn-danger btn-sm"><i class="fa fa-trash"></i></a>
+    <a href="{% url 'invoice_app:invoice-update' invoice.pk %}" class="btn btn-dark border border-secondary btn-sm"><i class="fa fa-pencil"></i></a>
+    <a href="{% url 'invoice_app:invoice-delete' invoice.pk %}" class="btn btn-dark border text-danger border-danger btn-sm"><i class="fa fa-trash"></i></a>
     </span>
 </div>
 <div class='p-4'>
-    <p>Description:<strong> {{ invoice.description }}</strong></p>
-    <p>Quantity:<strong> {{ invoice.quantity }}</strong></p>
-    <p>Unit Price:<strong> {{ invoice.unit_price }} Rs</strong></p>
-    <p>Total Price:<strong> {{ invoice.total_price }} Rs</strong></p>
-    <p>Tax Percentage:<strong> {{ invoice.tax_percentage }}%</strong></p>
-    <p>Grand Total (inclusive tax):<strong> {{ invoice.grand_total }} Rs</strong></p>
-    <p>
-    <p>Created At:<strong> {{ invoice.created_at }}</strong></p>
-    <p>Last Updated At:<strong> {{ invoice.updated_at }}</strong></p>
+    <!-- Client and Invoice Details -->
+    <div class="row my-4">
+        <div class="col-6">
+            <p class="fw-bold mb-0">Client:</p>
+            <p class="mb-0">{{ invoice.client.name }}</p>
+            {% if invoice.client.phone %}
+                <p class="mb-0">{{ invoice.client.phone }}</p>
+            {% endif %}
+        </div>
+        <div class="col-6 text-end mb-2">
+            <p class="fw-bold mb-0">Invoice:</p>
+            <p class="mb-0"><strong>Ref #:</strong> {{ invoice.reference_number }}</p>
+            <p class="mb-0"><strong>Date:</strong> {{ invoice.created_at }}</p>
+        </div>
+    </div>
+
+    <!-- Invoice Table -->
+    <table class="table table-bordered border-secondary">
+        <thead class="border-light">
+            <tr class="text-center">
+                <th class="col-1">Quantity</th>
+                <th class="col-6">Description</th>
+                <th class="col-2">Unit Price</th>
+                <th class="col-2">Total Price</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td class="text-center">{{ invoice.quantity }}</td>
+                <td>{{ invoice.description }}</td>
+                <td class="text-center">{{ invoice.unit_price }}</td>
+                <td class="text-center">{{ invoice.total_price }}</td>
+            </tr>
+        </tbody>
+        <tfoot class="text-center">
+            <tr>
+                <td colspan="3"><strong>Total (Rs):</strong></td>
+                <td>{{ invoice.total_price }}</td>
+            </tr>
+            <tr>
+                <td colspan="3"><strong>Tax ({{ invoice.tax_percentage }}%):</strong></td>
+                <td>{{ invoice.tax }}</td>
+            </tr>
+            <tr>
+                <td colspan="3"><strong>Grand Total (Rs):</strong></td>
+                <td>{{ invoice.grand_total }}</td>
+            </tr>
+        </tfoot>
+    </table>
+
+    <!-- Footer -->
+    <div class="text-end mt-3">
+        <p><strong>Last Updated:</strong> {{ invoice.updated_at }}</p>
+    </div>
     <a class="btn btn-primary btn-sm" href="{% url 'invoice_app:invoice-pdf' invoice.pk%}">View PDF</a>
-    <a class="btn btn-secondary btn-sm" href="{% url 'invoice_app:invoice-list' %}">All invoices</a>
+    <a class="btn btn-dark border border-secondary btn-sm" href="{% url 'invoice_app:invoice-list' %}">All invoices</a>
     </p>
 </div>
 {% endblock %}

@@ -1,21 +1,34 @@
+from django.contrib.auth.forms import UserCreationForm, UserChangeForm
 from django import forms
-from .models import Invoice
+from .models import Invoice, Company
 
 class InvoiceForm(forms.ModelForm):
     class Meta:
         model = Invoice
-        fields = ['description', 'quantity', 'unit_price', 'company', 'client', 'tax_percentage']
+        fields = ['client', 'company', 'tax_percentage']
         widgets = {
-            'description': forms.Textarea(attrs={'rows': 3, 'autofocus': 'autofocus'}),
+            'tax_percentage': forms.NumberInput(attrs={'min': '0', 'max': '100', 'step': '1.00'}),
         }
+
+class CompanyCreationForm(UserCreationForm):
+    class Meta:
+        model = Company
+        fields = ("email", "ntn_number", "name", 'phone', 'address',)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        # Make auto-calculated fields readonly
-        self.fields['tax_percentage'].initial = 10.50  # Set a default value
+        self.fields['name'].required = True
+        self.fields['ntn_number'].required = True
+        self.fields['phone'].required = True
+  
 
-    def clean_quantity(self):
-        quantity = self.cleaned_data.get('quantity')
-        if quantity <= 0:
-            raise forms.ValidationError("Quantity must be greater than zero.")
-        return quantity
+class CompanyChangeForm(UserChangeForm):
+    class Meta:
+        model = Company
+        fields = ("email", "ntn_number", "name", 'phone', 'address',)
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['name'].required = True
+        self.fields['ntn_number'].required = True
+        self.fields['phone'].required = True

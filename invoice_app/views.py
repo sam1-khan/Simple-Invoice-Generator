@@ -10,7 +10,6 @@ from django.template.loader import render_to_string
 from .forms import InvoiceForm
 from django.contrib.humanize.templatetags.humanize import naturaltime
 from datetime import datetime
-
 from django.db.models import Q
 
 
@@ -127,6 +126,7 @@ class InvoiceDeleteView(LoginRequiredMixin, DeleteView):
     model = Invoice
     template_name = "invoice_app/delete.html"
     success_url = reverse_lazy("invoice_app:invoice-list")
+
 
 class InvoicePDFView(View):
     def get(self, request, pk, *args, **kwargs):
