@@ -24,20 +24,34 @@
 <div class="row">
   {% for invoice in invoice_list %}
       <div class="col-md-6 my-3">
-          <div class="card">
-              <div class="card-body">
-                  <h5 class="card-title">{{ invoice.client }}</h5>
-                  <p class="card-text text-truncate"><small><strong>Description:</strong> {{ invoice.description }}</small></p>
-                  <p class="card-text"><small><strong>Reference:</strong> {{ invoice.reference_number }}</small></p>
-                  <p class="card-text"><small><strong>Date:</strong> {{ invoice.created_at }}</small></p>
-                  <p class="card-text"><small><strong>Quantity:</strong> {{ invoice.quantity }}</small></p>
-                  <p class="card-text"><small><strong>Unit Price:</strong> {{ invoice.unit_price }} Rs</small></p>
-                  <p class="card-text"><small><strong>Grand Total:</strong> {{ invoice.grand_total }} Rs</small></p>
+        <div class="card">
+          <div class="card-body">
+              <h5 class="card-title">{{ invoice.client.name }}</h5>
+              <p class="card-text text-truncate">
+                  <small><strong>Company:</strong> {{ invoice.company.name }}</small>
+              </p>
+              <p class="card-text text-truncate">
+                  <small><strong>Reference:</strong> {{ invoice.reference_number }}</small>
+              </p>
+              <p class="card-text">
+                  <small><strong>Date:</strong> {{ invoice.created_at|date:"F j, Y, g:i a" }}</small>
+              </p>
+              <p class="card-text">
+                  <small><strong>Total Price:</strong> {{ invoice.total_price }} Rs</small>
+              </p>
+              <p class="card-text">
+                  <small><strong>Tax ({{ invoice.tax_percentage }}%):</strong> {{ invoice.tax }} Rs</small>
+              </p>
+              <p class="card-text">
+                  <small><strong>Grand Total:</strong> {{ invoice.grand_total }} Rs</small>
+              </p>
+              <div class="d-flex gap-2">
                   <a href="{% url 'invoice_app:invoice-detail' invoice.pk %}" class="btn btn-success btn-sm">View Details</a>
                   <a href="{% url 'invoice_app:invoice-pdf' invoice.pk %}" class="btn btn-dark border text-primary border-primary btn-sm">View PDF</a>
                   <a href="{% url 'invoice_app:invoice-update' invoice.pk %}" class="btn btn-dark border border-secondary btn-sm">Edit</a>
               </div>
           </div>
+      </div>
       </div>
   {% endfor %}
 </div>

@@ -43,12 +43,18 @@
                 </tr>
             </thead>
             <tbody>
+                {% for item in invoice.items.all %}
                 <tr>
-                    <td class="text-center">{{ invoice.quantity }}</td>
-                    <td>{{ invoice.description }}</td>
-                    <td class="text-center">{{ invoice.unit_price }}</td>
-                    <td class="text-center">{{ invoice.total_price }}</td>
+                    <td class="text-center">{{ item.quantity }}</td>
+                    <td>{{ item.description }}</td>
+                    <td class="text-center">{{ item.unit_price }}</td>
+                    <td class="text-center">{{ item.total_price }}</td>
                 </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="4" class="text-center">No items available for this invoice.</td>
+                </tr>
+                {% endfor %}
             </tbody>
             <tfoot class="text-center">
                 <tr>
