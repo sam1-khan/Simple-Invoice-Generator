@@ -1,6 +1,6 @@
 from django.contrib.auth.forms import UserCreationForm, UserChangeForm
 from django import forms
-from .models import Invoice, Company
+from .models import Invoice, Company, InvoiceItem
 
 class InvoiceForm(forms.ModelForm):
     class Meta:
@@ -32,3 +32,14 @@ class CompanyChangeForm(UserChangeForm):
         self.fields['name'].required = True
         self.fields['ntn_number'].required = True
         self.fields['phone'].required = True
+
+
+class InvoiceItemForm(forms.ModelForm):
+    class Meta:
+        model = InvoiceItem
+        fields = ['description', 'quantity', 'unit_price']
+
+
+InvoiceItemFormSet = forms.inlineformset_factory(
+    Invoice, InvoiceItem, form=InvoiceItemForm, extra=1
+)

@@ -7,7 +7,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from .models import Invoice
 from weasyprint import HTML
 from django.template.loader import render_to_string
-from .forms import InvoiceForm
+from .forms import InvoiceForm, InvoiceItemFormSet
 from django.contrib.humanize.templatetags.humanize import naturaltime
 from datetime import datetime
 from django.db.models import Q
@@ -106,9 +106,26 @@ class InvoiceCreateView(LoginRequiredMixin, CreateView):
     template_name = "invoice_app/form.html"
     success_url = reverse_lazy('invoice_app:invoice-list')
 
+    def get_context_data(self, **kwargs):
+        # Add the InvoiceItemFormSet to the context
+        context = super().get_context_data(**kwargs)
+        if self.request.POST:
+            context['formset'] = InvoiceItemFormSet(self.request.POST)
+        else:
+            context['formset'] = InvoiceItemFormSet()
+        return context
+
     def form_valid(self, form):
-        # Any custom logic before saving
-        return super().form_valid(form)
+        # Save the invoice and the associated items
+        context = self.get_context_data()
+        formset = context['formset']
+        if formset.is_valid():
+            self.object = form.save()
+            formset.instance = self.object  # Set the parent invoice
+            formset.save()
+            return super().form_valid(form)
+        else:
+            return self.form_invalid(form)
 
 
 class InvoiceUpdateView(LoginRequiredMixin, UpdateView):
@@ -117,9 +134,26 @@ class InvoiceUpdateView(LoginRequiredMixin, UpdateView):
     template_name = "invoice_app/form.html"
     success_url = reverse_lazy('invoice_app:invoice-list')
 
+    def get_context_data(self, **kwargs):
+        # Add the InvoiceItemFormSet to the context
+        context = super().get_context_data(**kwargs)
+        if self.request.POST:
+            context['formset'] = InvoiceItemFormSet(self.request.POST, instance=self.object)
+        else:
+            context['formset'] = InvoiceItemFormSet(instance=self.object)
+        return context
+
     def form_valid(self, form):
-        # Any custom logic before updating
-        return super().form_valid(form)
+        # Save the invoice and the associated items
+        context = self.get_context_data()
+        formset = context['formset']
+        if formset.is_valid():
+            self.object = form.save()
+            formset.instance = self.object  # Set the parent invoice
+            formset.save()
+            return super().form_valid(form)
+        else:
+            return self.form_invalid(form)
 
 
 class InvoiceDeleteView(LoginRequiredMixin, DeleteView):

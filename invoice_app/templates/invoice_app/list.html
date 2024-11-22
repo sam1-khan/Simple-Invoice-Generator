@@ -28,13 +28,10 @@
           <div class="card-body">
               <h5 class="card-title">{{ invoice.client.name }}</h5>
               <p class="card-text text-truncate">
-                  <small><strong>Company:</strong> {{ invoice.company.name }}</small>
-              </p>
-              <p class="card-text text-truncate">
                   <small><strong>Reference:</strong> {{ invoice.reference_number }}</small>
               </p>
               <p class="card-text">
-                  <small><strong>Date:</strong> {{ invoice.created_at|date:"F j, Y, g:i a" }}</small>
+                  <small><strong>Date:</strong> {{ invoice.created_at }}</small>
               </p>
               <p class="card-text">
                   <small><strong>Total Price:</strong> {{ invoice.total_price }} Rs</small>
