@@ -7,7 +7,12 @@ class InvoiceForm(forms.ModelForm):
         model = Invoice
         fields = ['client', 'company', 'tax_percentage']
         widgets = {
-            'tax_percentage': forms.NumberInput(attrs={'min': '0', 'max': '100', 'step': '1.00'}),
+            'tax_percentage': forms.NumberInput(attrs={
+                'min': '0',
+                'max': '99999',
+                'step': '0.1',
+                'placeholder': 'Enter tax percentage (without "%")',
+            })
         }
 
 class CompanyCreationForm(UserCreationForm):
@@ -38,6 +43,23 @@ class InvoiceItemForm(forms.ModelForm):
     class Meta:
         model = InvoiceItem
         fields = ['description', 'quantity', 'unit_price']
+        widgets = {
+            'quantity': forms.NumberInput(attrs={
+                'min': '0',
+                'max': '999999',
+                'step': '1',
+                'placeholder': 'Enter quantity'
+            }),
+            'unit_price': forms.NumberInput(attrs={
+                'min': '0',
+                'step': '10',  # Use 0.01 for decimal precision
+                'placeholder': 'Enter unit price'
+            }),
+        }
+
+    description = forms.CharField(
+        widget=forms.TextInput(attrs={'placeholder': 'Enter item description'})
+    )
 
 
 InvoiceItemFormSet = forms.inlineformset_factory(

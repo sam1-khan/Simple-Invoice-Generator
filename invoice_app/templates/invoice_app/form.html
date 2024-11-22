@@ -3,11 +3,10 @@
 {% block title %}{{ form.instance.pk|yesno:"Edit,Create" }} Invoice{% endblock %}
 {% block content %}
 <div class="container">
-    <h1>{{ form.instance.pk|yesno:"Edit,Create" }} Invoice</h1>
+    <h1 class='pb-1'>{{ form.instance.pk|yesno:"Edit,Create" }} Invoice</h1>
     <form method="post">
         {% csrf_token %}
         
-        <h3>Invoice Details</h3>
         <div class="card mb-4">
             <div class="card-body">
                 {{ form|crispy }}
@@ -15,23 +14,29 @@
         </div>
 
         {% if formset %}
-        <h3>Invoice Items</h3>
+        <h4>Invoice Items</h4>
         {{ formset.management_form }}
         <div class="formset">
             {% for form in formset %}
-                <div class="formset-row card mb-2">
+                <div class="formset-row card mb-3">
                     <div class="card-body">
                         {{ form|crispy }}
                     </div>
                 </div>
             {% endfor %}
         </div>
-        <button type="button" class="btn btn-success btn-sm" id="add-form">Add Invoice Item</button>
+        <div class="d-grid gap-2">
+            <button type="button" class="btn btn-success mb-3" id="add-form">
+                Add An Item <i class="fa fa-plus"></i>
+            </button>
+        </div>
         {% endif %}
-
-        <div class="mt-3">
-            <button type="submit" class="btn btn-primary btn-sm">
+        <div>
+            <button type="submit" class="btn btn-primary btn-sm mt-2">
                 Save <i class="fa fa-save"></i>
+            </button>
+            <button class="btn btn-dark border border-secondary btn-sm mt-2" href="{% url 'invoice_app:invoice-list' %}">
+                All invoices <i class="fa fa fa-bars"></i>
             </button>
         </div>
     </form>
@@ -41,39 +46,53 @@
         const formsetContainer = document.querySelector('.formset'); // Container for formset rows
         const addFormButton = document.querySelector('#add-form'); // "Add Form" button
         const totalFormsInput = document.querySelector('#id_items-TOTAL_FORMS'); // Management form's TOTAL_FORMS field
+        const delCheckBox = document.querySelectorAll('div[id^="div_id_items-"]');
+        
+        delCheckBox.forEach(div => {
+            if (/div_id_items-\d+-DELETE/.test(div.id)) div.remove();
+        });
 
         if (!formsetContainer || !addFormButton || !totalFormsInput) {
             console.error("Required formset elements are missing!");
             return;
         }
-
-        // Function to update the visibility of remove buttons
-        function updateRemoveButtons() {
+    
+        // Function to update the TOTAL_FORMS value
+        function updateTotalForms() {
+            const formCount = formsetContainer.querySelectorAll('.formset-row').length;
+            totalFormsInput.value = formCount;
+            // Update visibility of remove buttons based on the number of forms
+            updateRemoveButtonVisibility();
+        }
+    
+        // Function to update visibility of remove buttons
+        function updateRemoveButtonVisibility() {
             const formRows = formsetContainer.querySelectorAll('.formset-row');
             formRows.forEach((formRow, index) => {
                 const removeButton = formRow.querySelector('.remove-form');
                 if (removeButton) {
+                    // Hide the remove button if there's only one form
                     removeButton.style.display = formRows.length > 1 ? 'inline-block' : 'none';
                 }
             });
         }
-
+    
         // Function to add a new form
         function addForm() {
             const formCount = parseInt(totalFormsInput.value, 10); // Current number of forms
             const lastForm = formsetContainer.querySelector('.formset-row:last-child');
-
+    
             if (!lastForm) {
                 console.error("No forms available to clone!");
                 return;
             }
-
+    
             // Clone the last form
             const newForm = lastForm.cloneNode(true);
-
+    
             // Update IDs and names in the cloned form
             newForm.innerHTML = newForm.innerHTML.replace(/items-(\d+)-/g, `items-${formCount}-`);
-
+    
             // Clear values in the new form
             newForm.querySelectorAll('input, select, textarea').forEach(input => {
                 input.value = '';
@@ -81,54 +100,48 @@
                     input.checked = false;
                 }
             });
-
-            // Add a "Remove" button if it doesn't exist
-            let removeButton = newForm.querySelector('.remove-form');
-            if (!removeButton) {
-                removeButton = document.createElement('button');
-                removeButton.type = 'button';
-                removeButton.className = 'btn btn-danger btn-sm remove-form';
-                removeButton.textContent = 'Remove';
-                newForm.appendChild(removeButton);
-            }
-
-            // Event listener to remove the form
-            removeButton.addEventListener('click', () => {
-                newForm.remove();
-                updateTotalForms();
-            });
-
+            
             // Append the new form to the container
             formsetContainer.appendChild(newForm);
-
-            // Update the TOTAL_FORMS value and remove button visibility
+    
+            // Update the TOTAL_FORMS value
             updateTotalForms();
-            updateRemoveButtons();
         }
-
-        // Function to update the TOTAL_FORMS value
-        function updateTotalForms() {
-            const formCount = formsetContainer.querySelectorAll('.formset-row').length;
-            totalFormsInput.value = formCount;
-        }
-
+    
         // Event listener for the "Add Invoice Item" button
         addFormButton.addEventListener('click', addForm);
-
+    
         // Event listener for the "Remove" buttons
         formsetContainer.addEventListener('click', function(event) {
             if (event.target.classList.contains('remove-form')) {
                 const formRow = event.target.closest('.formset-row');
                 formRow.remove();
                 updateTotalForms();
-                updateRemoveButtons();
-                console.log(totalFormsInput.value)
             }
         });
-
-        // Initialize the "Remove" buttons' visibility
-        updateRemoveButtons();
+    
+        // Initialize remove buttons for all existing forms and hide/remove accordingly
+        const formRows = formsetContainer.querySelectorAll('.formset-row');
+        formRows.forEach(formRow => {
+            let removeButton = formRow.querySelector('.remove-form');
+            if (!removeButton) {
+                removeButton = document.createElement('button');
+                removeButton.type = 'button';
+                removeButton.className = 'btn btn-dark p-2 fw-bold text-danger border border-danger rounded-top-0 btn-sm remove-form';
+                removeButton.textContent = 'Remove';
+                formRow.appendChild(removeButton);
+            }
+            
+            removeButton.addEventListener('click', () => {
+                formRow.remove();
+                updateTotalForms();
+            });
+        });
+    
+        // Update the visibility of the remove buttons initially
+        updateRemoveButtonVisibility();
     });
+    
 </script>
 
 {% endblock %}

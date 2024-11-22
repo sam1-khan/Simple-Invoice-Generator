@@ -13,23 +13,35 @@
 </div>
 </form>
 </div>
-<div class='my-1 gap-1'>
-  <a href="{% url 'invoice_app:invoice-create' %}" class="my-1 btn btn-success btn-sm">Create New Invoice</a>
-  {% if user.is_authenticated %}
-  <a class='btn btn-dark border text-danger border-danger btn-sm' href="{% url 'logout' %}?next={% url 'invoice_app:invoice-list' %}">Logout <i class="fa fa-sign-out"></i></a>
-  {% else %}
-  <a class='btn btn-primary btn-sm' href="{% url 'login' %}?next={% url 'invoice_app:invoice-list' %}">Login <i class="fa fa-sign-in"></i></a>
-  {% endif %}
-</div>
-<div class="row">
+<div class="mt-3 mb-1 d-flex gap-1 align-items-center">
+    <a href="{% url 'invoice_app:invoice-create' %}" class="btn btn-success flex-grow-1">
+      Create New Invoice <i class="fa fa-plus"></i>
+    </a>
+    {% if user.is_authenticated %}
+      <a class="btn btn-dark border text-danger border-danger" href="{% url 'logout' %}?next={% url 'invoice_app:invoice-list' %}">
+        Logout <i class="fa fa-sign-out"></i>
+      </a>
+    {% else %}
+      <a class="btn btn-primary btn-sm" href="{% url 'login' %}?next={% url 'invoice_app:invoice-list' %}">
+        Login <i class="fa fa-sign-in"></i>
+      </a>
+    {% endif %}
+  </div>
+  
+<div class="col">
   {% for invoice in invoice_list %}
-      <div class="col-md-6 my-3">
+      <div class="row-md-6 my-3">
         <div class="card">
           <div class="card-body">
-              <h5 class="card-title">{{ invoice.client.name }}</h5>
+              <h5 class="card-title">Invoice for {{ invoice.client.name }}</h5>
               <p class="card-text text-truncate">
                   <small><strong>Reference:</strong> {{ invoice.reference_number }}</small>
               </p>
+              {% for item in invoice.items.all %}
+                <p class="card-text text-warning text-turncate"><small><strong>{{ item.description }}</strong>: {{ item.quantity }} pc{{ item.quantity|pluralize }}  x {{ item.unit_price }} Rs = {{ item.total_price }} Rs</small></p>
+              {% empty %}
+                <p class="card-text text-danger"><small>No items for this invoice.</small></p>
+              {% endfor %}
               <p class="card-text">
                   <small><strong>Date:</strong> {{ invoice.created_at }}</small>
               </p>
@@ -43,9 +55,9 @@
                   <small><strong>Grand Total:</strong> {{ invoice.grand_total }} Rs</small>
               </p>
               <div class="d-flex gap-2">
-                  <a href="{% url 'invoice_app:invoice-detail' invoice.pk %}" class="btn btn-success btn-sm">View Details</a>
-                  <a href="{% url 'invoice_app:invoice-pdf' invoice.pk %}" class="btn btn-dark border text-primary border-primary btn-sm">View PDF</a>
-                  <a href="{% url 'invoice_app:invoice-update' invoice.pk %}" class="btn btn-dark border border-secondary btn-sm">Edit</a>
+                  <a href="{% url 'invoice_app:invoice-detail' invoice.pk %}" class="btn btn-success btn-sm">View Details <i class="fa fa-info-circle"></i></a>
+                  <a href="{% url 'invoice_app:invoice-pdf' invoice.pk %}" class="btn btn-dark border text-primary border-primary btn-sm">View PDF <i class="fa fa-file-pdf"></i></a>
+                  <a href="{% url 'invoice_app:invoice-update' invoice.pk %}" class="btn btn-dark border border-secondary btn-sm">Edit <i class="fa fa-pencil"></i></a>
               </div>
           </div>
       </div>

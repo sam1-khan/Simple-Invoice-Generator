@@ -72,8 +72,12 @@
     <div class="text-end mt-3">
         <p><strong>Last Updated:</strong> {{ invoice.updated_at }}</p>
     </div>
-    <a class="btn btn-primary btn-sm" href="{% url 'invoice_app:invoice-pdf' invoice.pk%}">View PDF</a>
-    <a class="btn btn-dark border border-secondary btn-sm" href="{% url 'invoice_app:invoice-list' %}">All invoices</a>
+    <a class="btn btn-primary btn-sm" href="{% url 'invoice_app:invoice-pdf' invoice.pk %}">
+        View PDF <i class="fa fa-file-pdf"></i>
+    </a>
+    <a class="btn btn-dark border border-secondary btn-sm" href="{% url 'invoice_app:invoice-list' %}">
+        All invoices <i class="fa fa-bars"></i>
+    </a>
     </p>
 </div>
 {% endblock %}
