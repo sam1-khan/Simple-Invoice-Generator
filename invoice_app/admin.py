@@ -1,17 +1,15 @@
 from django.contrib import admin
-from .models import Company, Client, Invoice, InvoiceItem
+from .models import InvoiceOwner, Client, Invoice, InvoiceItem
 from django.core.exceptions import ValidationError
 from django.utils.translation import gettext_lazy as _
 from django.contrib.auth.admin import UserAdmin
-from .forms import CompanyCreationForm, CompanyChangeForm
-from django.db import models
-from django import forms
+from .forms import InvoiceOwnerCreationForm, InvoiceOwnerChangeForm
 
 
-class CompanyAdmin(UserAdmin):
-    add_form = CompanyCreationForm
-    form = CompanyChangeForm
-    model = Company
+class InvoiceOwnerAdmin(UserAdmin):
+    add_form = InvoiceOwnerCreationForm
+    form = InvoiceOwnerChangeForm
+    model = InvoiceOwner
     list_display = ('name', 'phone', 'ntn_number', "email", "is_staff", 'updated_at')
     search_fields = ('name', 'ntn_number', 'email',)
     list_filter = ("is_staff", "is_active", 'updated_at',)
@@ -65,7 +63,7 @@ class InvoiceItemInline(admin.TabularInline):
 
 
 class InvoiceAdmin(admin.ModelAdmin):
-    list_display = ('reference_number', 'company', 'client', 'total_price', 'grand_total', 'updated_at')
+    list_display = ('reference_number', 'invoice_owner', 'client', 'total_price', 'grand_total', 'updated_at')
     search_fields = ('items', 'reference_number', 'client__name')
     list_filter = ('updated_at', 'client__name')
     ordering = ('-updated_at',)
@@ -99,7 +97,7 @@ class InvoiceItemAdmin(admin.ModelAdmin):
         super().save_model(request, obj, form, change)
 
 
-admin.site.register(Company, CompanyAdmin)
+admin.site.register(InvoiceOwner, InvoiceOwnerAdmin)
 admin.site.register(Client, ClientAdmin)
 admin.site.register(Invoice, InvoiceAdmin)
 admin.site.register(InvoiceItem, InvoiceItemAdmin)

@@ -1,11 +1,11 @@
 from django.contrib.auth.forms import UserCreationForm, UserChangeForm
 from django import forms
-from .models import Invoice, Company, InvoiceItem
+from .models import Invoice, InvoiceOwner, InvoiceItem
 
 class InvoiceForm(forms.ModelForm):
     class Meta:
         model = Invoice
-        fields = ['client', 'company', 'tax_percentage']
+        fields = ['client', 'invoice_owner', 'tax_percentage']
         widgets = {
             'tax_percentage': forms.NumberInput(attrs={
                 'min': '0',
@@ -15,9 +15,9 @@ class InvoiceForm(forms.ModelForm):
             })
         }
 
-class CompanyCreationForm(UserCreationForm):
+class InvoiceOwnerCreationForm(UserCreationForm):
     class Meta:
-        model = Company
+        model = InvoiceOwner
         fields = ("email", "ntn_number", "name", 'phone', 'address',)
 
     def __init__(self, *args, **kwargs):
@@ -27,9 +27,9 @@ class CompanyCreationForm(UserCreationForm):
         self.fields['phone'].required = True
   
 
-class CompanyChangeForm(UserChangeForm):
+class InvoiceOwnerChangeForm(UserChangeForm):
     class Meta:
-        model = Company
+        model = InvoiceOwner
         fields = ("email", "ntn_number", "name", 'phone', 'address',)
 
     def __init__(self, *args, **kwargs):

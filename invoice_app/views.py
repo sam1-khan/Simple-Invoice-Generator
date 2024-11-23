@@ -4,7 +4,7 @@ from django.views import View
 from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
 from django.urls import reverse_lazy
 from django.contrib.auth.mixins import LoginRequiredMixin
-from .models import Invoice
+from .models import Invoice, Client
 from weasyprint import HTML
 from django.template.loader import render_to_string
 from .forms import InvoiceForm, InvoiceItemFormSet
@@ -15,7 +15,7 @@ from django.db.models import Q
 
 class InvoiceListView(LoginRequiredMixin, ListView):
     model = Invoice
-    template_name = "invoice_app/list.html"
+    template_name = "invoice_app/invoice/list.html"
     context_object_name = "invoice"
 
     def parse_date(self, strval):
@@ -96,14 +96,14 @@ class InvoiceListView(LoginRequiredMixin, ListView):
 
 class InvoiceDetailView(LoginRequiredMixin, DetailView):
     model = Invoice
-    template_name = "invoice_app/detail.html"
+    template_name = "invoice_app/invoice/detail.html"
     context_object_name = "invoice"
 
 
 class InvoiceCreateView(LoginRequiredMixin, CreateView):
     model = Invoice
     form_class = InvoiceForm
-    template_name = "invoice_app/form.html"
+    template_name = "invoice_app/invoice/form.html"
     success_url = reverse_lazy('invoice_app:invoice-list')
 
     def get_context_data(self, **kwargs):
@@ -131,7 +131,7 @@ class InvoiceCreateView(LoginRequiredMixin, CreateView):
 class InvoiceUpdateView(LoginRequiredMixin, UpdateView):
     model = Invoice
     form_class = InvoiceForm
-    template_name = "invoice_app/form.html"
+    template_name = "invoice_app/invoice/form.html"
     success_url = reverse_lazy('invoice_app:invoice-list')
 
     def get_context_data(self, **kwargs):
@@ -158,7 +158,7 @@ class InvoiceUpdateView(LoginRequiredMixin, UpdateView):
 
 class InvoiceDeleteView(LoginRequiredMixin, DeleteView):
     model = Invoice
-    template_name = "invoice_app/delete.html"
+    template_name = "invoice_app/invoice/delete.html"
     success_url = reverse_lazy("invoice_app:invoice-list")
 
 
@@ -166,7 +166,7 @@ class InvoicePDFView(View):
     def get(self, request, pk, *args, **kwargs):
         invoice = get_object_or_404(Invoice, pk=pk)
 
-        html_string = render_to_string('invoice_app/invoice_pdf.html', {'invoice': invoice})
+        html_string = render_to_string('invoice_app/invoice/invoice_pdf.html', {'invoice': invoice})
 
         # Convert the HTML to a PDF using WeasyPrint
         html = HTML(string=html_string)
@@ -177,3 +177,66 @@ class InvoicePDFView(View):
         response['Content-Disposition'] = f'attachment; filename="invoice_{invoice.pk}.pdf"'
 
         return response
+    
+
+class ClientListView(InvoiceListView):
+    model = Client
+    template_name = "invoice_app/client/list.html"
+    context_object_name = "invoice_client"
+
+    def build_query(self, strval):
+        """
+        Constructs a dynamic query based on the user's search input for Client.
+        """
+        query = Q()
+
+        if strval.isdigit():
+            day = int(strval)
+            if 1 <= day <= 31:  # Valid day
+                query |= Q(created_at__day=day) | Q(updated_at__day=day)
+            else:  # Non-date numeric input
+                query |= Q(name__icontains=strval)
+
+        # Full date (YYYY-MM-DD)
+        elif len(strval) == 10 and "-" in strval:
+            try:
+                date_obj = datetime.strptime(strval, "%Y-%m-%d")
+                query |= Q(created_at__date=date_obj.date()) | Q(updated_at__date=date_obj.date())
+            except ValueError:
+                query |= Q(name__icontains=strval)
+
+        # Other date formats
+        else:
+            date_obj = self.parse_date(strval)
+            if date_obj:
+                query |= Q(created_at__date=date_obj.date()) | Q(updated_at__date=date_obj.date())
+            else:
+                # General text-based fallback search for Client
+                query |= Q(name__icontains=strval)
+        return query
+
+
+class ClientDetailView(LoginRequiredMixin, DetailView):
+    model = Client
+    template_name = "invoice_app/client/detail.html"
+    context_object_name = "client"
+
+
+class ClientCreateView(LoginRequiredMixin, CreateView):
+    model = Client
+    form_class = ClientForm
+    template_name = "invoice_app/client/form.html"
+    success_url = reverse_lazy('invoice_app:client-list')
+
+
+class ClientUpdateView(LoginRequiredMixin, UpdateView):
+    model = Client
+    form_class = ClientForm
+    template_name = "invoice_app/client/form.html"
+    success_url = reverse_lazy('invoice_app:client-list')  
+
+
+class ClientDeleteView(LoginRequiredMixin, DeleteView):
+    model = Client
+    template_name = "invoice_app/client/delete.html"
+    success_url = reverse_lazy("invoice_app:client-list")

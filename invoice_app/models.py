@@ -8,7 +8,7 @@ import uuid
 from .managers import CustomUserManager
 
 
-class Company(AbstractUser):
+class InvoiceOwner(AbstractUser):
     address = models.TextField(max_length=255)
     phone = models.CharField(max_length=12)
     ntn_number = models.CharField(max_length=13, unique=True)
@@ -67,7 +67,7 @@ class Client(models.Model):
 
 class Invoice(models.Model):
     client = models.ForeignKey(Client, on_delete=models.CASCADE)
-    company = models.ForeignKey(Company, on_delete=models.CASCADE)
+    invoice_owner = models.ForeignKey(InvoiceOwner, on_delete=models.CASCADE)
     reference_number = models.CharField(max_length=14, editable=False, unique=True)
     tax_percentage = models.DecimalField(max_digits=5, decimal_places=2, validators=[MinValueValidator(0)])
     tax = models.DecimalField(max_digits=16, default=0, editable=False, decimal_places=2)
