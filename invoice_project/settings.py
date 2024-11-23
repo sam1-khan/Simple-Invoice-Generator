@@ -6,7 +6,7 @@ environ.Env.read_env()
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 # Used for a default title
-APP_NAME = 'Invoice Generator'   # Add
+APP_NAME = 'Simple Invoice Generator'   # Add
 
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = env('SECRET_KEY')
@@ -15,7 +15,7 @@ SECRET_KEY = env('SECRET_KEY')
 DEBUG = True
 
 ALLOWED_HOSTS = ['*']
-AUTH_USER_MODEL = "invoice_app.Company"
+AUTH_USER_MODEL = "invoice_app.InvoiceOwner"
 # Application definition
 
 INSTALLED_APPS = [
@@ -29,8 +29,7 @@ INSTALLED_APPS = [
 
     'django_extensions', 
     'crispy_forms',  
-    'crispy_bootstrap5',  
-    'taggit',
+    'crispy_bootstrap5',
     'invoice_app.apps.InvoiceAppConfig',
 ]
 
