@@ -1,16 +1,16 @@
 from django.contrib.auth.forms import UserCreationForm, UserChangeForm
 from django import forms
-from .models import Invoice, InvoiceOwner, InvoiceItem
+from .models import Invoice, InvoiceOwner, InvoiceItem, Client
 
 class InvoiceForm(forms.ModelForm):
     class Meta:
         model = Invoice
-        fields = ['client', 'invoice_owner', 'tax_percentage']
+        fields = ['invoice_owner', 'tax_percentage']
         widgets = {
             'tax_percentage': forms.NumberInput(attrs={
                 'min': '0',
                 'max': '99999',
-                'step': '0.1',
+                'step': '0.01',
                 'placeholder': 'Enter tax percentage (without "%")',
             })
         }
@@ -52,7 +52,7 @@ class InvoiceItemForm(forms.ModelForm):
             }),
             'unit_price': forms.NumberInput(attrs={
                 'min': '0',
-                'step': '10',  # Use 0.01 for decimal precision
+                'step': '0.01',  # Use 0.01 for decimal precision
                 'placeholder': 'Enter unit price'
             }),
         }
@@ -62,6 +62,22 @@ class InvoiceItemForm(forms.ModelForm):
     )
 
 
+class ClientForm(forms.ModelForm):
+    class Meta:
+        model = Client
+        fields = ['name', 'phone']
+        widgets = {
+            'phone': forms.TextInput(attrs={
+                'placeholder': 'Enter client phone number',
+            }),
+            'name': forms.TextInput(attrs={'placeholder': 'Enter client name'})
+        }
+
+
 InvoiceItemFormSet = forms.inlineformset_factory(
-    Invoice, InvoiceItem, form=InvoiceItemForm, extra=1
+    Invoice, InvoiceItem, form=InvoiceItemForm, extra=1, can_delete=False
+)
+
+ClientFormSet = forms.inlineformset_factory(
+    Invoice, Client, form=ClientForm, extra=1, can_delete=False
 )

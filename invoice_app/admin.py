@@ -62,17 +62,26 @@ class InvoiceItemInline(admin.TabularInline):
     readonly_fields = ('total_price',)
 
 
+class ClientInline(admin.TabularInline):
+    model = Client
+    extra = 1
+    readonly_fields = ('updated_at', 'created_at',)
+
+
 class InvoiceAdmin(admin.ModelAdmin):
-    list_display = ('reference_number', 'invoice_owner', 'client', 'total_price', 'grand_total', 'updated_at')
+    list_display = ('reference_number', 'invoice_owner', 'get_client_name', 'total_price', 'grand_total', 'updated_at')
     search_fields = ('items', 'reference_number', 'client__name')
-    list_filter = ('updated_at', 'client__name')
+    list_filter = ('updated_at',)
     ordering = ('-updated_at',)
     date_hierarchy = 'updated_at'
     readonly_fields = ('total_price', 'tax', 'grand_total', 'created_at', 'updated_at', 'reference_number')
-    exclude = ('tax',)
+#    exclude = ('tax',)
     
-    inlines = [InvoiceItemInline]
+    inlines = [InvoiceItemInline, ClientInline]
 
+    def get_client_name(self, obj):
+        return obj.client.name  
+    
     def save_model(self, request, obj, form, change):
         try:
             obj.clean()  

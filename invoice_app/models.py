@@ -45,28 +45,8 @@ class InvoiceOwner(AbstractUser):
         return self.name
 
 
-class Client(models.Model):
-    name = models.CharField(max_length=50)
-    phone = models.CharField(max_length=12)
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-
-    class Meta:
-        ordering = ('-updated_at',)
-
-    def clean(self):
-        if self.phone and not self.phone.replace("-", "").isdigit():
-            raise ValidationError(_("Phone number should contain only digits and dashes (-)."))
-
-        if self.phone and not (11 <= len(self.phone) <= 12):
-            raise ValidationError("Phone Number must be 11 to 12 characters long. Pattern: 0123-4567890")
-
-    def __str__(self):
-        return self.name
-
-
 class Invoice(models.Model):
-    client = models.ForeignKey(Client, on_delete=models.CASCADE)
+#    client = models.ForeignKey(Client, related_name='invoices', on_delete=models.CASCADE)
     invoice_owner = models.ForeignKey(InvoiceOwner, on_delete=models.CASCADE)
     reference_number = models.CharField(max_length=14, editable=False, unique=True)
     tax_percentage = models.DecimalField(max_digits=5, decimal_places=2, validators=[MinValueValidator(0)])
@@ -123,3 +103,25 @@ class InvoiceItem(models.Model):
 
     def __str__(self):
         return f"{self.description} - {self.quantity} x {self.unit_price}"
+
+
+class Client(models.Model):
+    name = models.CharField(max_length=55)
+    phone = models.CharField(max_length=12)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    invoice = models.ForeignKey(Invoice, related_name='clients', on_delete=models.CASCADE, null=True, blank=True)
+
+
+    class Meta:
+        ordering = ('-updated_at',)
+
+    def clean(self):
+        if self.phone and not self.phone.replace("-", "").isdigit():
+            raise ValidationError(_("Phone number should contain only digits and dashes (-)."))
+
+        if self.phone and not (11 <= len(self.phone) <= 12):
+            raise ValidationError("Phone Number must be 11 to 12 characters long. Pattern: 0123-4567890")
+
+    def __str__(self):
+        return self.name

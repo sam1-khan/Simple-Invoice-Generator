@@ -1,0 +1,14 @@
+{% extends "base_bootstrap.html" %}
+{% block title %}Client Detail{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1>Client: {{ client.name }}</h1>
+    <p><strong>Phone:</strong> {{ client.phone }}</p>
+    <p><strong>Address:</strong> {{ client.address }}</p>
+
+    <a href="{% url 'invoice_app:client-update' client.pk %}" class="btn btn-warning">Edit</a>
+    <a href="{% url 'invoice_app:client-delete' client.pk %}" class="btn btn-danger">Delete</a>
+    <a href="{% url 'invoice_app:client-list' %}" class="btn btn-secondary">Back to Client List</a>
+</div>
+{% endblock %}

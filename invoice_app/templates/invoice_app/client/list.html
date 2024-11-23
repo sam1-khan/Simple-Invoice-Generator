@@ -1,0 +1,32 @@
+{% extends "base_bootstrap.html" %}
+{% block title %}Client List{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1>Client List</h1>
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Phone</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for client in client_list %}
+            <tr>
+                <td>{{ client.name }}</td>
+                <td>{{ client.phone }}</td>
+                <td>
+                    <a href="{% url 'invoice_app:client-detail' client.pk %}" class="btn btn-info btn-sm">View</a>
+                    <a href="{% url 'invoice_app:client-update' client.pk %}" class="btn btn-warning btn-sm">Edit</a>
+                    <a href="{% url 'invoice_app:client-delete' client.pk %}" class="btn btn-danger btn-sm">Delete</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <a href="{% url 'invoice_app:client-create' %}" class="btn btn-primary">Add New Client</a>
+</div>
+{% endblock %}

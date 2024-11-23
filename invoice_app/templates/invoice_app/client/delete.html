@@ -1,0 +1,14 @@
+{% extends "base_bootstrap.html" %}
+{% block title %}Delete Client{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1>Are you sure you want to delete the client "{{ client.name }}"?</h1>
+
+    <form method="post">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-danger">Yes, Delete</button>
+        <a href="{% url 'invoice_app:client-list' %}" class="btn btn-secondary">Cancel</a>
+    </form>
+</div>
+{% endblock %}
