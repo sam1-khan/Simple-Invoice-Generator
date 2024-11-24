@@ -4,10 +4,10 @@
 {% block content %}
 
 <form method="post" style="color: white;" action="{% url 'login' %}">
-    <h1 class="h3 mb-3 font-weight-normal">Login</h1>
+    <h1 class="mb-3 text-center font-weight-normal fw-bold">Login</h1>
     {% csrf_token %}
     {{ form|crispy }}
-    <input type="submit" class="btn btn-primary my-1 btn-sm" value="Login" />
+    <input type="submit" class="btn btn-outline-primary my-1 btn-sm" value="Login" />
     <input type="hidden" name="next" value="{{ next }}" />
     <a class="mx-2 px-1" href="{% url 'password_reset' %}"><small>Forgot Password?</small></a>
 </form>

@@ -1,83 +1,113 @@
 {% extends "base_bootstrap.html" %}
-{% load humanize %} <!-- https://docs.djangoproject.com/en/4.2/ref/contrib/humanize -->
+{% load static %}
+{% load humanize %}
+
 {% block content %}
-<div class='border-bottom border-2 border-success d-flex align-items-center p-3'>
-    <h2 class="fw-bold">Invoice for {{ invoice.client }}</h2>
-    <span class='float-end ms-auto'>
-    <small>
-        ({{ invoice.updated_at|naturaltime }})
-    </small>
-    <a href="{% url 'invoice_app:invoice-update' invoice.pk %}" class="btn btn-dark border border-secondary btn-sm"><i class="fa fa-pencil"></i></a>
-    <a href="{% url 'invoice_app:invoice-delete' invoice.pk %}" class="btn btn-dark border text-danger border-danger btn-sm"><i class="fa fa-trash"></i></a>
-    </span>
+<div class="border-bottom border-2 border-success d-flex flex-wrap justify-content-between align-items-center p-3">
+    <div class="d-flex align-items-center">
+        <!-- Invoice Title Section -->
+        <h2 class="fw-bold text-wrap mb-0 text-light">Invoice for {{ invoice.clients.first }}</h2>
+        <!-- Actions Section -->
+        <small class="me-2 text-nowrap text-muted">
+            ({{ invoice.updated_at|naturaltime }})
+        </small>
+        <a href="{% url 'invoice_app:invoice-update' invoice.pk %}" class="btn btn-outline-secondary btn-sm me-2">
+            <i class="fa fa-pencil"></i>
+        </a>
+        <a href="{% url 'invoice_app:invoice-delete' invoice.pk %}" class="btn btn-outline-danger btn-sm">
+            <i class="fa fa-trash"></i>
+        </a>
+    </div>
 </div>
-<div class='p-4'>
-    <!-- Client and Invoice Details -->
-    <div class="row my-4">
+
+<div class="container py-5 text-light">
+    <div class="row mb-4">
         <div class="col-6">
-            <p class="fw-bold mb-0">Client:</p>
-            <p class="mb-0">{{ invoice.client.name }}</p>
+            <p class="fw-bold mb-1">Client:</p>
+            <p class="mb-0">{{ invoice.clients.first.name }}</p>
             {% if invoice.client.phone %}
-                <p class="mb-0">{{ invoice.client.phone }}</p>
+                <p class="mb-0">{{ invoice.clients.first.phone }}</p>
             {% endif %}
         </div>
-        <div class="col-6 text-end mb-2">
-            <p class="fw-bold mb-0">Invoice:</p>
+        <div class="col-6 text-end">
+            <p class="fw-bold mb-1">Invoice:</p>
             <p class="mb-0"><strong>Ref #:</strong> {{ invoice.reference_number }}</p>
-            <p class="mb-0"><strong>Date:</strong> {{ invoice.created_at }}</p>
+            <p class="mb-0"><strong>Date:</strong> {{ invoice.created_at|date:"Y-m-d" }}</p>
         </div>
     </div>
 
     <!-- Invoice Table -->
-    <table class="table table-bordered border-secondary">
-        <thead class="border-light">
-            <tr class="text-center">
-                <th class="col-1">Quantity</th>
-                <th class="col-6">Description</th>
-                <th class="col-2">Unit Price</th>
-                <th class="col-2">Total Price</th>
-            </tr>
-        </thead>
+    <div class="mb-4">
+        <table class="table table-bordered table-striped table-dark">
+            <thead class="table-light">
+                <tr class="text-center">
+                    <th class="col-1">#</th> <!-- Serial Number Column -->
+                    <th class="col-6">Name</th>
+                    <th class="col-2">Quantity</th> <!-- Moved after description -->
+                    <th class="col-6">Unit</th>
+                    <th class="col-2">Unit Price</th>
+                    <th class="col-2">Total Price</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in invoice.items.all %}
+                    <tr>
+                        <td class="text-center">{{ forloop.counter }}</td> <!-- Serial Number -->
+                        <td>
+                            {{ item.name }}
+                            {% if item.description %}
+                                <br>
+                                <small class="text-muted">{{ item.description }}</small>
+                            {% endif %}
+                        </td>
+                        <td class="text-center">{{ item.quantity }}</td>
+                        <td class="text-center">{{ item.unit }}</td>
+                        <td class="text-center">{{ item.unit_price }}</td>
+                        <td class="text-center">{{ item.total_price }}</td>
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan="6" class="text-center text-danger">No items for this invoice.</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Invoice Summary -->
+    <table class="table table-bordered table-dark">
         <tbody>
-            {% for item in invoice.items.all %}
             <tr>
-                <td class="text-center">{{ item.quantity }}</td>
-                <td>{{ item.description }}</td>
-                <td class="text-center">{{ item.unit_price }}</td>
-                <td class="text-center">{{ item.total_price }}</td>
+                <td><strong>Total (Rs):</strong></td>
+                <td class="text-end">{{ invoice.total_price }}</td>
             </tr>
-            {% empty %}
+            {% if invoice.tax_percentage %}
+                <tr>
+                    <td><strong>Tax ({{ invoice.tax_percentage }}%):</strong></td>
+                    <td class="text-end">{{ invoice.tax }}</td>
+                </tr>
+            {% endif %}
             <tr>
-                <td colspan="4" class="text-center">No items available for this invoice.</td>
+                <td><strong>Grand Total (Rs):</strong></td>
+                <td class="text-end fw-bold">{{ invoice.grand_total }}</td>
             </tr>
-            {% endfor %}
         </tbody>
-        <tfoot class="text-center">
-            <tr>
-                <td colspan="3"><strong>Total (Rs):</strong></td>
-                <td>{{ invoice.total_price }}</td>
-            </tr>
-            <tr>
-                <td colspan="3"><strong>Tax ({{ invoice.tax_percentage }}%):</strong></td>
-                <td>{{ invoice.tax }}</td>
-            </tr>
-            <tr>
-                <td colspan="3"><strong>Grand Total (Rs):</strong></td>
-                <td>{{ invoice.grand_total }}</td>
-            </tr>
-        </tfoot>
     </table>
 
-    <!-- Footer -->
-    <div class="text-end mt-3">
-        <p><strong>Last Updated:</strong> {{ invoice.updated_at }}</p>
+    <!-- Footer and Action Buttons -->
+    <div class="d-flex align-items-center flex-wrap justify-content-between mt-4">
+        <div class="d-flex gap-1">
+            <a href="{% url 'invoice_app:invoice-pdf' invoice.pk %}" class="btn btn-outline-primary btn-sm">
+                View PDF <i class="fa fa-file-pdf"></i>
+            </a>
+            <a class="btn btn-outline-secondary btn-sm" href="{% url 'invoice_app:invoice-list' %}">
+                All invoices <i class="fa fa-bars"></i>
+            </a>
+        </div>
+        <div>
+            <p><strong>Last Updated:</strong> {{ invoice.updated_at }}</p>
+        </div>
     </div>
-    <a class="btn btn-primary btn-sm" href="{% url 'invoice_app:invoice-pdf' invoice.pk %}">
-        View PDF <i class="fa fa-file-pdf"></i>
-    </a>
-    <a class="btn btn-dark border border-secondary btn-sm" href="{% url 'invoice_app:invoice-list' %}">
-        All invoices <i class="fa fa-bars"></i>
-    </a>
-    </p>
+
 </div>
 {% endblock %}

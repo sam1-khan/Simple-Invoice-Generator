@@ -1,3 +1,4 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -6,78 +7,93 @@
     <title>Invoice #{{ invoice.pk }}</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
-<body style='font-family: Arial, sans-serif;' >
-    <div class="my-4">
+<body>
+    <div class="container">
         <!-- Company Details -->
-        <div class="text-center" style='margin-bottom: 64px;'>
-            <h1 class="fw-bold">{{ invoice.company.name }}</h1>
-            <h4 class="mb-1">{{ invoice.company.address }}</h4>
-            <h4 class="mb-1">Phone: {{ invoice.company.phone }}</h4>
-            <h4><strong>NTN No: {{ invoice.company.ntn_number }}</strong></h4>
+        <div class="text-center" style="margin-bottom: 52px; margin-top: -24px;">
+            <img src="http://127.0.0.1:8000{% static 'media/logo.png' %}" alt="Invoice Owner Logo" class="img-fluid" style="max-width: 200px;">
+            <h1 class="fw-bold">{{ invoice.invoice_owner.name }}</h1>
+            <h4>{{ invoice.invoice_owner.address }}</h4>
+            <h4>Phone: {{ invoice.invoice_owner.phone }}</h4>
+            <h4><strong>NTN No: {{ invoice.invoice_owner.ntn_number }}</strong></h4>
         </div>
 
         <!-- Client and Invoice Details -->
         <div class="row mb-4">
             <div class="col-6">
-                <p class="fw-bold mb-0">Client:</p>
-                <p class="mb-0">{{ invoice.client.name }}</p>
+                <p class="fw-bold mb-1">Client:</p>
+                <p class="mb-0">{{ invoice.clients.first.name }}</p>
                 {% if invoice.client.phone %}
-                    <p class="mb-0">{{ invoice.client.phone }}</p>
+                    <p class="mb-0">{{ invoice.clients.first.phone }}</p>
                 {% endif %}
             </div>
             <div class="col-6 text-end">
-                <p class="fw-bold mb-0">Invoice:</p>
+                <p class="fw-bold mb-1">Invoice:</p>
                 <p class="mb-0"><strong>Ref #:</strong> {{ invoice.reference_number }}</p>
-                <p class="mb-0"><strong>Date:</strong> {{ invoice.created_at }}</p>
+                <p class="mb-0"><strong>Date:</strong> {{ invoice.created_at|date:"Y-m-d" }}</p>
             </div>
         </div>
 
         <!-- Invoice Table -->
-        <table class="table table-bordered border-dark mt-4">
-            <thead class="border-2">
-                <tr class="text-center">
-                    <th class="col-1">Quantity</th>
-                    <th class="col-6">Description</th>
-                    <th class="col-2">Unit Price</th>
-                    <th class="col-2">Total Price</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for item in invoice.items.all %}
-                <tr>
-                    <td class="text-center">{{ item.quantity }}</td>
-                    <td>{{ item.description }}</td>
-                    <td class="text-center">{{ item.unit_price }}</td>
-                    <td class="text-center">{{ item.total_price }}</td>
-                </tr>
-                {% empty %}
-                <tr>
-                    <td colspan="4" class="text-center text-danger">No items for this invoice.</td>
-                </tr>
-                {% endfor %}
-            </tbody>
-            <tfoot class="text-center">
-                <tr>
-                    <td colspan="3"><strong>Total (Rs):</strong></td>
-                    <td>{{ invoice.total_price }}</td>
-                </tr>
-                {% if invoice.tax_percentage%}
-                <tr>
-                    <td colspan="3"><strong>Tax ({{ invoice.tax_percentage }}%):</strong></td>
-                    <td>{{ invoice.tax }}</td>
-                </tr>
-                {% endif %}
-                <tr>
-                    <td colspan="3"><strong>Grand Total (Rs):</strong></td>
-                    <td>{{ invoice.grand_total }}</td>
-                </tr>
-            </tfoot>
-        </table>
-
-        <!-- Footer -->
-        <div class="text-end mt-3">
-            <p><strong>Last Updated:</strong> {{ invoice.updated_at }}</p>
+        <div class="mb-4">
+            <table class="table table-bordered table-striped">
+                <thead class="table-light">
+                    <tr class="text-center">
+                        <th class="col-1">#</th> <!-- Serial Number Column -->
+                        <th class="col-6">Name</th>
+                        <th class="col-2">Quantity</th> <!-- Moved after description -->
+                        <th class="col-6">Unit</th>
+                        <th class="col-2">Unit Price</th>
+                        <th class="col-2">Total Price</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in invoice.items.all %}
+                    <tr>
+                        <td class="text-center">{{ forloop.counter }}</td> <!-- Serial Number -->
+                        <td>
+                            {{ item.name }}
+                            {% if item.description %}
+                                <br>
+                                <small class="text-muted">{{ item.description }}</small>
+                            {% endif %}
+                        </td>
+                        <td class="text-center">{{ item.quantity }}</td>
+                        <td class="text-center">{{ item.unit }}</td>
+                        <td class="text-center">{{ item.unit_price }}</td>
+                        <td class="text-center">{{ item.total_price }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5" class="text-center text-danger">No items for this invoice.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
         </div>
+
+        <!-- Invoice Summary -->
+        <table class="table table-bordered">
+            <tbody>
+                <tr>
+                    <td><strong>Total (Rs):</strong></td>
+                    <td class="text-end">{{ invoice.total_price }}</td>
+                </tr>
+                {% if invoice.tax_percentage %}
+                    <tr>
+                        <td><strong>Tax ({{ invoice.tax_percentage }}%):</strong></td>
+                        <td class="text-end">{{ invoice.tax }}</td>
+                    </tr>
+                    <tr>
+                    <td>
+                        <strong>Grand Total (Rs)</strong>
+                        <small class="text-muted">Inclusive Tax</small>
+                    </td>
+                    <td class="text-end fw-bold">{{ invoice.grand_total }}</td>
+                {% endif %}
+                </tr>
+            </tbody>
+        </table>
     </div>
 </body>
 </html>

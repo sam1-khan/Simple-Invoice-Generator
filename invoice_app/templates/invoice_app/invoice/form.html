@@ -3,15 +3,30 @@
 {% block title %}{{ form.instance.pk|yesno:"Edit,Create" }} Invoice{% endblock %}
 {% block content %}
 <div class="container">
-    <h1 class='pb-1'>{{ form.instance.pk|yesno:"Edit,Create" }} Invoice</h1>
+    <h1 class='pb-1 text-center fw-bold'>{{ form.instance.pk|yesno:"Edit,Create" }} Invoice</h1>
     <form method="post">
         {% csrf_token %}
         
+        <h4>Tax</h4>
         <div class="card mb-4">
             <div class="card-body">
                 {{ form|crispy }}
             </div>
         </div>
+
+        {% if client_formset %}
+        <h4>Client</h4>
+        {{ client_formset.management_form }}
+        <div class="client_formset">
+            {% for form in client_formset %}
+            <div class="client_formset card mb-4">
+                <div class="card-body">
+                    {{ form|crispy }}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
 
         {% if formset %}
         <h4>Invoice Items</h4>
@@ -26,16 +41,16 @@
             {% endfor %}
         </div>
         <div class="d-grid gap-2">
-            <button type="button" class="btn btn-success mb-3" id="add-form">
+            <button type="button" class="btn btn-outline-success mb-3" id="add-form">
                 Add An Item <i class="fa fa-plus"></i>
             </button>
         </div>
         {% endif %}
         <div class="mt-2">
-            <button type="submit" class="btn btn-primary btn-sm">
+            <button type="submit" class="btn btn-outline-primary btn-sm">
                 Save <i class="fa fa-save"></i>
             </button>
-            <button type="submit" class="btn btn-dark border-secondary btn-sm" value="Cancel" onclick="window.location.href='{% url 'invoice_app:invoice-list' %}';return false;">Cancel <i class="fa fa-times"></i></button>
+            <button type="submit" class="btn btn-outline-secondary btn-sm" value="Cancel" onclick="window.location.href='{% url 'invoice_app:invoice-list' %}';return false;">Cancel <i class="fa fa-times"></i></button>
             </button>
         </div>
     </form>
@@ -45,12 +60,7 @@
         const formsetContainer = document.querySelector('.formset'); // Container for formset rows
         const addFormButton = document.querySelector('#add-form'); // "Add Form" button
         const totalFormsInput = document.querySelector('#id_items-TOTAL_FORMS'); // Management form's TOTAL_FORMS field
-        const delCheckBox = document.querySelectorAll('div[id^="div_id_items-"]');
         
-        delCheckBox.forEach(div => {
-            if (/div_id_items-\d+-DELETE/.test(div.id)) div.remove();
-        });
-
         if (!formsetContainer || !addFormButton || !totalFormsInput) {
             console.error("Required formset elements are missing!");
             return;
@@ -105,6 +115,10 @@
     
             // Update the TOTAL_FORMS value
             updateTotalForms();
+            const newNameField = newForm.querySelector('input[name^="items"][name$="-name"]');
+            if (newNameField) {
+                newNameField.focus();
+            }
         }
     
         // Event listener for the "Add Invoice Item" button
@@ -126,7 +140,7 @@
             if (!removeButton) {
                 removeButton = document.createElement('button');
                 removeButton.type = 'button';
-                removeButton.className = 'btn btn-dark p-2 fw-bold text-danger border border-danger rounded-top-0 btn-sm remove-form';
+                removeButton.className = 'btn btn-outline-danger p-2 rounded-top-0 btn-sm remove-form';
                 removeButton.textContent = 'Remove';
                 formRow.appendChild(removeButton);
             }

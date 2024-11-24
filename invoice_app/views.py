@@ -7,7 +7,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from .models import Invoice, Client
 from weasyprint import HTML
 from django.template.loader import render_to_string
-from .forms import InvoiceForm, InvoiceItemFormSet
+from .forms import InvoiceForm, ClientForm, InvoiceItemFormSet, ClientFormSet
 from django.contrib.humanize.templatetags.humanize import naturaltime
 from datetime import datetime
 from django.db.models import Q
@@ -55,8 +55,9 @@ class InvoiceListView(LoginRequiredMixin, ListView):
                 query |= Q(created_at__day=day) | Q(updated_at__day=day)
             else:  # Non-date numeric input
                 query |= Q(reference_number__icontains=strval) | \
-                         Q(description__icontains=strval) | \
-                         Q(client__name__icontains=strval)
+                         Q(items__description__icontains=strval) | \
+                         Q(items__name__icontains=strval) | \
+                         Q(clients__name__icontains=strval)
 
         # Full date (YYYY-MM-DD)
         elif len(strval) == 10 and "-" in strval:
@@ -65,8 +66,9 @@ class InvoiceListView(LoginRequiredMixin, ListView):
                 query |= Q(created_at__date=date_obj.date()) | Q(updated_at__date=date_obj.date())
             except ValueError:
                 query |= Q(reference_number__icontains=strval) | \
-                         Q(description__icontains=strval) | \
-                         Q(client__name__icontains=strval)
+                         Q(items__name__icontains=strval) | \
+                         Q(items__description__icontains=strval) | \
+                         Q(clients__name__icontains=strval)
 
         # Other date formats
         else:
@@ -76,8 +78,9 @@ class InvoiceListView(LoginRequiredMixin, ListView):
             else:
                 # General text-based fallback search
                 query |= Q(reference_number__icontains=strval) | \
-                         Q(description__icontains=strval) | \
-                         Q(client__name__icontains=strval)
+                         Q(items__name__icontains=strval) | \
+                         Q(items__description__icontains=strval) | \
+                         Q(clients__name__icontains=strval)
 
         return query
 
@@ -107,22 +110,26 @@ class InvoiceCreateView(LoginRequiredMixin, CreateView):
     success_url = reverse_lazy('invoice_app:invoice-list')
 
     def get_context_data(self, **kwargs):
-        # Add the InvoiceItemFormSet to the context
         context = super().get_context_data(**kwargs)
         if self.request.POST:
             context['formset'] = InvoiceItemFormSet(self.request.POST)
+            context['client_formset'] = ClientFormSet(self.request.POST)
         else:
             context['formset'] = InvoiceItemFormSet()
+            context['client_formset'] = ClientFormSet(queryset=Client.objects.none())  # Empty queryset on GET
+
         return context
 
     def form_valid(self, form):
-        # Save the invoice and the associated items
         context = self.get_context_data()
         formset = context['formset']
-        if formset.is_valid():
+        client_formset = context['client_formset']
+        if formset.is_valid() and client_formset.is_valid():
             self.object = form.save()
             formset.instance = self.object  # Set the parent invoice
+            client_formset.instance = self.object
             formset.save()
+            client_formset.save()  # Save the new clients
             return super().form_valid(form)
         else:
             return self.form_invalid(form)
@@ -174,7 +181,7 @@ class InvoicePDFView(View):
 
         # Return the generated PDF as an HttpResponse
         response = HttpResponse(pdf, content_type='application/pdf')
-        response['Content-Disposition'] = f'attachment; filename="invoice_{invoice.pk}.pdf"'
+        response['Content-Disposition'] = f'attachment; filename="invoice_{invoice.reference_number}.pdf"'
 
         return response
     

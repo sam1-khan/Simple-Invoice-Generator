@@ -20,7 +20,7 @@ class InvoiceOwner(AbstractUser):
     last_name = None
 
     email = models.EmailField(_("email address"), unique=True)
-    name = models.CharField(max_length=50, unique=True)
+    name = models.CharField(max_length=255, unique=True)
 
     USERNAME_FIELD = "email"
     FIRST_NAME_FIELD = "name"
@@ -49,7 +49,7 @@ class Invoice(models.Model):
 #    client = models.ForeignKey(Client, related_name='invoices', on_delete=models.CASCADE)
     invoice_owner = models.ForeignKey(InvoiceOwner, on_delete=models.CASCADE)
     reference_number = models.CharField(max_length=14, editable=False, unique=True)
-    tax_percentage = models.DecimalField(max_digits=5, decimal_places=2, validators=[MinValueValidator(0)])
+    tax_percentage = models.DecimalField(max_digits=5, default=0, decimal_places=2, validators=[MinValueValidator(0)])
     tax = models.DecimalField(max_digits=16, default=0, editable=False, decimal_places=2)
     total_price = models.DecimalField(max_digits=16, default=0, decimal_places=2, editable=False)
     grand_total = models.DecimalField(max_digits=16, default=0, decimal_places=2, editable=False)
@@ -70,20 +70,23 @@ class Invoice(models.Model):
         
         # Ensure reference number is generated
         if not self.reference_number:
-            date_part = now().strftime("%Y%m")
+            # date_part = now().strftime("%Y%m")
             uuid_part = str(uuid.uuid4()).split('-')[0][:6]
-            self.reference_number = f"{date_part}-{uuid_part}"
+           # self.reference_number = f"{date_part}-{uuid_part}"
+            self.reference_number = f"SAE-{uuid_part}"
 
         # Call the parent class save method
         super().save(*args, **kwargs)
 
     def __str__(self):
-        return f"Invoice {self.reference_number} - {self.client.name}"
+        return f"Invoice {self.reference_number}"
 
     
 class InvoiceItem(models.Model):
     invoice = models.ForeignKey(Invoice, on_delete=models.CASCADE, related_name="items")
-    description = models.CharField(max_length=255)
+    unit = models.CharField(max_length=55)
+    description = models.TextField(null=True, blank=True)
+    name = models.CharField(max_length=255)
     quantity = models.PositiveIntegerField(validators=[MinValueValidator(0), MaxValueValidator(999999)])
     unit_price = models.DecimalField(max_digits=16, decimal_places=2, validators=[MinValueValidator(0)])
     total_price = models.DecimalField(max_digits=16, decimal_places=2, editable=False)
@@ -106,12 +109,11 @@ class InvoiceItem(models.Model):
 
 
 class Client(models.Model):
-    name = models.CharField(max_length=55)
-    phone = models.CharField(max_length=12)
+    name = models.CharField(max_length=255)
+    phone = models.CharField(max_length=12, blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     invoice = models.ForeignKey(Invoice, related_name='clients', on_delete=models.CASCADE, null=True, blank=True)
-
 
     class Meta:
         ordering = ('-updated_at',)

@@ -7,13 +7,24 @@ class InvoiceForm(forms.ModelForm):
         model = Invoice
         fields = ['invoice_owner', 'tax_percentage']
         widgets = {
-            'tax_percentage': forms.NumberInput(attrs={
-                'min': '0',
-                'max': '99999',
-                'step': '0.01',
-                'placeholder': 'Enter tax percentage (without "%")',
+            'invoice_owner': forms.Select(attrs={
+                'autofocus': 'autofocus', 
             })
         }
+
+    tax_percentage = forms.DecimalField(
+        required=True,
+        initial=0,
+        max_digits=5,
+        decimal_places=2,
+        widget=forms.NumberInput(attrs={
+            'min': '0',
+            'max': '99999',
+            'step': '0.01',
+            'placeholder': 'Enter tax percentage (without "%")'
+        })
+    )
+
 
 class InvoiceOwnerCreationForm(UserCreationForm):
     class Meta:
@@ -42,24 +53,31 @@ class InvoiceOwnerChangeForm(UserChangeForm):
 class InvoiceItemForm(forms.ModelForm):
     class Meta:
         model = InvoiceItem
-        fields = ['description', 'quantity', 'unit_price']
+        fields = ['name', 'description', 'quantity', 'unit', 'unit_price']
         widgets = {
             'quantity': forms.NumberInput(attrs={
                 'min': '0',
                 'max': '999999',
                 'step': '1',
-                'placeholder': 'Enter quantity'
+                'placeholder': 'Enter item quantity'
             }),
             'unit_price': forms.NumberInput(attrs={
                 'min': '0',
                 'step': '0.01',  # Use 0.01 for decimal precision
-                'placeholder': 'Enter unit price'
+                'placeholder': 'Enter item price'
             }),
+            'name': forms.TextInput(attrs={
+                'placeholder': 'Enter item name',
+                'autofocus': 'autofocus'  
+            }),
+            'description': forms.Textarea(attrs={
+                'placeholder': 'Enter item description',
+                'rows':2
+            }),
+                'unit': forms.TextInput(attrs={
+                'placeholder': 'Enter quantity unit'
+            })
         }
-
-    description = forms.CharField(
-        widget=forms.TextInput(attrs={'placeholder': 'Enter item description'})
-    )
 
 
 class ClientForm(forms.ModelForm):
@@ -70,7 +88,10 @@ class ClientForm(forms.ModelForm):
             'phone': forms.TextInput(attrs={
                 'placeholder': 'Enter client phone number',
             }),
-            'name': forms.TextInput(attrs={'placeholder': 'Enter client name'})
+            'name': forms.TextInput(attrs={
+                'placeholder': 'Enter client name',
+                'autofocus': 'autofocus'  
+            })
         }
 
 

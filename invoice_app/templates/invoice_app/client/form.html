@@ -1,0 +1,25 @@
+{% extends "base_bootstrap.html" %}
+{% load crispy_forms_tags %}
+{% block title %}{{ form.instance.pk|yesno:"Edit,Create" }} Client{% endblock %}
+{% block content %}
+<div class="container">
+    <h1>{{ form.instance.pk|yesno:"Edit,Create" }} Client</h1>
+    <form method="post">
+        {% csrf_token %}
+        <div class="card mb-4">
+            <div class="card-body">
+                {{ form|crispy }}
+            </div>
+        </div>
+
+        <div class="mt-2">
+            <button type="submit" class="btn btn-primary btn-sm">
+                Save <i class="fa fa-save"></i>
+            </button>
+            <button type="submit" class="btn btn-dark border-secondary btn-sm" value="Cancel" onclick="window.location.href='{% url 'invoice_app:client-list' %}';return false;">
+                Cancel <i class="fa fa-times"></i>
+            </button>
+        </div>
+    </form>
+</div>
+{% endblock %}
