@@ -85,8 +85,8 @@
                         <td class="text-center">{{ item.unit_price }}</td>
                         <td class="text-center">{{ item.total_price }}</td>
                         {% if item.item_tax_percentage %}
-                            <td class="text-center">{{ item.item_tax_percentage }}%</td>
-                            <td class="text-center">{{ item.item_tax }}</td>
+                            <td class="text-center">{{ item.item_tax }} ({{ item.item_tax_percentage }}%)</td>
+                            <td class="text-center">{{ item.after_tax }}</td>
                         {% endif %}
                     </tr>
                 {% empty %}
