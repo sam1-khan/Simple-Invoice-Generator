@@ -63,7 +63,7 @@ class InvoiceOwnerChangeForm(UserChangeForm):
 class InvoiceItemForm(forms.ModelForm):
     class Meta:
         model = InvoiceItem
-        fields = ['name', 'description', 'quantity', 'unit', 'unit_price', 'item_tax_percentage',]
+        fields = ['name', 'description', 'quantity', 'unit', 'unit_price',]
         widgets = {
             'quantity': forms.NumberInput(attrs={
                 'min': '0',
@@ -88,19 +88,6 @@ class InvoiceItemForm(forms.ModelForm):
                 'placeholder': 'Enter quantity unit i.e pc(s), box(es), unit(s)',
             })
         }
-
-    item_tax_percentage = forms.DecimalField(
-        required=False,
-        initial=0,
-        max_digits=5,
-        decimal_places=2,
-        widget=forms.NumberInput(attrs={
-            'min': '0',
-            'max': '99999',
-            'step': '0.01',
-            'placeholder': 'Enter individual item tax percentage (without "%")',
-        })
-    )
 
 
 class ClientForm(forms.ModelForm):

@@ -84,10 +84,6 @@
                         <th class="col-2">Unit</th>
                         <th class="col-2">Unit Price</th>
                         <th class="col-2">Total Price</th>
-                        {% if invoice.items.first.item_tax_percentage %}
-                            <th class="col-2">Tax %</th>
-                            <th class="col-2">After Tax</th>
-                        {% endif %}
                     </tr>
                 </thead>
                 <tbody>
@@ -105,10 +101,6 @@
                         <td class="text-center">{{ item.unit }}</td>
                         <td class="text-center">{{ item.unit_price }}</td>
                         <td class="text-center">{{ item.total_price }}</td>
-                        {% if item.item_tax_percentage %}
-                            <td class="text-center">{{ item.item_tax_percentage }}%</td>
-                            <td class="text-center">{{ item.item_tax }}</td>
-                        {% endif %}
                     </tr>
                     {% empty %}
                     <tr>
@@ -122,47 +114,48 @@
         <!-- Invoice Summary -->
         <table class="table table-bordered">
             <tbody>
-                {% if invoice.tax_percentage %}
-                    <tr>
-                        <td><strong class="text-muted">Total (Rs):</strong></td>
-                        <td class="text-end">{{ invoice.total_price }}</td>
-                    </tr>
-                    <tr>
-                        <td><strong class="text-muted">Tax ({{ invoice.tax_percentage }}%):</strong></td>
-                        <td class="text-end">{{ invoice.tax }}</td>
-                    </tr>
-                    <tr>
-                        <td>
-                            <strong>Grand Total (Rs)</strong>
-                            <small class="text-muted">incl. tax</small>
-                        </td>
+                <tr>
+                    <td>
+                        <strong>Total (Rs) </strong>
+                        <small class="text-muted"> incl. tax</small>
+                    </td>
+                    {% if invoice.tax_percentage %}
                         <td class="text-end fw-bold">{{ invoice.grand_total }}</td>
-                    </tr>
-                {% else %}
-                    <tr>
-                        <td><strong>Total (Rs):</strong></td>
-                        <td class="text-end">{{ invoice.total_price }}</td>
-                    </tr>
-                {% endif %}
+                    {% else %}
+                        <td class="text-end fw-bold">{{ invoice.total_price }}</td>
+                    {% endif %}
+                </tr>
             </tbody>
         </table>
-        <!-- Footer Section -->
-        <div class="row footer">
-            <div class="col-6">
-                {% if invoice.notes %}
-                <p><strong>Additional Notes:</strong></p>
-                <p>{{ invoice.notes }}</p>
-                {% endif %}
-            </div>
-            <div class="col-6 text-end">
-                {% if invoice.invoice_owner.bank %}
-                    <p><strong>Online Payment Details:</strong></p>
-                    <p class="mb-0"><small><strong>Bank: </strong>{{ invoice.invoice_owner.bank }}</small></p>
-                    <p class="mb-0"><small><strong>IBAN: </strong>{{ invoice.invoice_owner.iban }}</small></p>
-                    <p><small><strong>Title: </strong>{{ invoice.invoice_owner.account_title }}</small></p>
-                {% endif %}
+    <!-- Footer Section -->
+    <div class="row footer">
+        <div class="col-6">
+            {% if invoice.invoice_owner.bank %}
+            <p class="mb-2"><strong>Payment Details:</strong></p>
+            <p class="mb-0"><small><strong>Bank: </strong>{{ invoice.invoice_owner.bank }}</small></p>
+            <p class="mb-0"><small><strong>Title: </strong>{{ invoice.invoice_owner.account_title }}</small></p>
+            <p><small><strong>IBAN: </strong>{{ invoice.invoice_owner.iban }}</small></p>
+            {% endif %}
+            {% if invoice.notes %}
+            <p class="mt-4"><strong>Additional Notes:</strong></p>
+            <p>{{ invoice.notes }}</p>
+            {% endif %}
+        </div>
+        <div class="col-6 text-end" style="text-align: center; margin-top: -36px;">
+            <!-- Signature -->
+            <div style="display: inline-block; text-align: center; padding-left: 120px;">
+                <img 
+                    style="width: 240px; object-fit: contain; margin-right: auto; margin-bottom: -60px;" 
+                    src="http://127.0.0.1:8000{% static 'media/sign.png' %}" 
+                    alt="CEO Signature">
+                <!-- Aligned Text -->
+                <p style="border-top: 1px solid #000; margin-top: -5px; padding-top: 5px; display: inline-block; width: auto;">
+                    <small>Chief Executive Officer</small>
+                </p>
             </div>
         </div>
     </div>
+    
+</div>
 </body>
 </html>
