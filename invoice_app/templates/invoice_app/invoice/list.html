@@ -42,25 +42,43 @@
           </p>
           
           {% for item in invoice.items.all %}
-            <p class="card-text text-truncate"><small><strong>{{ item.name }}</strong>: 
-              {{ item.quantity }} {{ item.unit }} x {{ item.unit_price }} Rs = {{ item.total_price }} Rs
-            </small></p>
+            <p class="card-text text-truncate">
+              <small><strong>{{ item.name }}</strong>: 
+                {{ item.quantity }} {{ item.unit }} x {{ item.unit_price }} Rs = {{ item.total_price }} Rs
+              </small>
+            </p>
           {% empty %}
-            <p class="card-text text-danger"><small>No items for this invoice.</small></p>
+            <p class="card-text text-danger">
+              <small>No items for this invoice.</small>
+            </p>
           {% endfor %}
           
           <p class="card-text text-muted">
-            <small><strong>Date:</strong> {{ invoice.created_at|date:"Y-m-d" }}</small>
+            <small><strong>Date: </strong>
+              {% if invoice.date %}
+                {{ invoice.date|date:"Y-m-d" }}
+              {% else %}
+                {{ invoice.created_at|date:"Y-m-d" }}
+              {% endif %}
+            </small>
           </p>
           <p class="card-text text-muted">
-            <small><strong>Total Price:</strong> {{ invoice.total_price }} Rs</small>
+            <small>
+              <strong>Total Price:</strong> {{ invoice.total_price }} Rs
+            </small>
           </p>
-          <p class="card-text text-muted">
-            <small><strong>Tax ({{ invoice.tax_percentage }}%):</strong> {{ invoice.tax }} Rs</small>
-          </p>
-          <p class="card-text text-muted">
-            <small><strong>Grand Total:</strong> {{ invoice.grand_total }} Rs</small>
-          </p>
+          {% if invoice.tax_percentage %}
+            <p class="card-text text-muted">
+              <small>
+                <strong>Tax ({{ invoice.tax_percentage }}%):</strong> {{ invoice.tax }} Rs
+              </small>
+            </p>
+            <p class="card-text text-muted">
+              <small>
+                <strong>Grand Total:</strong> {{ invoice.grand_total }} Rs
+              </small>
+            </p>
+          {% endif %}
 
           <div class="d-flex gap-2 mt-3">
             <a href="{% url 'invoice_app:invoice-detail' invoice.pk %}" class="btn btn-outline-success btn-sm w-100">

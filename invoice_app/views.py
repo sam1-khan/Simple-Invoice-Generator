@@ -63,7 +63,7 @@ class InvoiceListView(LoginRequiredMixin, ListView):
         elif len(strval) == 10 and "-" in strval:
             try:
                 date_obj = datetime.strptime(strval, "%Y-%m-%d")
-                query |= Q(created_at__date=date_obj.date()) | Q(updated_at__date=date_obj.date())
+                query |= Q(date=date_obj.date()) | Q(created_at__date=date_obj.date()) | Q(updated_at__date=date_obj.date())
             except ValueError:
                 query |= Q(reference_number__icontains=strval) | \
                          Q(items__name__icontains=strval) | \
@@ -74,7 +74,7 @@ class InvoiceListView(LoginRequiredMixin, ListView):
         else:
             date_obj = self.parse_date(strval)
             if date_obj:
-                query |= Q(created_at__date=date_obj.date()) | Q(updated_at__date=date_obj.date())
+                query |= Q(date=date_obj.date()) | Q(created_at__date=date_obj.date()) | Q(updated_at__date=date_obj.date())
             else:
                 # General text-based fallback search
                 query |= Q(reference_number__icontains=strval) | \

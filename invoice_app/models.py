@@ -2,9 +2,7 @@ from django.db import models
 from django.core.exceptions import ValidationError
 from django.utils.translation import gettext_lazy as _
 from django.core.validators import MinValueValidator, MaxValueValidator
-from django.utils.timezone import now
 from django.contrib.auth.models import AbstractUser
-import uuid
 from .managers import CustomUserManager
 
 
@@ -14,6 +12,9 @@ class InvoiceOwner(AbstractUser):
     ntn_number = models.CharField(max_length=13, unique=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    bank = models.CharField(max_length=55)
+    account_title = models.CharField(max_length=24)
+    iban = models.CharField(max_length=34)
 
     username = None
     first_name = None
@@ -24,7 +25,7 @@ class InvoiceOwner(AbstractUser):
 
     USERNAME_FIELD = "email"
     FIRST_NAME_FIELD = "name"
-    REQUIRED_FIELDS = ['name', 'address', 'ntn_number', 'phone']
+    REQUIRED_FIELDS = ['name', 'address', 'ntn_number', 'phone', 'iban', 'bank', 'account_title']
 
     objects = CustomUserManager()
 
@@ -46,13 +47,15 @@ class InvoiceOwner(AbstractUser):
 
 
 class Invoice(models.Model):
-#    client = models.ForeignKey(Client, related_name='invoices', on_delete=models.CASCADE)
+    # client = models.ForeignKey(Client, related_name='invoices', on_delete=models.CASCADE)
     invoice_owner = models.ForeignKey(InvoiceOwner, on_delete=models.CASCADE)
     reference_number = models.CharField(max_length=14, editable=False, unique=True)
-    tax_percentage = models.DecimalField(max_digits=5, default=0, decimal_places=2, validators=[MinValueValidator(0)])
+    tax_percentage = models.DecimalField(max_digits=5, blank=True, null=True, decimal_places=2, validators=[MinValueValidator(0)])
     tax = models.DecimalField(max_digits=16, default=0, editable=False, decimal_places=2)
     total_price = models.DecimalField(max_digits=16, default=0, decimal_places=2, editable=False)
     grand_total = models.DecimalField(max_digits=16, default=0, decimal_places=2, editable=False)
+    date = models.DateField(null=True, blank=True)
+    notes = models.TextField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -71,9 +74,10 @@ class Invoice(models.Model):
         # Ensure reference number is generated
         if not self.reference_number:
             # date_part = now().strftime("%Y%m")
-            uuid_part = str(uuid.uuid4()).split('-')[0][:6]
-           # self.reference_number = f"{date_part}-{uuid_part}"
-            self.reference_number = f"SAE-{uuid_part}"
+            # uuid_part = str(uuid.uuid4()).split('-')[0][:6]
+            # self.reference_number = f"{date_part}-{uuid_part}"
+            if self.pk:
+                self.reference_number = f"SAE-{self.pk}"
 
         # Call the parent class save method
         super().save(*args, **kwargs)
@@ -87,6 +91,8 @@ class InvoiceItem(models.Model):
     unit = models.CharField(max_length=55)
     description = models.TextField(null=True, blank=True)
     name = models.CharField(max_length=255)
+    item_tax_percentage = models.DecimalField(max_digits=5, default=0, decimal_places=2, validators=[MinValueValidator(0)])
+    #tax = models.DecimalField(max_digits=16, default=0, editable=False, decimal_places=2)
     quantity = models.PositiveIntegerField(validators=[MinValueValidator(0), MaxValueValidator(999999)])
     unit_price = models.DecimalField(max_digits=16, decimal_places=2, validators=[MinValueValidator(0)])
     total_price = models.DecimalField(max_digits=16, decimal_places=2, editable=False)
@@ -105,15 +111,17 @@ class InvoiceItem(models.Model):
         super().save(*args, **kwargs)
 
     def __str__(self):
-        return f"{self.description} - {self.quantity} x {self.unit_price}"
+        return f"{self.name} - {self.quantity} x {self.unit_price}"
 
 
 class Client(models.Model):
     name = models.CharField(max_length=255)
+    address = models.TextField(max_length=255, null=True, blank=True)
+    ntn_number = models.CharField(max_length=13, unique=True, null=True, blank=True)
     phone = models.CharField(max_length=12, blank=True, null=True)
+    invoice = models.ForeignKey(Invoice, related_name='clients', on_delete=models.CASCADE, null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-    invoice = models.ForeignKey(Invoice, related_name='clients', on_delete=models.CASCADE, null=True, blank=True)
 
     class Meta:
         ordering = ('-updated_at',)
@@ -124,6 +132,9 @@ class Client(models.Model):
 
         if self.phone and not (11 <= len(self.phone) <= 12):
             raise ValidationError("Phone Number must be 11 to 12 characters long. Pattern: 0123-4567890")
+
+        if self.ntn_number and not (7 <= len(self.ntn_number) <= 13):
+            raise ValidationError("NTN number must be 7 to 13 characters long. Pattern: 01234-5678901 or 0123456-78901")
 
     def __str__(self):
         return self.name

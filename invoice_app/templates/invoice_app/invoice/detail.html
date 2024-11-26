@@ -3,15 +3,18 @@
 {% load humanize %}
 
 {% block content %}
-<div class="border-bottom border-2 border-success d-flex flex-wrap justify-content-between align-items-center p-3">
-    <div class="d-flex align-items-center">
-        <!-- Invoice Title Section -->
-        <h2 class="fw-bold text-wrap mb-0 text-light">Invoice for {{ invoice.clients.first }}</h2>
-        <!-- Actions Section -->
+<style>
+        .footer .col-6 p {
+            margin: 5px 0;
+        }
+</style>
+<div class="border-bottom flex-column border-2 border-success d-flex p-3 mb-2">
+    <h2 class="fw-bold text-wrap mb-0 text-light">Invoice for {{ invoice.clients.first.name }}</h2>
+    <div class="d-flex ms-auto align-items-center">
         <small class="me-2 text-nowrap text-muted">
             ({{ invoice.updated_at|naturaltime }})
         </small>
-        <a href="{% url 'invoice_app:invoice-update' invoice.pk %}" class="btn btn-outline-secondary btn-sm me-2">
+        <a href="{% url 'invoice_app:invoice-update' invoice.pk %}" class="btn btn-outline-secondary btn-sm me-1">
             <i class="fa fa-pencil"></i>
         </a>
         <a href="{% url 'invoice_app:invoice-delete' invoice.pk %}" class="btn btn-outline-danger btn-sm">
@@ -20,39 +23,56 @@
     </div>
 </div>
 
-<div class="container py-5 text-light">
-    <div class="row mb-4">
-        <div class="col-6">
-            <p class="fw-bold mb-1">Client:</p>
+<div class="container text-light">
+    <!-- Client and Invoice Details -->
+    <div class="row mb-5">
+        <div class="col-md-6 mt-3">
+            <p class="mb-0 fw-bold">Billed To:</p>
             <p class="mb-0">{{ invoice.clients.first.name }}</p>
-            {% if invoice.client.phone %}
-                <p class="mb-0">{{ invoice.clients.first.phone }}</p>
+            {% if invoice.clients.first.address %}
+                <p class="mb-0"><small>{{ invoice.clients.first.address }}</small></p>
+            {% endif %}
+            {% if invoice.clients.first.phone %}
+                <p class="mb-0"><small><strong>Phone: </strong>{{ invoice.clients.first.phone }}</small></p>
+            {% endif %}
+            {% if invoice.clients.first.ntn_number %}
+                <p class="mb-0"><small><strong>NTN No: </strong>{{ invoice.clients.first.ntn_number }}</small></p>
             {% endif %}
         </div>
-        <div class="col-6 text-end">
-            <p class="fw-bold mb-1">Invoice:</p>
-            <p class="mb-0"><strong>Ref #:</strong> {{ invoice.reference_number }}</p>
-            <p class="mb-0"><strong>Date:</strong> {{ invoice.created_at|date:"Y-m-d" }}</p>
+        <div class="col-md-6 text-md-end mt-3">
+            <p class="fw-bold mb-0">Invoice Details:</p>
+            <p class="mb-0"><small><strong>Ref #:</strong> {{ invoice.reference_number }}</small></p>
+            <p class="mb-0"><small><strong>Date:</strong>
+                {% if invoice.date %}
+                    {{ invoice.date|date:"Y-m-d" }}
+                {% else %}
+                    {{ invoice.created_at|date:"Y-m-d" }}
+                {% endif %}
+            </small></p>
         </div>
     </div>
 
-    <!-- Invoice Table -->
-    <div class="mb-4">
+    <!-- Invoice Items Table -->
+    <div class="mb-5">
         <table class="table table-bordered table-striped table-dark">
             <thead class="table-light">
                 <tr class="text-center">
-                    <th class="col-1">#</th> <!-- Serial Number Column -->
+                    <th class="col-1">#</th>
                     <th class="col-6">Name</th>
-                    <th class="col-2">Quantity</th> <!-- Moved after description -->
-                    <th class="col-6">Unit</th>
+                    <th class="col-2">Quantity</th>
+                    <th class="col-2">Unit</th>
                     <th class="col-2">Unit Price</th>
                     <th class="col-2">Total Price</th>
+                    {% if invoice.items.first and invoice.items.first.item_tax_percentage %}
+                        <th class="col-2">Tax %</th>
+                        <th class="col-2">After Tax</th>
+                    {% endif %}
                 </tr>
             </thead>
             <tbody>
                 {% for item in invoice.items.all %}
                     <tr>
-                        <td class="text-center">{{ forloop.counter }}</td> <!-- Serial Number -->
+                        <td class="text-center">{{ forloop.counter }}</td>
                         <td>
                             {{ item.name }}
                             {% if item.description %}
@@ -64,10 +84,14 @@
                         <td class="text-center">{{ item.unit }}</td>
                         <td class="text-center">{{ item.unit_price }}</td>
                         <td class="text-center">{{ item.total_price }}</td>
+                        {% if item.item_tax_percentage %}
+                            <td class="text-center">{{ item.item_tax_percentage }}%</td>
+                            <td class="text-center">{{ item.item_tax }}</td>
+                        {% endif %}
                     </tr>
                 {% empty %}
                     <tr>
-                        <td colspan="6" class="text-center text-danger">No items for this invoice.</td>
+                        <td colspan="8" class="text-center text-danger">No items for this invoice.</td>
                     </tr>
                 {% endfor %}
             </tbody>
@@ -94,20 +118,31 @@
         </tbody>
     </table>
 
-    <!-- Footer and Action Buttons -->
-    <div class="d-flex align-items-center flex-wrap justify-content-between mt-4">
-        <div class="d-flex gap-1">
-            <a href="{% url 'invoice_app:invoice-pdf' invoice.pk %}" class="btn btn-outline-primary btn-sm">
-                View PDF <i class="fa fa-file-pdf"></i>
-            </a>
-            <a class="btn btn-outline-secondary btn-sm" href="{% url 'invoice_app:invoice-list' %}">
-                All invoices <i class="fa fa-bars"></i>
-            </a>
+    <!-- Footer Section -->
+    <div class="row">
+        <div class="col-md-6 mt-3">
+            <!-- Additional Notes -->
+            {% if invoice.notes %}
+                <p><strong class="mb-2">Additional Notes:</strong></p>
+                <p>{{ invoice.notes }}</p>
+            {% endif %}
         </div>
-        <div>
-            <p><strong>Last Updated:</strong> {{ invoice.updated_at }}</p>
+        <div class="col-md-6 text-md-end mt-3">
+            {% if invoice.invoice_owner.bank %}
+            <p><strong>Online Payment Details:</strong></p>
+            <p class="mb-0"><small><strong>Bank: </strong>{{ invoice.invoice_owner.bank }}</small></p>
+            <p class="mb-0"><small><strong>IBAN: </strong>{{ invoice.invoice_owner.iban }}</small></p>
+            <p><small><strong>Title: </strong>{{ invoice.invoice_owner.account_title }}</small></p>
+            {% endif %}
         </div>
     </div>
-
+    <div class="d-flex text-nowrap gap-2">
+        <a href="{% url 'invoice_app:invoice-pdf' invoice.pk %}" class="btn btn-outline-primary btn-sm">
+            View PDF <i class="fa fa-file-pdf"></i>
+        </a>
+        <a class="btn btn-outline-secondary btn-sm" href="{% url 'invoice_app:invoice-list' %}">
+            All invoices <i class="fa fa-bars"></i>
+        </a>
+    </div>
 </div>
 {% endblock %}

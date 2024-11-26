@@ -10,7 +10,7 @@
 
     {% block head %}{% endblock %}
   </head>
-  <body style='font-family: Arial, sans-serif;'>
+  <body style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;">
     <div class="container">
     {% block navbar %}{% endblock %}
     {% block welcome %}{% endblock %}
@@ -23,7 +23,7 @@
         {% endfor %}
       {% endif %}
     {% endblock %}
-    <main style="width: 80%; color: white;" class="m-auto my-4">
+    <main class="container my-4 text-white">
       {% block content %}{% endblock %}
     </main>
     </div>
