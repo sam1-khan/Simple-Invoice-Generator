@@ -59,6 +59,7 @@ class Invoice(models.Model):
     notes = models.TextField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    is_taxed = models.BooleanField(default=False)
 
     def clean(self):
         """Validate tax_percentage."""

@@ -67,6 +67,11 @@
               <strong>Total Price:</strong> {{ invoice.total_price }} Rs
             </small>
           </p>
+            <p class="card-text text-muted">
+              <small>
+                <strong>Tax included:</strong> {% if invoice.is_taxed %} Yes {% else %} No {% endif %}
+              </small>
+            </p>           
           {% if invoice.tax_percentage %}
             <p class="card-text text-muted">
               <small>

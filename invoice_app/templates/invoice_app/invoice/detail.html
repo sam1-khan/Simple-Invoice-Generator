@@ -102,18 +102,16 @@
     <table class="table table-bordered table-dark">
         <tbody>
             <tr>
-                <td><strong>Total (Rs):</strong></td>
-                <td class="text-end">{{ invoice.total_price }}</td>
-            </tr>
-            {% if invoice.tax_percentage %}
-                <tr>
-                    <td><strong>Tax ({{ invoice.tax_percentage }}%):</strong></td>
-                    <td class="text-end">{{ invoice.tax }}</td>
-                </tr>
-            {% endif %}
-            <tr>
-                <td><strong>Grand Total (Rs):</strong></td>
-                <td class="text-end fw-bold">{{ invoice.grand_total }}</td>
+                <td>
+                    <strong>Total (Rs) </strong>
+                {% if invoice.tax_percentage or invoice.is_taxed %}
+                    <small class="text-muted"> incl. tax</small>
+                </td>
+                    <td class="text-end fw-bold">{{ invoice.grand_total }}</td>
+                {% else %}
+                </td>
+                    <td class="text-end fw-bold">{{ invoice.total_price }}</td>
+                {% endif %}
             </tr>
         </tbody>
     </table>

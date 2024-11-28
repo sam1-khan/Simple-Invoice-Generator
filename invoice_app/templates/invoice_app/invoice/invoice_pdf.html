@@ -21,7 +21,10 @@
             margin-top: -30px;
         }
         .header img {
-            width: 200px;
+            width: 240px;
+            margin-bottom: -30px;
+            margin-top: -30px;
+
         }
         .header h1, .header h4 {
             margin: 10px 0;
@@ -117,11 +120,12 @@
                 <tr>
                     <td>
                         <strong>Total (Rs) </strong>
+                    {% if invoice.tax_percentage or invoice.is_taxed %}
                         <small class="text-muted"> incl. tax</small>
                     </td>
-                    {% if invoice.tax_percentage %}
                         <td class="text-end fw-bold">{{ invoice.grand_total }}</td>
                     {% else %}
+                    </td>
                         <td class="text-end fw-bold">{{ invoice.total_price }}</td>
                     {% endif %}
                 </tr>

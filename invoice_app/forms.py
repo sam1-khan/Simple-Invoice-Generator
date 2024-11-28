@@ -5,7 +5,7 @@ from .models import Invoice, InvoiceOwner, InvoiceItem, Client
 class InvoiceForm(forms.ModelForm):
     class Meta:
         model = Invoice
-        fields = ['invoice_owner', 'tax_percentage', 'date', 'notes',]
+        fields = ['invoice_owner', 'tax_percentage', 'date', 'notes', 'is_taxed',]
         widgets = {
             'invoice_owner': forms.Select(attrs={
                 'autofocus': 'autofocus', 
@@ -19,7 +19,10 @@ class InvoiceForm(forms.ModelForm):
             'notes': forms.Textarea(attrs={
                 'rows': 3,
                 'placeholder': 'Enter additional notes',
-            })
+            }),
+            'is_taxed': forms.CheckboxInput(attrs={
+                'label': 'Taxed Included',
+            }),
         }
 
     tax_percentage = forms.DecimalField(
