@@ -1,14 +1,22 @@
 {% extends "base_bootstrap.html" %}
-{% block title %}Delete Client{% endblock %}
-
 {% block content %}
-<div class="container">
-    <h1>Are you sure you want to delete the client "{{ client.name }}"?</h1>
-
-    <form method="post">
+<div class="container py-5">
+  <div class="card shadow-sm border-danger mx-auto" style="max-width: 500px;">
+    <div class="card-body">
+      <h3 class="card-title text-center text-danger mb-4">Delete Client</h3>
+      <p class="text-center mb-4">Are you sure you want to delete the client: <strong>{{ client }}</strong>?</p>
+      <form action="" method="POST">
         {% csrf_token %}
-        <button type="submit" class="btn btn-danger">Yes, Delete</button>
-        <a href="{% url 'invoice_app:client-list' %}" class="btn btn-secondary">Cancel</a>
-    </form>
+        <div class="d-flex justify-content-around">
+          <button type="submit" class="btn btn-danger btn-sm" value="Yes, delete.">
+            Yes, delete <i class="fa fa-trash"></i>
+          </button>
+          <button type="button" class="btn btn-outline-secondary btn-sm" onclick="window.location.href='{% url 'invoice_app:client-list' %}'; return false;">
+            Cancel <i class="fa fa-times"></i>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
 </div>
 {% endblock %}

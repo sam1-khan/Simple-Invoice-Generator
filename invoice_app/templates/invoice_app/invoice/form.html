@@ -77,6 +77,43 @@ document.addEventListener('DOMContentLoaded', () => {
         totalFormsInput.value = formCount;
     }
 
+    // Function to update the visibility of the remove buttons based on total forms
+    function updateRemoveButtonVisibility() {
+        const formRows = document.querySelectorAll('.formset-row');
+        
+        // Count the number of non-deleted forms
+        const nonDeletedForms = Array.from(formRows).filter(formRow => {
+            const deleteCheckbox = formRow.querySelector('[name$="-DELETE"]');
+            return !deleteCheckbox || !deleteCheckbox.checked;
+        });
+
+        // If there is only one non-deleted form, hide the remove button for all forms
+        if (nonDeletedForms.length === 1) {
+            formRows.forEach(formRow => {
+                const removeButton = formRow.querySelector('.remove-form');
+                if (removeButton) {
+                    removeButton.style.display = 'none';
+                }
+            });
+        } else {
+            formRows.forEach(formRow => {
+                const removeButton = formRow.querySelector('.remove-form');
+                const deleteCheckbox = formRow.querySelector('[name$="-DELETE"]');
+                
+                // Show the remove button if the form is not marked for deletion
+                if (deleteCheckbox && deleteCheckbox.checked) {
+                    if (removeButton) {
+                        removeButton.style.display = 'none';
+                    }
+                } else {
+                    if (removeButton) {
+                        removeButton.style.display = 'inline-block';
+                    }
+                }
+            });
+        }
+    }
+
     // Event listener for the "Add Form" button
     addFormButton.addEventListener('click', addForm);
 
@@ -106,10 +143,9 @@ document.addEventListener('DOMContentLoaded', () => {
         
         // Update the TOTAL_FORMS value
         updateTotalForms();
-        const newNameField = newForm.querySelector('input[name^="items"][name$="-name"]');
-        if (newNameField) {
-            newNameField.focus();
-        }
+
+        // Update visibility of remove buttons after adding a new form
+        updateRemoveButtonVisibility();
     }
 
     // Delegated event listener for "Remove" buttons
@@ -119,6 +155,7 @@ document.addEventListener('DOMContentLoaded', () => {
             formRow.querySelector('[name$="-DELETE"]').checked = true;
             formRow.style.display = 'none';
             updateTotalForms();
+            updateRemoveButtonVisibility(); // Re-check the visibility of remove buttons
         }
     });
 

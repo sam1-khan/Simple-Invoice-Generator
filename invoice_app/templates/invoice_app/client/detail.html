@@ -1,14 +1,21 @@
 {% extends "base_bootstrap.html" %}
+{% load humanize %}
 {% block title %}Client Detail{% endblock %}
 
 {% block content %}
-<div class="container">
-    <h1>Client: {{ client.name }}</h1>
-    <p><strong>Phone:</strong> {{ client.phone }}</p>
-    <p><strong>Address:</strong> {{ client.address }}</p>
-
-    <a href="{% url 'invoice_app:client-update' client.pk %}" class="btn btn-warning">Edit</a>
-    <a href="{% url 'invoice_app:client-delete' client.pk %}" class="btn btn-danger">Delete</a>
-    <a href="{% url 'invoice_app:client-list' %}" class="btn btn-secondary">Back to Client List</a>
+<div class="container d-flex flex-column">
+    <h2 class="fw-bold text-wrap mb-2 text-light">{{ client.name }}</h2>
+    <p class="mb-0"><strong>Phone:</strong> <small>{{ client.phone }}</small></p>
+    <p class="mb-0"><strong>Address:</strong> <small>{{ client.address }}</small></p>
+    <p><strong>Created at:</strong> {{ client.created_at }}</p>
+    <div class="d-flex justify-content-between mt-2 mb-4">
+        <a href="{% url 'invoice_app:client-list' %}" class="btn btn-outline-primary fw-bold flex-grow-1 btn me-1 btn-sm">
+          Client List <i class="fa fa-bars"></i>
+        </a>
+        <a class="btn btn-outline-secondary btn-sm me-1" href="{% url 'invoice_app:client-update' client.pk %}">
+          Edit <i class="fa fa-pencil"></i></a>
+        <a class="btn btn-outline-danger btn-sm" href="{% url 'invoice_app:client-delete' client.pk %}">
+          Delete <i class="fa fa-trash"></i></a>
+    </div>
 </div>
 {% endblock %}

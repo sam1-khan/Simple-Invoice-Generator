@@ -116,7 +116,7 @@ class ClientForm(forms.ModelForm):
 
 
 InvoiceItemFormSet = forms.inlineformset_factory(
-    Invoice, InvoiceItem, form=InvoiceItemForm, extra=0, can_delete=True
+    Invoice, InvoiceItem, form=InvoiceItemForm, extra=1, can_delete=True
 )
 
 ClientFormSet = forms.inlineformset_factory(

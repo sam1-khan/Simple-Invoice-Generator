@@ -189,7 +189,7 @@ class InvoicePDFView(View):
 class ClientListView(InvoiceListView):
     model = Client
     template_name = "invoice_app/client/list.html"
-    context_object_name = "invoice_client"
+    context_object_name = "client"
 
     def build_query(self, strval):
         """
@@ -203,6 +203,9 @@ class ClientListView(InvoiceListView):
                 query |= Q(created_at__day=day) | Q(updated_at__day=day)
             else:  # Non-date numeric input
                 query |= Q(name__icontains=strval)
+                query |= Q(ntn_number__icontains=strval)
+                query |= Q(address__icontains=strval)
+                query |= Q(phone__icontains=strval)
 
         # Full date (YYYY-MM-DD)
         elif len(strval) == 10 and "-" in strval:
@@ -211,6 +214,9 @@ class ClientListView(InvoiceListView):
                 query |= Q(created_at__date=date_obj.date()) | Q(updated_at__date=date_obj.date())
             except ValueError:
                 query |= Q(name__icontains=strval)
+                query |= Q(ntn_number__icontains=strval)
+                query |= Q(address__icontains=strval)
+                query |= Q(phone__icontains=strval)
 
         # Other date formats
         else:
@@ -220,7 +226,22 @@ class ClientListView(InvoiceListView):
             else:
                 # General text-based fallback search for Client
                 query |= Q(name__icontains=strval)
+                query |= Q(ntn_number__icontains=strval)
+                query |= Q(address__icontains=strval)
+                query |= Q(phone__icontains=strval)
         return query
+    
+    def get(self, request):
+        strval = request.GET.get("search", "").strip()
+        query = self.build_query(strval) if strval else Q()
+
+        client_list = Client.objects.filter(query).select_related().distinct().order_by('-updated_at')
+
+        for obj in client_list:
+            obj.natural_updated = naturaltime(obj.updated_at)
+
+        ctx = {'client_list': client_list, 'search': strval}
+        return render(request, self.template_name, ctx)
 
 
 class ClientDetailView(LoginRequiredMixin, DetailView):

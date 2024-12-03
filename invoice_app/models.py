@@ -80,7 +80,6 @@ class Invoice(models.Model):
         """Generate the next reference number in sequence."""
         last_invoice = Invoice.objects.all().order_by('-id').first()
         if last_invoice:
-            # Extract the last reference number, removing 'INV-' and converting to int
             last_number = int(last_invoice.reference_number.split('-')[1])
             next_number = last_number + 1
         else:
