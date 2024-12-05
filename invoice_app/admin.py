@@ -62,12 +62,6 @@ class InvoiceItemInline(admin.TabularInline):
     readonly_fields = ('total_price',)
 
 
-class ClientInline(admin.TabularInline):
-    model = Client
-    extra = 1
-    readonly_fields = ('updated_at', 'created_at',)
-
-
 class InvoiceAdmin(admin.ModelAdmin):
     list_display = ('reference_number', 'invoice_owner', 'get_client_name', 'total_price', 'grand_total', 'updated_at')
     search_fields = ('items', 'reference_number', 'client__name')
@@ -77,7 +71,7 @@ class InvoiceAdmin(admin.ModelAdmin):
     readonly_fields = ('total_price', 'tax', 'grand_total', 'created_at', 'updated_at', 'reference_number')
 #    exclude = ('tax',)
     
-    inlines = [InvoiceItemInline, ClientInline]
+    inlines = [InvoiceItemInline,]
 
     def get_client_name(self, obj):
         return obj.client.name  

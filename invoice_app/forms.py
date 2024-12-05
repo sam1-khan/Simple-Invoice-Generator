@@ -5,7 +5,7 @@ from .models import Invoice, InvoiceOwner, InvoiceItem, Client
 class InvoiceForm(forms.ModelForm):
     class Meta:
         model = Invoice
-        fields = ['invoice_owner', 'tax_percentage', 'date', 'notes', 'is_taxed',]
+        fields = ['invoice_owner', 'client', 'is_taxed', 'tax_percentage', 'date', 'notes',]
         widgets = {
             'invoice_owner': forms.Select(attrs={
                 'autofocus': 'autofocus', 
@@ -20,10 +20,9 @@ class InvoiceForm(forms.ModelForm):
                 'rows': 3,
                 'placeholder': 'Enter additional notes',
             }),
-            'is_taxed': forms.CheckboxInput(attrs={
-                'label': 'Taxed Included',
-            }),
         }
+    is_taxed = forms.BooleanField(label='Tax Included', required=False)
+
 
     tax_percentage = forms.DecimalField(
         required=False,
@@ -37,6 +36,7 @@ class InvoiceForm(forms.ModelForm):
             'placeholder': 'Enter tax percentage (without "%")',
         })
     )
+    client = forms.ModelChoiceField(queryset=Client.objects.all(), empty_label="Select Client or Create New", required=True)
 
 
 class InvoiceOwnerCreationForm(UserCreationForm):
@@ -117,8 +117,4 @@ class ClientForm(forms.ModelForm):
 
 InvoiceItemFormSet = forms.inlineformset_factory(
     Invoice, InvoiceItem, form=InvoiceItemForm, extra=1, can_delete=True
-)
-
-ClientFormSet = forms.inlineformset_factory(
-    Invoice, Client, form=ClientForm, extra=1, can_delete=False
 )

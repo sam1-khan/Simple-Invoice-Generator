@@ -7,7 +7,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from .models import Invoice, Client
 from weasyprint import HTML
 from django.template.loader import render_to_string
-from .forms import InvoiceForm, ClientForm, InvoiceItemFormSet, ClientFormSet
+from .forms import InvoiceForm, ClientForm, InvoiceItemFormSet
 from django.contrib.humanize.templatetags.humanize import naturaltime
 from datetime import datetime
 from django.db.models import Q
@@ -113,23 +113,18 @@ class InvoiceCreateView(LoginRequiredMixin, CreateView):
         context = super().get_context_data(**kwargs)
         if self.request.POST:
             context['formset'] = InvoiceItemFormSet(self.request.POST)
-            context['client_formset'] = ClientFormSet(self.request.POST)
         else:
             context['formset'] = InvoiceItemFormSet()
-            context['client_formset'] = ClientFormSet(queryset=Client.objects.none())  # Empty queryset on GET
 
         return context
 
     def form_valid(self, form):
         context = self.get_context_data()
         formset = context['formset']
-        client_formset = context['client_formset']
-        if formset.is_valid() and client_formset.is_valid():
+        if formset.is_valid():
             self.object = form.save()
             formset.instance = self.object  # Set the parent invoice
-            client_formset.instance = self.object
             formset.save()
-            client_formset.save()  # Save the new clients
             return super().form_valid(form)
         else:
             return self.form_invalid(form)
@@ -146,6 +141,7 @@ class InvoiceUpdateView(LoginRequiredMixin, UpdateView):
         context = super().get_context_data(**kwargs)
         if self.request.POST:
             context['formset'] = InvoiceItemFormSet(self.request.POST, instance=self.object)
+
         else:
             context['formset'] = InvoiceItemFormSet(instance=self.object)
         return context

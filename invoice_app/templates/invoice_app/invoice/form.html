@@ -6,32 +6,36 @@
     div[id$="-DELETE"] {
         display: none;
     }
+
+    div[id="div_id_client"] {
+        display: flex;
+        flex-wrap: wrap;
+    }
+
+    div[id="div_id_client"] label {
+        flex-basis: 100%;
+    }
+    
+    div[id="div_id_client"] select {
+        flex-basis: 92%;
+        margin-right: auto;
+    }
+
+    div[id="div_id_client"] button {
+        flex-basis: 7%;
+    }
 </style>
 <div class="container">
     <h1 class='pb-1 text-center fw-bold'>{{ form.instance.pk|yesno:"Edit,Create" }} Invoice</h1>
     <form method="post">
         {% csrf_token %}
         
-        <h4>Tax</h4>
+        <h4>Invoice</h4>
         <div class="card mb-4">
             <div class="card-body">
                 {{ form|crispy }}
             </div>
         </div>
-
-        {% if client_formset %}
-        <h4>Client</h4>
-        {{ client_formset.management_form }}
-        <div class="client_formset">
-            {% for form in client_formset %}
-            <div class="client_formset card mb-4">
-                <div class="card-body">
-                    {{ form|crispy }}
-                </div>
-            </div>
-            {% endfor %}
-        </div>
-        {% endif %}
 
         {% if formset %}
         <h4>Invoice Items</h4>
@@ -61,11 +65,58 @@
     </form>
 </div>
 <script type="text/javascript">
+function openWindow() {
+        const url = "{% url 'invoice_app:client-create' %}"; 
+        
+        const width = 600;
+        const height = 520;
+        const left = (window.innerWidth / 2) - (width / 2);
+        const top = (window.innerHeight / 2) - (height / 2);
+
+        const windowOptions = `width=${width}, height=${height}, left=${left}, top=${top}`;
+
+        // Open the new window with the specified URL and options
+        window.open(url, 'Create New Client', windowOptions);
+    }
+
 document.addEventListener('DOMContentLoaded', () => {
-    const formsetContainer = document.querySelector('.formset'); // Container for formset rows
-    const addFormButton = document.querySelector('#add-form'); // "Add Form" button
-    const totalFormsInput = document.querySelector('#id_items-TOTAL_FORMS'); // Management form's TOTAL_FORMS field
-    
+    const formsetContainer = document.querySelector('.formset');
+    const addFormButton = document.querySelector('#add-form');
+    const totalFormsInput = document.querySelector('#id_items-TOTAL_FORMS');
+    const clientDropdownDiv = document.querySelector('#div_id_client');
+    const isTaxedCheckbox = document.querySelector('#id_is_taxed');
+    const isTaxedDiv = document.querySelector('#div_id_is_taxed');
+    const taxPercentageDiv = document.querySelector('#div_id_tax_percentage');
+
+    function toggleFields() {
+        if (isTaxedCheckbox.checked) {
+            taxPercentageDiv.style.display = 'none';
+        } else {
+            taxPercentageDiv.style.display = 'block';
+        }
+
+        if (taxPercentageDiv.querySelector('input').value > 0) {
+            isTaxedDiv.style.display = 'none';
+        } else {
+            isTaxedDiv.style.display = 'block';
+        }
+    }
+
+    isTaxedCheckbox.addEventListener('change', toggleFields);
+    taxPercentageDiv.querySelector('input').addEventListener('input', toggleFields);
+
+
+    if (clientDropdownDiv){
+        addClientButton = document.createElement('button');
+        addClientButton.type = 'button';
+        addClientButton.className = 'btn btn-outline-success rounded btn-sm add-client-button';
+        addClientButton.innerHTML = '<i class="fa fa-plus"></i>';
+        addClientButton.setAttribute('title', 'Add New Client');
+        addClientButton.onclick = openWindow
+
+        clientDropdownDiv.appendChild(addClientButton);
+    }
+
     if (!formsetContainer || !addFormButton || !totalFormsInput) {
         console.error("Required formset elements are missing!");
         return;

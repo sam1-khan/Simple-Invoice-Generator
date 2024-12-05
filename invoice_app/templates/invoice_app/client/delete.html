@@ -5,10 +5,10 @@
     <div class="card-body">
       <h3 class="card-title text-center text-danger mb-4">Delete Client</h3>
       <p class="text-center mb-4">Are you sure you want to delete the client: <strong>{{ client }}</strong>?</p>
-      <form action="" method="POST">
+      <form method="POST">
         {% csrf_token %}
         <div class="d-flex justify-content-around">
-          <button type="submit" class="btn btn-danger btn-sm" value="Yes, delete.">
+          <button type="submit" class="btn btn-danger btn-sm" value="Yes, delete." autofocus>
             Yes, delete <i class="fa fa-trash"></i>
           </button>
           <button type="button" class="btn btn-outline-secondary btn-sm" onclick="window.location.href='{% url 'invoice_app:client-list' %}'; return false;">

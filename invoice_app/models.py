@@ -46,8 +46,34 @@ class InvoiceOwner(AbstractUser):
         return self.name
 
 
+class Client(models.Model):
+    name = models.CharField(max_length=255)
+    address = models.TextField(max_length=255, null=True, blank=True)
+    ntn_number = models.CharField(max_length=13, null=True, blank=True)
+    phone = models.CharField(max_length=12, blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ('-updated_at',)
+
+    def clean(self):
+        if self.phone and not self.phone.replace("-", "").isdigit():
+            raise ValidationError(_("Phone number should contain only digits and dashes (-)."))
+
+        if self.phone and not (11 <= len(self.phone) <= 12):
+            raise ValidationError("Phone Number must be 11 to 12 characters long. Pattern: 0123-4567890")
+
+        if self.ntn_number and not (7 <= len(self.ntn_number) <= 13):
+            raise ValidationError("NTN number must be 7 to 13 characters long. Pattern: 01234-5678901 or 0123456-78901")
+
+    def __str__(self):
+        return self.name
+
+
 class Invoice(models.Model):
     invoice_owner = models.ForeignKey(InvoiceOwner, on_delete=models.CASCADE)
+    client = models.ForeignKey(Client, related_name='invoices', on_delete=models.CASCADE)
     reference_number = models.CharField(max_length=14, editable=False, unique=True)
     tax_percentage = models.DecimalField(
         max_digits=5, blank=True, null=True, decimal_places=2, validators=[MinValueValidator(0)]
@@ -122,29 +148,3 @@ class InvoiceItem(models.Model):
 
     def __str__(self):
         return f"{self.name} - {self.quantity} x {self.unit_price}"
-
-
-class Client(models.Model):
-    name = models.CharField(max_length=255)
-    address = models.TextField(max_length=255, null=True, blank=True)
-    ntn_number = models.CharField(max_length=13, null=True, blank=True)
-    phone = models.CharField(max_length=12, blank=True, null=True)
-    invoice = models.ForeignKey(Invoice, related_name='clients', on_delete=models.CASCADE, null=True, blank=True)
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-
-    class Meta:
-        ordering = ('-updated_at',)
-
-    def clean(self):
-        if self.phone and not self.phone.replace("-", "").isdigit():
-            raise ValidationError(_("Phone number should contain only digits and dashes (-)."))
-
-        if self.phone and not (11 <= len(self.phone) <= 12):
-            raise ValidationError("Phone Number must be 11 to 12 characters long. Pattern: 0123-4567890")
-
-        if self.ntn_number and not (7 <= len(self.ntn_number) <= 13):
-            raise ValidationError("NTN number must be 7 to 13 characters long. Pattern: 01234-5678901 or 0123456-78901")
-
-    def __str__(self):
-        return self.name

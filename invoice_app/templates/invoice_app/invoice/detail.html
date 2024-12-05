@@ -27,16 +27,16 @@
     <!-- Client and Invoice Details -->
     <div class="row mb-5">
         <div class="col-md-6 mt-3">
-            <p class="mb-0 fw-bold">Billed To:</p>
-            <p class="mb-0">{{ invoice.clients.first.name }}</p>
-            {% if invoice.clients.first.address %}
-                <p class="mb-0"><small>{{ invoice.clients.first.address }}</small></p>
+            <p class="mb-0 fw-bold">Client:</p>
+            <p class="mb-0">{{ invoice.client }}</p>
+            {% if invoice.client.address %}
+                <p class="mb-0"><small>{{ invoice.client.address }}</small></p>
             {% endif %}
-            {% if invoice.clients.first.phone %}
-                <p class="mb-0"><small><strong>Phone: </strong>{{ invoice.clients.first.phone }}</small></p>
+            {% if invoice.client.phone %}
+                <p class="mb-0"><small><strong>Phone: </strong>{{ invoice.client.phone }}</small></p>
             {% endif %}
-            {% if invoice.clients.first.ntn_number %}
-                <p class="mb-0"><small><strong>NTN No: </strong>{{ invoice.clients.first.ntn_number }}</small></p>
+            {% if invoice.client.ntn_number %}
+                <p class="mb-0"><small><strong>NTN No: </strong>{{ invoice.client.ntn_number }}</small></p>
             {% endif %}
         </div>
         <div class="col-md-6 text-md-end mt-3">
