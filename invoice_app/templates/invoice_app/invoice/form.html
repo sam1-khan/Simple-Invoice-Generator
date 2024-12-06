@@ -1,7 +1,7 @@
 {% extends "base_bootstrap.html" %}
 {% load crispy_forms_tags %}
 {% block title %}{{ form.instance.pk|yesno:"Edit,Create" }} Invoice{% endblock %}
-{% block navbar %}<p class="border-3 border-top border-primary"></p>{% endblock %}
+{% block navbar %}<p class="border-3 border-top border-info"></p>{% endblock %}
 {% block content %}
 <style>
     div[id$="-DELETE"] {
