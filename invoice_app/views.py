@@ -57,7 +57,7 @@ class InvoiceListView(LoginRequiredMixin, ListView):
                 query |= Q(reference_number__icontains=strval) | \
                          Q(items__description__icontains=strval) | \
                          Q(items__name__icontains=strval) | \
-                         Q(clients__name__icontains=strval)
+                         Q(client__name__icontains=strval)
 
         # Full date (YYYY-MM-DD)
         elif len(strval) == 10 and "-" in strval:
@@ -68,7 +68,7 @@ class InvoiceListView(LoginRequiredMixin, ListView):
                 query |= Q(reference_number__icontains=strval) | \
                          Q(items__name__icontains=strval) | \
                          Q(items__description__icontains=strval) | \
-                         Q(clients__name__icontains=strval)
+                         Q(client__name__icontains=strval)
 
         # Other date formats
         else:
@@ -80,7 +80,7 @@ class InvoiceListView(LoginRequiredMixin, ListView):
                 query |= Q(reference_number__icontains=strval) | \
                          Q(items__name__icontains=strval) | \
                          Q(items__description__icontains=strval) | \
-                         Q(clients__name__icontains=strval)
+                         Q(client__name__icontains=strval)
 
         return query
 

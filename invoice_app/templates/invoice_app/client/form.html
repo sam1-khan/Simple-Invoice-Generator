@@ -1,6 +1,7 @@
 {% extends "base_bootstrap.html" %}
 {% load crispy_forms_tags %}
 {% block title %}{{ form.instance.pk|yesno:"Edit,Create" }} Client{% endblock %}
+{% block navbar %}<p class="border-3 border-top border-danger"></p>{% endblock %}
 {% block content %}
 <div class="container">
     <h1>{{ form.instance.pk|yesno:"Edit,Create" }} Client</h1>
