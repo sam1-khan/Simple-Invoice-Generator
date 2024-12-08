@@ -1,7 +1,7 @@
 {% extends "base_bootstrap.html" %}
 {% load crispy_forms_tags %}
 {% block title %}{{ form.instance.pk|yesno:"Edit,Create" }} Client{% endblock %}
-{% block navbar %}<p class="border-3 border-top border-danger"></p>{% endblock %}
+{% block navbar %}<p class="border-3 border-top border-warning"></p>{% endblock %}
 {% block content %}
 <div class="container">
     <h1>{{ form.instance.pk|yesno:"Edit,Create" }} Client</h1>
@@ -23,17 +23,19 @@
     </form>
 </div>
 <script>
-document.querySelector('#save-button').addEventListener('click', function(event) {
-    event.preventDefault();
-    document.getElementById('theForm').submit();
-    window.opener.location.reload();
-});
+    document.querySelector('#save-button').addEventListener('click', function(event) {
+        event.preventDefault();
+        document.getElementById('theForm').submit();
+        if (window.opener) {
+            window.opener.location.reload();
+        }
+    });
 
-document.getElementById('cancel-button').addEventListener('click', function(event) {
-    if (window.opener) {
-        window.opener.location.reload();
-    }
-    window.close();
-});
+    document.getElementById('cancel-button').addEventListener('click', function(event) {
+        if (window.opener) {
+            window.opener.location.reload();
+        }
+        window.close();
+    });
 </script>
 {% endblock %}

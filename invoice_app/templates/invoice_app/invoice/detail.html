@@ -9,7 +9,7 @@
         }
 </style>
 <div class="border-bottom flex-column border-2 border-success d-flex p-3 mb-2">
-    <h2 class="fw-bold text-wrap mb-0 text-light">Invoice for {{ invoice.clients.first.name }}</h2>
+    <h2 class="fw-bold text-wrap mb-0 text-light">{{ invoice.is_quotation|yesno:"Quotation,Invoice" }} for {{ invoice.client.name }}</h2>
     <div class="d-flex ms-auto align-items-center">
         <small class="me-2 text-nowrap text-muted">
             ({{ invoice.updated_at|naturaltime }})
@@ -40,7 +40,7 @@
             {% endif %}
         </div>
         <div class="col-md-6 text-md-end mt-3">
-            <p class="fw-bold mb-0">Invoice Details:</p>
+            <p class="fw-bold mb-0">{{ invoice.is_quotation|yesno:"Quotation,Invoice" }} Details:</p>
             <p class="mb-0"><small><strong>Ref #:</strong> {{ invoice.reference_number }}</small></p>
             <p class="mb-0"><small><strong>Date:</strong>
                 {% if invoice.date %}
@@ -91,7 +91,7 @@
                     </tr>
                 {% empty %}
                     <tr>
-                        <td colspan="8" class="text-center text-danger">No items for this invoice.</td>
+                        <td colspan="8" class="text-center text-danger">No items for this {{ invoice.is_quotation|yesno:"quotation,invoice" }}.</td>
                     </tr>
                 {% endfor %}
             </tbody>

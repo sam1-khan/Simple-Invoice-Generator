@@ -1,6 +1,6 @@
 {% extends "base_bootstrap.html" %}
 {% block title %}Client List{% endblock %}
-{% block navbar %}<p class="border-3 border-top border-danger"></p>{% endblock %}
+{% block navbar %}<p class="border-3 border-top border-warning"></p>{% endblock %}
 {% block content %}
 <h1 class="fw-bold text-center my-3">Client List</h1>
 
@@ -18,11 +18,34 @@
 
 <!-- User Action Buttons -->
 <div class="d-flex justify-content-between mt-2 mb-4">
-  <a href="{% url 'invoice_app:client-create' %}" class="btn btn-outline-success fw-bold flex-grow-1 btn me-2 btn-sm">
+  <!-- Create New Invoice Button -->
+  <a href="{% url 'invoice_app:invoice-create' %}" class="btn btn-outline-success fw-bold flex-grow-1 btn me-1 btn-sm">
     Create New Client <i class="fa fa-plus"></i>
   </a>
-  <a class="btn btn-outline-primary btn-sm" href="{% url 'invoice_app:invoice-list' %}">
-    Invoices <i class="fa fa-bars"></i></a>
+
+  <!-- Dropdown -->
+  <div class="btn-group">
+    <button type="button" class="btn btn-outline-primary btn-sm dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+      Options
+    </button>
+    <ul class="dropdown-menu">
+      <li>
+        <a class="dropdown-item" href="{% url 'invoice_app:invoice-list' %}">Invoices
+          <i class="ms-1 fa fa-bars"></i> 
+        </a>
+      </li>
+      <li>
+        <a class="dropdown-item" href="{% url 'invoice_app:client-list' %}">Quotations
+          <i class="ms-1 fa fa-file"></i> 
+        </a>
+      </li>
+      <li>
+        <a class="dropdown-item" href="{% url 'logout' %}?next={% url 'invoice_app:invoice-list' %}">Logout
+          <i class="ms-1 fa fa-sign-out"></i> 
+        </a>
+      </li>
+    </ul>
+  </div>
 </div>
 
 <!-- Client List -->

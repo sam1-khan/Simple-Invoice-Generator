@@ -74,7 +74,7 @@ class Client(models.Model):
 class Invoice(models.Model):
     invoice_owner = models.ForeignKey(InvoiceOwner, on_delete=models.CASCADE)
     client = models.ForeignKey(Client, related_name='invoices', on_delete=models.CASCADE)
-    reference_number = models.CharField(max_length=14, editable=False, unique=True)
+    reference_number = models.CharField(max_length=14, editable=False)
     tax_percentage = models.DecimalField(
         max_digits=5, blank=True, null=True, decimal_places=2, validators=[MinValueValidator(0)]
     )
@@ -86,6 +86,7 @@ class Invoice(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     is_taxed = models.BooleanField(default=False)
+    is_quotation = models.BooleanField(default=False)
 
     def clean(self):
         """Validate tax_percentage."""
@@ -100,31 +101,39 @@ class Invoice(models.Model):
         # Calculate tax and grand total based on the invoice tax_percentage
         self.tax = self.total_price * (self.tax_percentage / 100) if self.tax_percentage else 0
         self.grand_total = self.total_price + self.tax
-
+ 
     @staticmethod
-    def get_next_reference_number():
+    def get_next_reference_number(last_invoice=None, is_quotation=False):
         """Generate the next reference number in sequence."""
-        last_invoice = Invoice.objects.all().order_by('-id').first()
+        
         if last_invoice:
-            last_number = int(last_invoice.reference_number.split('-')[1])
+            last_number = int(last_invoice.reference_number.split('-')[2])  # Extract last sequence number (xxxx)
             next_number = last_number + 1
         else:
-            next_number = 1  # Starting at 1 if no invoices exist yet
+            next_number = 1
         
-        return f"SAE-{next_number:04d}"
+        if is_quotation:
+            return f"SAE-Q-{next_number:04d}"  # Quotation reference number (Q-xxxx)
+        else:
+            return f"SAE-I-{next_number:04d}"  # Invoice reference number (I-xxxx)
 
     def save(self, *args, **kwargs):
-        """Override save to set the reference number before saving."""
-        if not self.reference_number:
-            self.reference_number = Invoice.get_next_reference_number()
-
-        # Save first to ensure primary key is set before calculating totals
-        super().save(*args, **kwargs)
+        """Override save to set the reference number before saving, and handle is_quotation changes."""
         
-        # Now calculate totals after the instance is saved
-        self.calculate_totals()
+        is_quotation_changed = False
+        
+        if self.pk:  # Check if this is an existing object (not a new one)
+            old_invoice = Invoice.objects.get(pk=self.pk)
+            is_quotation_changed = old_invoice.is_quotation != self.is_quotation  # Check if the type changed
 
-        # Save again with updated totals
+        if not self.reference_number or is_quotation_changed:
+            if self.is_quotation:
+                last_quotation = Invoice.objects.filter(is_quotation=True).order_by('-id').first()
+                self.reference_number = Invoice.get_next_reference_number(last_quotation, is_quotation=True)
+            else:
+                last_invoice = Invoice.objects.filter(is_quotation=False).order_by('-id').first()
+                self.reference_number = Invoice.get_next_reference_number(last_invoice, is_quotation=False)
+        
         super().save(*args, **kwargs)
 
 
