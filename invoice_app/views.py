@@ -177,7 +177,7 @@ class InvoicePDFView(View):
 
         # Return the generated PDF as an HttpResponse
         response = HttpResponse(pdf, content_type='application/pdf')
-        response['Content-Disposition'] = f'attachment; filename="invoice_{invoice.reference_number}.pdf"'
+        response['Content-Disposition'] = f'attachment; filename="{invoice.reference_number}.pdf"'
 
         return response
     

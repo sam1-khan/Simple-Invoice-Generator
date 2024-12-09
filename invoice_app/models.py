@@ -118,9 +118,9 @@ class Invoice(models.Model):
             next_number = 1
         
         if is_quotation:
-            return f"SAE-Q-{next_number:04d}"  # Quotation reference number (Q-xxxx)
+            return f"Q_SAE-{next_number:04d}"  # Quotation reference number (Q-xxxx)
         else:
-            return f"SAE-I-{next_number:04d}"  # Invoice reference number (I-xxxx)
+            return f"I_SAE-{next_number:04d}"  # Invoice reference number (I-xxxx)
 
     def save(self, *args, **kwargs):
         """Override save to set the reference number before saving, and handle is_quotation changes."""
