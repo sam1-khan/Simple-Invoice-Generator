@@ -8,7 +8,7 @@
             margin: 5px 0;
         }
 </style>
-<div class="border-bottom flex-column border-2 border-success d-flex p-3 mb-2">
+<div class="border-bottom flex-column border-2 border-success d-flex p-3">
     <h2 class="fw-bold text-wrap mb-0 text-light">{{ invoice.is_quotation|yesno:"Quotation,Invoice" }} for {{ invoice.client.name }}</h2>
     <div class="d-flex ms-auto align-items-center">
         <small class="me-2 text-nowrap text-muted">
@@ -25,8 +25,8 @@
 
 <div class="container text-light">
     <!-- Client and Invoice Details -->
-    <div class="row mb-5">
-        <div class="col-md-6 mt-3">
+    <div class="row mb-3">
+        <div class="col-md-6 mt-2">
             <p class="mb-0 fw-bold">Client:</p>
             <p class="mb-0">{{ invoice.client }}</p>
             {% if invoice.client.address %}
@@ -53,7 +53,7 @@
     </div>
 
     <!-- Invoice Items Table -->
-    <div class="mb-5">
+    <div class="mb-2">
         <table class="table table-bordered table-striped table-dark">
             <thead class="table-light">
                 <tr class="text-center">
@@ -117,23 +117,6 @@
     </table>
 
     <!-- Footer Section -->
-    <div class="row">
-        <div class="col-md-6 mt-3">
-            <!-- Additional Notes -->
-            {% if invoice.notes %}
-                <p><strong class="mb-2">Additional Notes:</strong></p>
-                <p>{{ invoice.notes }}</p>
-            {% endif %}
-        </div>
-        <div class="col-md-6 text-md-end mt-3">
-            {% if invoice.invoice_owner.bank %}
-            <p><strong>Online Payment Details:</strong></p>
-            <p class="mb-0"><small><strong>Bank: </strong>{{ invoice.invoice_owner.bank }}</small></p>
-            <p class="mb-0"><small><strong>IBAN: </strong>{{ invoice.invoice_owner.iban }}</small></p>
-            <p><small><strong>Title: </strong>{{ invoice.invoice_owner.account_title }}</small></p>
-            {% endif %}
-        </div>
-    </div>
     <div class="d-flex text-nowrap gap-2">
         <a href="{% url 'invoice_app:invoice-pdf' invoice.pk %}" class="btn btn-outline-primary btn-sm">
             View PDF <i class="fa fa-file-pdf"></i>

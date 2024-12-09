@@ -10,14 +10,14 @@ class InvoiceOwnerAdmin(UserAdmin):
     add_form = InvoiceOwnerCreationForm
     form = InvoiceOwnerChangeForm
     model = InvoiceOwner
-    list_display = ('name', 'phone', 'ntn_number', "email", "is_staff", 'updated_at')
+    list_display = ('name', 'phone', 'phone_2', 'ntn_number', "email", "is_staff", 'updated_at',)
     search_fields = ('name', 'ntn_number', 'email',)
     list_filter = ("is_staff", "is_active", 'updated_at',)
     ordering = ('-updated_at',)
     date_hierarchy = 'updated_at'
 
     fieldsets = (
-        (None, {"fields": ("email", "password", "name", "ntn_number", "phone")}),
+        (None, {"fields": ("email", "password", "name", "ntn_number", "phone", "phone_2")}),
         ("Permissions", {"fields": ("is_staff", "is_active", "groups", "user_permissions")}),
     )
 
@@ -25,7 +25,7 @@ class InvoiceOwnerAdmin(UserAdmin):
         (None, {
             "classes": ("wide",),
             "fields": (
-                "email", "password1", "password2", "name", "ntn_number", "phone",
+                "email", "password1", "password2", "name", "ntn_number", "phone", "phone_2",
                 "is_staff", "is_active", "groups", "user_permissions"
             )}
         ),
@@ -86,8 +86,8 @@ class InvoiceAdmin(admin.ModelAdmin):
 
 
 class InvoiceItemAdmin(admin.ModelAdmin):
-    list_display = ('invoice', 'description', 'quantity', 'unit_price', 'total_price')
-    search_fields = ('description', 'invoice__reference_number')
+    list_display = ('invoice', 'name', 'description', 'quantity', 'unit_price', 'total_price')
+    search_fields = ('name', 'description', 'invoice__reference_number')
     list_filter = ('invoice',)
     readonly_fields = ('total_price',)
 

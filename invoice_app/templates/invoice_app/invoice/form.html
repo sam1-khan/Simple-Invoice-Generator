@@ -189,15 +189,26 @@ document.addEventListener('DOMContentLoaded', () => {
     // Function to add a new form
     function addForm() {
         const formCount = parseInt(totalFormsInput.value, 10); // Current number of forms
-        const lastForm = formsetContainer.querySelector('.formset-row:last-child');
+
+        let formToClone = null;
         
-        if (!lastForm) {
-            console.error("No forms available to clone!");
+        const formRows = formsetContainer.querySelectorAll('.formset-row');
+        // Try to find the first valid form that is not marked for deletion
+        for (let formRow of formRows) {
+            const deleteCheckbox = formRow.querySelector('[name$="-DELETE"]');
+            if (!deleteCheckbox || !deleteCheckbox.checked) {
+                formToClone = formRow;
+                break;  // Exit the loop once a valid form is found
+            }
+        }
+
+        if (!formToClone) {
+            console.error("No valid form to clone!");
             return;
         }
 
-        // Clone the last form
-        const newForm = lastForm.cloneNode(true);
+        // Clone the form
+        const newForm = formToClone.cloneNode(true);
 
         // Update IDs and names in the cloned form
         newForm.innerHTML = newForm.innerHTML.replace(/items-(\d+)-/g, `items-${formCount}-`);
@@ -215,6 +226,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Update visibility of remove buttons after adding a new form
         updateRemoveButtonVisibility();
+
+        const newNameField = newForm.querySelector('input[name^="items"][name$="-name"]');
+        if (newNameField) {
+            newNameField.focus();
+        }
     }
 
     // Delegated event listener for "Remove" buttons

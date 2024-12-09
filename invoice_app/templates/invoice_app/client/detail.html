@@ -8,13 +8,14 @@
     <h2 class="fw-bold text-wrap mb-2 text-light">{{ client.name }}</h2>
     <p class="mb-0"><strong>Phone:</strong> <small>{{ client.phone }}</small></p>
     <p class="mb-0"><strong>Address:</strong> <small>{{ client.address }}</small></p>
-    <p><strong>Created at:</strong> {{ client.created_at }}</p>
+    <p class="mb-0"><strong>Created at:</strong> {{ client.created_at }}</p>
+    <p><strong>Updated at:</strong> {{ client.updated_at }}</p>
     <div class="d-flex justify-content-between mt-2 mb-4">
-        <a href="{% url 'invoice_app:client-list' %}" class="btn btn-outline-primary fw-bold flex-grow-1 btn me-1 btn-sm">
+        <a class="btn flex-grow-1 btn-outline-primary btn-sm me-1" href="{% url 'invoice_app:client-update' client.pk %}">
+        Edit <i class="fa fa-pencil"></i></a>
+        <a href="{% url 'invoice_app:client-list' %}" class="btn btn-outline-secondary fw-bold btn me-1 btn-sm">
           Client List <i class="fa fa-bars"></i>
         </a>
-        <a class="btn btn-outline-secondary btn-sm me-1" href="{% url 'invoice_app:client-update' client.pk %}">
-          Edit <i class="fa fa-pencil"></i></a>
         <a class="btn btn-outline-danger btn-sm" href="{% url 'invoice_app:client-delete' client.pk %}">
           Delete <i class="fa fa-trash"></i></a>
     </div>

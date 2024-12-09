@@ -17,7 +17,7 @@
         }
         .header {
             text-align: center;
-            margin-bottom: 20px;
+            margin-bottom: 10px;
             margin-top: -30px;
         }
         .header img {
@@ -29,7 +29,7 @@
             margin: 6px 0;
         }
         .footer {
-            margin-top: 15px;
+            margin-top: 10px;
             font-size: 0.9rem;
             color: #6c757d;
         }
@@ -43,7 +43,7 @@
             <img src="http://127.0.0.1:8000{% static 'media/logo.png' %}" alt="Logo">
             <h1 class="fw-bold" style="font-size: 1.9rem;">{{ invoice.invoice_owner.name }}</h1>
             <h4>{{ invoice.invoice_owner.address }}</h4>
-            <h4>{{ invoice.invoice_owner.phone }}</h4>
+            <h4>{{ invoice.invoice_owner.phone }}{% if invoice.invoice_owner.phone_2 %}, {{ invoice.invoice_owner.phone_2 }} {% endif %}</h4>
             <h4>{{ invoice.invoice_owner.email }}</h4>
             <h4><strong>NTN No: {{ invoice.invoice_owner.ntn_number }}</strong></h4>
         </div>
@@ -51,7 +51,7 @@
         <p class="text-center fw-bold mb-2">{{ invoice.is_quotation|yesno:"Quotation,Invoice" }}</p>
 
         <!-- Client and Invoice Details -->
-        <div class="row mb-4">
+        <div class="row mb-2">
             <div class="col-6">
                 <p class="fw-bold mb-0">Client:</p>
                 <p class="mb-0">{{ invoice.client.name }}</p>
@@ -79,7 +79,7 @@
         </div>
 
         <!-- Invoice Table -->
-        <div class="mb-4" style="font-size: 0.95rem;">
+        <div class="mb-2" style="font-size: 0.95rem;">
             <table class="table table-bordered table-striped">
                 <thead class="table-light">
                     <tr class="text-center">
@@ -133,28 +133,30 @@
                 </tr>
             </tbody>
         </table>
+
     <!-- Footer Section -->
     <div class="row footer">
         <div class="col-6">
-            {% if invoice.invoice_owner.bank %}
-            <p class="mb-2"><strong>Payment Details:</strong></p>
-            <p class="mb-0"><small><strong>Bank: </strong>{{ invoice.invoice_owner.bank }}</small></p>
-            <p class="mb-0"><small><strong>Title: </strong>{{ invoice.invoice_owner.account_title }}</small></p>
-            <p><small><strong>IBAN: </strong>{{ invoice.invoice_owner.iban }}</small></p>
-            {% endif %}
-            {% if invoice.notes %}
-            <p class="mt-4"><strong>Additional Notes:</strong></p>
-            <p>{{ invoice.notes }}</p>
+            {% if not invoice.is_quotation %}
+                {% if invoice.invoice_owner.bank %}
+                <p class="mb-2"><strong>Payment Details:</strong></p>
+                <p class="mb-0"><small><strong>Bank: </strong>{{ invoice.invoice_owner.bank }}</small></p>
+                <p class="mb-0"><small><strong>Title: </strong>{{ invoice.invoice_owner.account_title }}</small></p>
+                <p><small><strong>IBAN: </strong>{{ invoice.invoice_owner.iban }}</small></p>
+                {% endif %}
+                {% if invoice.notes %}
+                <p class="mt-4"><strong>Additional Notes:</strong></p>
+                <p>{{ invoice.notes }}</p>
+                {% endif %}
             {% endif %}
         </div>
+        <!-- Signature -->  
         <div class="col-6 text-end" style="text-align: center; margin-top: -36px;">
-            <!-- Signature -->
             <div style="display: inline-block; text-align: center; padding-left: 120px;">
                 <img 
                     style="width: 220px; display: inline-block; object-fit: contain; margin-right: auto; margin-bottom: -60px;" 
                     src="http://127.0.0.1:8000{% static 'media/sign.png' %}" 
                     alt="CEO Signature">
-                <!-- Aligned Text -->
                 <p style="border-top: 1px solid #000; margin-top: -5px; padding-top: 5px; display: inline-block; width: auto;">
                     <small>Chief Executive Officer</small>
                 </p>

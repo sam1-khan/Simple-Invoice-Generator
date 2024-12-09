@@ -9,6 +9,7 @@ from .managers import CustomUserManager
 class InvoiceOwner(AbstractUser):
     address = models.TextField(max_length=255)
     phone = models.CharField(max_length=12)
+    phone_2 = models.CharField(max_length=12, blank=True, null=True)
     ntn_number = models.CharField(max_length=13, unique=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -34,9 +35,13 @@ class InvoiceOwner(AbstractUser):
 
     def clean(self):
         if self.phone and not self.phone.replace("-", "").isdigit():
+            if self.phone_2 and not self.phone_2.replace("-", "").isdigit():
+                raise ValidationError(_("Phone number should contain only digits and dashes (-)."))
             raise ValidationError(_("Phone number should contain only digits and dashes (-)."))
 
         if self.phone and not (11 <= len(self.phone) <= 12):
+            if self.phone_2 and not (11 <= len(self.phone_2) <= 12):
+                raise ValidationError("Phone Number must be 11 to 12 characters long. Pattern: 0123-4567890")
             raise ValidationError("Phone Number must be 11 to 12 characters long. Pattern: 0123-4567890")
 
         if self.ntn_number and not (7 <= len(self.ntn_number) <= 13):
@@ -134,6 +139,11 @@ class Invoice(models.Model):
                 last_invoice = Invoice.objects.filter(is_quotation=False).order_by('-id').first()
                 self.reference_number = Invoice.get_next_reference_number(last_invoice, is_quotation=False)
         
+        super().save(*args, **kwargs)
+        # Now calculate totals after the instance is saved
+        self.calculate_totals()
+
+        # Save again with updated totals
         super().save(*args, **kwargs)
 
 
