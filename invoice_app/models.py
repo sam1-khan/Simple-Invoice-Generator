@@ -112,7 +112,7 @@ class Invoice(models.Model):
         """Generate the next reference number in sequence."""
         
         if last_invoice:
-            last_number = int(last_invoice.reference_number.split('-')[2])  # Extract last sequence number (xxxx)
+            last_number = int(last_invoice.reference_number.split('-')[1])  # Extract last sequence number (xxxx)
             next_number = last_number + 1
         else:
             next_number = 1
