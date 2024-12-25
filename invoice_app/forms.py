@@ -5,10 +5,15 @@ from .models import Invoice, InvoiceOwner, InvoiceItem, Client
 class InvoiceForm(forms.ModelForm):
     class Meta:
         model = Invoice
-        fields = ['invoice_owner', 'client', 'is_quotation', 'is_taxed', 'tax_percentage', 'date', 'notes',]
+        fields = ['invoice_owner', 'client', 'is_quotation', 'is_taxed', 'tax_percentage', 'transit_charges', 'date', 'notes',]
         widgets = {
             'invoice_owner': forms.Select(attrs={
                 'autofocus': 'autofocus', 
+            }),
+            'transit_charges': forms.NumberInput(attrs={
+                'min': '0',
+                'step': '0.01',  # Use 0.01 for decimal precision
+                'placeholder': 'Enter transit charges (if any)',
             }),
             'date': forms.DateInput(
                 format=('%Y-%m-%d'),
@@ -23,8 +28,6 @@ class InvoiceForm(forms.ModelForm):
         }
     is_taxed = forms.BooleanField(label='Tax Included', required=False)
     is_quotation = forms.BooleanField(label='Quotation', required=False)
-
-
     tax_percentage = forms.DecimalField(
         required=False,
         initial=0,

@@ -102,8 +102,14 @@
     <table class="table table-bordered table-dark">
         <tbody>
             <tr>
+                {% if invoice.transit_charges %}
+                    <td class="fw-bold">Transit Charges</td>
+                    <td class="text-end fw-bold">{{ invoice.transit_charges }}</td>
+                {% endif %}
+            </tr>
+            <tr>
                 <td>
-                    <strong>Total (Rs) </strong>
+                    <strong>Total</strong>
                 {% if invoice.tax_percentage or invoice.is_taxed %}
                     <small class="text-muted"> incl. tax</small>
                 </td>

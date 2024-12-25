@@ -82,22 +82,15 @@
           </p>
           <p class="card-text text-muted">
             <small>
-              <strong>Total Price:</strong> {{ invoice.total_price }} Rs
-              <small class="text-muted fw-bold">{% if invoice.is_taxed %} incl. tax{% endif %}</small>
+              <strong>Total:</strong>
+              {% if invoice.tax_percentage or invoice.is_taxed %}
+                {{ invoice.grand_total }}
+                <small class="text-muted"> (incl. tax)</small>
+              {% else %}
+                {{ invoice.total_price }}
+              {% endif %}
             </small>
-          </p>          
-          {% if invoice.tax_percentage %}
-            <p class="card-text text-muted">
-              <small>
-                <strong>Tax ({{ invoice.tax_percentage }}%):</strong> {{ invoice.tax }} Rs
-              </small>
-            </p>
-            <p class="card-text text-muted">
-              <small>
-                <strong>Grand Total:</strong> {{ invoice.grand_total }} Rs
-              </small>
-            </p>
-          {% endif %}
+          </p>
 
           <div class="d-flex gap-2 mt-3">
             <a href="{% url 'invoice_app:invoice-detail' invoice.pk %}" class="btn btn-outline-success btn-sm w-100">

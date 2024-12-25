@@ -92,6 +92,7 @@ class Invoice(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
     is_taxed = models.BooleanField(default=False)
     is_quotation = models.BooleanField(default=False)
+    transit_charges = models.DecimalField(max_digits=16, default=0, decimal_places=2, null=True, blank=True)
 
     def clean(self):
         """Validate tax_percentage."""
@@ -106,6 +107,9 @@ class Invoice(models.Model):
         # Calculate tax and grand total based on the invoice tax_percentage
         self.tax = self.total_price * (self.tax_percentage / 100) if self.tax_percentage else 0
         self.grand_total = self.total_price + self.tax
+        if self.transit_charges:
+            self.grand_total += self.transit_charges
+            self.total_price += self.transit_charges
  
     @staticmethod
     def get_next_reference_number(last_invoice=None, is_quotation=False):
