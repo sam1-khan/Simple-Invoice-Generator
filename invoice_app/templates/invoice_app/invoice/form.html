@@ -42,11 +42,6 @@
 
         {% if formset %}
         <h4>{{ invoice.is_quotation|yesno:"Quotation,Invoice" }} Items</h4>
-        <div class="d-grid gap-2">
-            <button type="button" class="btn btn-outline-success mb-3" id="add-form">
-                Add An Item <i class="fa fa-plus"></i>
-            </button>
-        </div>
         {{ formset.management_form }}
         <div class="formset">
             {% for form in formset %}
@@ -56,6 +51,11 @@
                     </div>
                 </div>
             {% endfor %}
+        </div>
+        <div class="d-grid gap-2">
+            <button type="button" class="btn btn-outline-success mb-3" id="add-form">
+                Add An Item <i class="fa fa-plus"></i>
+            </button>
         </div>
         {% endif %}
         <div class="mt-2">
@@ -92,10 +92,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const taxPercentageDiv = document.querySelector('#div_id_tax_percentage');
     const ownerLabel = document.querySelector('#div_id_invoice_owner').querySelector('label');
     const isQuotationCheckbox = document.querySelector('#div_id_is_quotation').querySelector('input')
-    
-    // Move the last form (extra form) to the beginning
-    const lastForm = formsetContainer.lastElementChild;
-    formsetContainer.prepend(lastForm);
 
     function changeLabel() {
         if (ownerLabel.innerHTML && isQuotationCheckbox) {
@@ -222,8 +218,8 @@ document.addEventListener('DOMContentLoaded', () => {
             input.value = '';
         });
 
-        // Prepend the new form to the container
-        formsetContainer.insertBefore(newForm, formsetContainer.firstChild)
+        // Append the new form to the container
+        formsetContainer.appendChild(newForm)
         
         // Update the TOTAL_FORMS value
         updateTotalForms();
