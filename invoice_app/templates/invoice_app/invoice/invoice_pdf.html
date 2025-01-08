@@ -153,10 +153,10 @@
                 <p class="mb-0"><small><strong>Title: </strong>{{ invoice.invoice_owner.account_title }}</small></p>
                 <p><small><strong>IBAN: </strong>{{ invoice.invoice_owner.iban }}</small></p>
                 {% endif %}
-                {% if invoice.notes %}
+            {% endif %}
+            {% if invoice.notes %}
                 <p class="mt-4"><strong>Additional Notes:</strong></p>
                 <p>{{ invoice.notes }}</p>
-                {% endif %}
             {% endif %}
         </div>
         <!-- Signature -->  
