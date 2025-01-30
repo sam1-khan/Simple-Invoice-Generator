@@ -1,5 +1,6 @@
 from django.contrib.auth.forms import UserCreationForm, UserChangeForm
 from django import forms
+from .widgets import NoTrailingZeroNumberInput
 from .models import Invoice, InvoiceOwner, InvoiceItem, Client
 
 class InvoiceForm(forms.ModelForm):
@@ -10,7 +11,7 @@ class InvoiceForm(forms.ModelForm):
             'invoice_owner': forms.Select(attrs={
                 'autofocus': 'autofocus', 
             }),
-            'transit_charges': forms.NumberInput(attrs={
+            'transit_charges': NoTrailingZeroNumberInput(attrs={
                 'min': '0',
                 'step': '0.001',  # Use 0.01 for decimal precision
                 'placeholder': 'Enter transit charges (if any)',
@@ -33,7 +34,7 @@ class InvoiceForm(forms.ModelForm):
         initial=0,
         max_digits=5,
         decimal_places=2,
-        widget=forms.NumberInput(attrs={
+        widget=NoTrailingZeroNumberInput(attrs={
             'min': '0',
             'max': '99999',
             'step': '0.001',
@@ -72,13 +73,13 @@ class InvoiceItemForm(forms.ModelForm):
         model = InvoiceItem
         fields = ['name', 'description', 'quantity', 'unit', 'unit_price',]
         widgets = {
-            'quantity': forms.NumberInput(attrs={
+            'quantity': NoTrailingZeroNumberInput(attrs={
                 'min': '0',
                 'max': '999999',
                 'step': '0.001',
                 'placeholder': 'Enter item quantity',
             }),
-            'unit_price': forms.NumberInput(attrs={
+            'unit_price': NoTrailingZeroNumberInput(attrs={
                 'min': '0',
                 'step': '0.001',  # Use 0.01 for decimal precision
                 'placeholder': 'Enter item price',

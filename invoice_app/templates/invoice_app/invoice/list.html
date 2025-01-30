@@ -62,7 +62,7 @@
           {% for item in invoice.items.all %}
             <p class="card-text text-truncate">
               <small><strong>{{ item.name }}</strong>: 
-                {{ item.quantity }} {{ item.unit }} x {{ item.unit_price }} Rs = {{ item.total_price }} Rs
+                {{ item.quantity.normalize }} {{ item.unit }} x {{ item.unit_price.normalize }} Rs = {{ item.total_price.normalize }} Rs
               </small>
             </p>
           {% empty %}
@@ -84,10 +84,10 @@
             <small>
               <strong>Total:</strong>
               {% if invoice.tax_percentage or invoice.is_taxed %}
-                {{ invoice.grand_total }}
+                {{ invoice.grand_total.normalize }}
                 <small class="text-muted"> (incl. tax)</small>
               {% else %}
-                {{ invoice.total_price }}
+                {{ invoice.total_price.normalize }}
               {% endif %}
             </small>
           </p>
