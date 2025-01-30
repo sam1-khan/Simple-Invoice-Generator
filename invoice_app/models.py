@@ -81,18 +81,18 @@ class Invoice(models.Model):
     client = models.ForeignKey(Client, related_name='invoices', on_delete=models.CASCADE)
     reference_number = models.CharField(max_length=14, editable=False)
     tax_percentage = models.DecimalField(
-        max_digits=5, blank=True, null=True, decimal_places=2, validators=[MinValueValidator(0)]
+        max_digits=5, blank=True, null=True, decimal_places=3, validators=[MinValueValidator(0)]
     )
-    total_price = models.DecimalField(max_digits=16, default=0, decimal_places=2, editable=False)
-    tax = models.DecimalField(max_digits=16, default=0, decimal_places=2, editable=False)
-    grand_total = models.DecimalField(max_digits=16, default=0, decimal_places=2, editable=False)
+    total_price = models.DecimalField(max_digits=16, default=0, decimal_places=3, editable=False)
+    tax = models.DecimalField(max_digits=16, default=0, decimal_places=3, editable=False)
+    grand_total = models.DecimalField(max_digits=16, default=0, decimal_places=3, editable=False)
     date = models.DateField(null=True, blank=True)
     notes = models.TextField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     is_taxed = models.BooleanField(default=False)
     is_quotation = models.BooleanField(default=False)
-    transit_charges = models.DecimalField(max_digits=16, default=0, decimal_places=2, null=True, blank=True)
+    transit_charges = models.DecimalField(max_digits=16, default=0, decimal_places=3, null=True, blank=True)
 
     def clean(self):
         """Validate tax_percentage."""
@@ -160,9 +160,9 @@ class InvoiceItem(models.Model):
     unit = models.CharField(max_length=55)  # Added back 'unit' field
     description = models.TextField(null=True, blank=True)  # Added back 'description' field
     name = models.CharField(max_length=255)
-    quantity = models.PositiveIntegerField(validators=[MinValueValidator(1)])
-    unit_price = models.DecimalField(max_digits=16, decimal_places=2, validators=[MinValueValidator(0)])
-    total_price = models.DecimalField(max_digits=16, decimal_places=2, editable=False)
+    quantity = models.DecimalField(max_digits=16, decimal_places=3, validators=[MinValueValidator(0)])
+    unit_price = models.DecimalField(max_digits=16, decimal_places=3, validators=[MinValueValidator(0)])
+    total_price = models.DecimalField(max_digits=16, decimal_places=3, editable=False)
 
     def save(self, *args, **kwargs):
         """Calculate total_price based on quantity and unit_price."""

@@ -12,7 +12,7 @@ class InvoiceForm(forms.ModelForm):
             }),
             'transit_charges': forms.NumberInput(attrs={
                 'min': '0',
-                'step': '0.01',  # Use 0.01 for decimal precision
+                'step': '0.001',  # Use 0.01 for decimal precision
                 'placeholder': 'Enter transit charges (if any)',
             }),
             'date': forms.DateInput(
@@ -36,7 +36,7 @@ class InvoiceForm(forms.ModelForm):
         widget=forms.NumberInput(attrs={
             'min': '0',
             'max': '99999',
-            'step': '0.01',
+            'step': '0.001',
             'placeholder': 'Enter tax percentage (without "%")',
         })
     )
@@ -75,21 +75,22 @@ class InvoiceItemForm(forms.ModelForm):
             'quantity': forms.NumberInput(attrs={
                 'min': '0',
                 'max': '999999',
-                'step': '1',
+                'step': '0.001',
                 'placeholder': 'Enter item quantity',
             }),
             'unit_price': forms.NumberInput(attrs={
                 'min': '0',
-                'step': '0.01',  # Use 0.01 for decimal precision
+                'step': '0.001',  # Use 0.01 for decimal precision
                 'placeholder': 'Enter item price',
             }),
             'name': forms.TextInput(attrs={
                 'placeholder': 'Enter item name',
-                'autofocus': 'autofocus',  
+                'autofocus': 'autofocus',
+                'autocomplete': 'off',
             }),
-            'description': forms.TextInput(attrs={
+            'description': forms.Textarea(attrs={
                 'placeholder': 'Enter item description',
-                'rows':2,
+                'rows': 3,
             }),
                 'unit': forms.TextInput(attrs={
                 'placeholder': 'Enter quantity unit i.e pc(s), box(es), unit(s)',
@@ -104,17 +105,21 @@ class ClientForm(forms.ModelForm):
         widgets = {
             'phone': forms.TextInput(attrs={
                 'placeholder': 'Enter client phone number',
+                'autocomplete': 'off',
             }),
             'name': forms.TextInput(attrs={
                 'placeholder': 'Enter client name',
                 'autofocus': 'autofocus',
+                'autocomplete': 'off',
             }),
             'address': forms.TextInput(attrs={
                 'placeholder': 'Enter client address',
                 'rows': 2,
+                'autocomplete': 'off',
             }),
             'ntn_number': forms.TextInput(attrs={
                 'placeholder': 'Enter client ntn number',
+                'autocomplete': 'off',
             })
         }
 
