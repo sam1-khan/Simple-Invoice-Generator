@@ -1,4 +1,5 @@
 {% load static %}
+{% load l10n %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -73,9 +74,9 @@
                 <p class="mb-0"><small><strong>Ref #:</strong> {{ invoice.reference_number }}</small></p>
                 <p class="mb-0"><small><strong>Date:</strong>
                     {% if invoice.date %}
-                        {{ invoice.date|date:"Y-m-d" }}
+                        {{ invoice.date|date:"d-m-Y" }}
                     {% else %}
-                        {{ invoice.created_at|date:"Y-m-d" }}
+                        {{ invoice.created_at|date:"d-m-Y" }}
                     {% endif %}
                 </small></p>
             </div>
@@ -105,10 +106,10 @@
                                 <small class="text-muted">{{ item.description|linebreaksbr }}</small>
                             {% endif %}
                         </td>
-                        <td class="text-center">{{ item.quantity.normalize }}</td>
+                        <td class="text-center">{{ item.quantity.normalize|localize }}</td>
                         <td class="text-center">{{ item.unit }}</td>
-                        <td class="text-center">{{ item.unit_price.normalize }}</td>
-                        <td class="text-center">{{ item.total_price.normalize }}</td>
+                        <td class="text-center">{{ item.unit_price.normalize|localize }}</td>
+                        <td class="text-center">{{ item.total_price.normalize|localize }}</td>
                     </tr>
                     {% empty %}
                     <tr>
@@ -125,7 +126,7 @@
                 <tr>
                     {% if invoice.transit_charges %}
                         <td class="fw-bold">Transit Charges</td>
-                        <td class="text-end fw-bold">{{ invoice.transit_charges.normalize }}</td>
+                        <td class="text-end fw-bold">{{ invoice.transit_charges.normalize|localize }}</td>
                     {% endif %}
                 </tr>
                 <tr>
@@ -134,10 +135,10 @@
                     {% if invoice.tax_percentage or invoice.is_taxed %}
                         <small class="text-muted"> incl. tax</small>
                     </td>
-                        <td class="text-end fw-bold">{{ invoice.grand_total.normalize }}</td>
+                        <td class="text-end fw-bold">{{ invoice.grand_total.normalize|localize }}</td>
                     {% else %}
                     </td>
-                        <td class="text-end fw-bold">{{ invoice.total_price.normalize }}</td>
+                        <td class="text-end fw-bold">{{ invoice.total_price.normalize|localize }}</td>
                     {% endif %}
                 </tr>
             </tbody>

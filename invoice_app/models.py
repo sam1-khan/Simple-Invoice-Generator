@@ -103,14 +103,14 @@ class Invoice(models.Model):
         """Calculate total_price, tax, and grand_total."""
         # Recalculate total price from all items
         self.total_price = sum(item.total_price for item in self.items.all())
-
+        
+        if self.transit_charges:
+            self.total_price += self.transit_charges
+ 
         # Calculate tax and grand total based on the invoice tax_percentage
         self.tax = self.total_price * (self.tax_percentage / 100) if self.tax_percentage else 0
         self.grand_total = self.total_price + self.tax
-        if self.transit_charges:
-            self.grand_total += self.transit_charges
-            self.total_price += self.transit_charges
- 
+
     @staticmethod
     def get_next_reference_number(last_invoice=None, is_quotation=False):
         """Generate the next reference number in sequence."""

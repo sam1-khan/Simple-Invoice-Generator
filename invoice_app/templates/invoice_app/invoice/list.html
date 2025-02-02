@@ -1,4 +1,5 @@
 {% extends "base_bootstrap.html" %}
+{% load l10n %}
 {% block title %}Invoice List{% endblock %}
 {% block navbar %}<p class="border-3 border-top border-info"></p>{% endblock %}
 {% block content %}
@@ -62,7 +63,7 @@
           {% for item in invoice.items.all %}
             <p class="card-text text-truncate">
               <small><strong>{{ item.name }}</strong>: 
-                {{ item.quantity.normalize }} {{ item.unit }} x {{ item.unit_price.normalize }} Rs = {{ item.total_price.normalize }} Rs
+                {{ item.quantity.normalize|localize }} {{ item.unit }} x {{ item.unit_price.normalize|localize }} Rs = {{ item.total_price.normalize|localize }} Rs
               </small>
             </p>
           {% empty %}
@@ -74,9 +75,9 @@
           <p class="card-text text-muted">
             <small><strong>Date: </strong>
               {% if invoice.date %}
-                {{ invoice.date|date:"Y-m-d" }}
+                {{ invoice.date|date:"d-m-Y" }}
               {% else %}
-                {{ invoice.created_at|date:"Y-m-d" }}
+                {{ invoice.created_at|date:"d-m-Y" }}
               {% endif %}
             </small>
           </p>
@@ -84,10 +85,10 @@
             <small>
               <strong>Total:</strong>
               {% if invoice.tax_percentage or invoice.is_taxed %}
-                {{ invoice.grand_total.normalize }}
+                {{ invoice.grand_total.normalize|localize }}
                 <small class="text-muted"> (incl. tax)</small>
               {% else %}
-                {{ invoice.total_price.normalize }}
+                {{ invoice.total_price.normalize|localize }}
               {% endif %}
             </small>
           </p>
