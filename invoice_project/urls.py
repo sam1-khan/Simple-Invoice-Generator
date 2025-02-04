@@ -18,12 +18,14 @@ from django.urls import path, include, re_path
 from django.views.static import serve
 from django.conf.urls.static import static
 from django.conf import settings
+from invoice_app.api import api
 
 
 urlpatterns = [
     path('', include('invoice_app.urls')),  # Change to ads.urls
     path('admin/', admin.site.urls),  # Keep
     path('accounts/', include('django.contrib.auth.urls')),
+    path("api/v1/", api.urls),
 ]
 
 # Serve the static HTML

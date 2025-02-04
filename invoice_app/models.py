@@ -16,6 +16,8 @@ class InvoiceOwner(AbstractUser):
     bank = models.CharField(max_length=55)
     account_title = models.CharField(max_length=24)
     iban = models.CharField(max_length=34)
+    logo = models.ImageField(upload_to="invoice_owner/logos/", null=True, blank=True)  # Added logo field
+    signature = models.ImageField(upload_to="invoice_owner/signatures/", null=True, blank=True)  # Added signature field
 
     username = None
     first_name = None

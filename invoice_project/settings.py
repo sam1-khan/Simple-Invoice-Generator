@@ -1,12 +1,16 @@
 import os
 import environ
+from datetime import timedelta
+
+# Initialize environment variables
 env = environ.Env()
 environ.Env.read_env()
+
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
-# Used for a default title
-APP_NAME = 'Simple Invoice Generator'   # Add
+# Application name
+APP_NAME = 'Simple Invoice Generator'
 
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = env('SECRET_KEY')
@@ -15,9 +19,11 @@ SECRET_KEY = env('SECRET_KEY')
 DEBUG = True
 
 ALLOWED_HOSTS = ['*']
-AUTH_USER_MODEL = "invoice_app.InvoiceOwner"
-# Application definition
 
+# Use our custom user model
+AUTH_USER_MODEL = "invoice_app.InvoiceOwner"
+
+# Application definition
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
@@ -27,23 +33,33 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'django.contrib.humanize',
 
-    'django_extensions', 
-    'crispy_forms',  
+    # Third-party apps
+    'django_extensions',
+    'crispy_forms',
     'crispy_bootstrap5',
+    'corsheaders',
+
+    # Your apps
     'invoice_app.apps.InvoiceAppConfig',
+    
+    # If ninja_jwt requires adding an app, include it here (check its documentation)
+    'ninja_jwt',  
 ]
 
-# When we get to tagging
-
-# When we get to crispy forms :)
+# Crispy forms configuration
 CRISPY_ALLOWED_TEMPLATE_PACKS = "bootstrap5"
 CRISPY_TEMPLATE_PACK = "bootstrap5"
 
+# Optional: if you're using taggit or similar packages
 TAGGIT_CASE_INSENSITIVE = True
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+
+    # corsheaders should be placed as high as possible
+    'corsheaders.middleware.CorsMiddleware',
+
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
@@ -51,12 +67,17 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
+# CORS configuration (allow requests from your frontend, e.g., Next.js)
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:3000",
+]
+
 ROOT_URLCONF = 'invoice_project.urls'
 
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [],  # Add template directories here if needed.
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -64,7 +85,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
-                'invoice_app.context_processors.settings',      # Add
+                'invoice_app.context_processors.settings',  # Your custom context processor, if any.
             ],
         },
     },
@@ -72,6 +93,7 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'invoice_project.wsgi.application'
 
+# Database configuration (using SQLite for development)
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
@@ -80,8 +102,6 @@ DATABASES = {
 }
 
 # Password validation
-# https://docs.djangoproject.com/en/4.2/ref/settings/#auth-password-validators
-
 AUTH_PASSWORD_VALIDATORS = [
     {
         'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
@@ -97,39 +117,53 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-
-# Internationalization
-# https://docs.djangoproject.com/en/4.2/topics/i18n/
-
+# Internationalization settings
 LANGUAGE_CODE = 'en-us'
-
 TIME_ZONE = 'Asia/Karachi'
-
 USE_I18N = True
-
 USE_L10N = True
 USE_THOUSAND_SEPARATOR = True
-
 USE_TZ = True
 
-
-# Static files (CSS, JavaScript, Images)
-# https://docs.djangoproject.com/en/4.2/howto/static-files/
-
+# Static and media files
 STATIC_URL = '/static/'
 MEDIA_URL = '/media/'
 STATIC_ROOT = os.path.join(BASE_DIR, "static")
 
+# Authentication backends
 AUTHENTICATION_BACKENDS = (
     'django.contrib.auth.backends.ModelBackend',
 )
 
+# Redirect URLs after login/logout
 LOGOUT_REDIRECT_URL = '/'
 LOGIN_REDIRECT_URL = '/'
 
-# Don't set default LOGIN_URL - let django.contrib.auth set it when it is loaded
-# LOGIN_URL = '/accounts/login'
-
-# Needed for 3.2 and later
-# https://stackoverflow.com/questions/67783120/warning-auto-created-primary-key-used-when-not-defining-a-primary-key-type-by
+# Default primary key field type for Django 3.2+
 DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'
+
+# -----------------------------------------------------------------------------
+# Caching Configuration
+# -----------------------------------------------------------------------------
+# Using Django’s local memory cache for development.
+# For production, consider a more robust backend (e.g. memcached, redis)
+CACHES = {
+    "default": {
+        "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
+        "LOCATION": "unique-snowflake",
+    }
+}
+
+# -----------------------------------------------------------------------------
+# JWT (ninja_jwt) Configuration
+# -----------------------------------------------------------------------------
+# If you're using ninja_jwt, you can customize its settings here.
+# Refer to the ninja_jwt documentation for available settings.
+NINJA_JWT = {
+    "SIGNING_KEY": env('SECRET_KEY'),              # Use your SECRET_KEY for signing tokens
+    "ALGORITHM": "HS256",
+    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=60),
+    "REFRESH_TOKEN_LIFETIME": timedelta(days=1),
+    "AUTH_HEADER_TYPES": ("Bearer",),
+    "AUTH_HEADER_NAME": "HTTP_AUTHORIZATION",
+}
