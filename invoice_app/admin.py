@@ -17,7 +17,7 @@ class InvoiceOwnerAdmin(UserAdmin):
     date_hierarchy = 'updated_at'
 
     fieldsets = (
-        (None, {"fields": ("email", "password", "name", "ntn_number", "phone", "phone_2")}),
+        (None, {"fields": ("email", "password", "name", "ntn_number", "phone", "phone_2", 'address', 'bank', 'iban', 'account_title', 'logo', 'signature',)}),
         ("Permissions", {"fields": ("is_staff", "is_active", "groups", "user_permissions")}),
     )
 
@@ -25,8 +25,8 @@ class InvoiceOwnerAdmin(UserAdmin):
         (None, {
             "classes": ("wide",),
             "fields": (
-                "email", "password1", "password2", "name", "ntn_number", "phone", "phone_2",
-                "is_staff", "is_active", "groups", "user_permissions"
+                "email", "password1", "password2", "name", "ntn_number", "phone", "phone_2", 'address', 'bank', 'iban', 'account_title', 'logo', 'signature',
+                "is_staff", "is_active", "groups", "user_permissions",
             )}
         ),
     )

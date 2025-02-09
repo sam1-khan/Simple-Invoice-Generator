@@ -1,9 +1,13 @@
 from django.db import models
 from django.core.exceptions import ValidationError
 from django.utils.translation import gettext_lazy as _
-from django.core.validators import MinValueValidator, MaxValueValidator
+from django.core.validators import MinValueValidator
 from django.contrib.auth.models import AbstractUser
 from .managers import CustomUserManager
+from .utils import upload_logo, upload_sign
+from imagekit.models import ProcessedImageField
+from imagekit.processors import ResizeToFill
+from .storage import OverwriteStorage
 
 
 class InvoiceOwner(AbstractUser):
@@ -16,8 +20,24 @@ class InvoiceOwner(AbstractUser):
     bank = models.CharField(max_length=55)
     account_title = models.CharField(max_length=24)
     iban = models.CharField(max_length=34)
-    logo = models.ImageField(upload_to="invoice_owner/logos/", null=True, blank=True)  # Added logo field
-    signature = models.ImageField(upload_to="invoice_owner/signatures/", null=True, blank=True)  # Added signature field
+    logo = ProcessedImageField(
+        upload_to=upload_logo,
+        storage=OverwriteStorage(),
+        processors=[ResizeToFill(500, 500)],
+        format='PNG',
+        options={'quality': 90},
+        null=True,
+        blank=True,
+    )
+    signature = ProcessedImageField(
+        upload_to=upload_sign,
+        storage=OverwriteStorage(),
+        processors=[ResizeToFill(577, 432)],
+        format='PNG',
+        options={'quality': 90},
+        null=True,
+        blank=True,
+    )
 
     username = None
     first_name = None

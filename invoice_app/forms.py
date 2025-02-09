@@ -47,25 +47,37 @@ class InvoiceForm(forms.ModelForm):
 class InvoiceOwnerCreationForm(UserCreationForm):
     class Meta:
         model = InvoiceOwner
-        fields = ["email", "ntn_number", "name", 'phone', 'address', 'bank', 'iban', 'account_title',]
+        fields = ["email", "ntn_number", "name", 'phone', 'phone_2', 'address', 'bank', 'iban', 'account_title', 'logo', 'signature',]
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields['name'].required = True
         self.fields['ntn_number'].required = True
         self.fields['phone'].required = True
+        self.fields['bank'].required = True
+        self.fields['address'].required = True
+        self.fields['iban'].required = True
+        self.fields['account_title'].required = True
+        self.fields['logo'].required = True
+        self.fields['signature'].required = True
   
 
 class InvoiceOwnerChangeForm(UserChangeForm):
     class Meta:
         model = InvoiceOwner
-        fields = ["email", "ntn_number", "name", 'phone', 'address',]
+        fields = ["email", "ntn_number", "name", 'phone', 'phone_2', 'address', 'bank', 'iban', 'account_title', 'logo', 'signature',]
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields['name'].required = True
         self.fields['ntn_number'].required = True
         self.fields['phone'].required = True
+        self.fields['bank'].required = True
+        self.fields['address'].required = True
+        self.fields['iban'].required = True
+        self.fields['account_title'].required = True
+        self.fields['logo'].required = True
+        self.fields['signature'].required = True
 
 
 class InvoiceItemForm(forms.ModelForm):

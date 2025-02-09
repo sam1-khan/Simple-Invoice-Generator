@@ -38,12 +38,16 @@ INSTALLED_APPS = [
     'crispy_forms',
     'crispy_bootstrap5',
     'corsheaders',
+    'imagekit',
 
     # Your apps
     'invoice_app.apps.InvoiceAppConfig',
     
     # If ninja_jwt requires adding an app, include it here (check its documentation)
-    'ninja_jwt',  
+    'ninja_jwt',
+
+    # Django cleanup should be in last  
+    'django_cleanup.apps.CleanupConfig',
 ]
 
 # Crispy forms configuration
