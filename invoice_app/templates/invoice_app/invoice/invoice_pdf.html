@@ -44,7 +44,7 @@
     <div class="container">
         <!-- Header Section -->
         <div class="header">
-            <img src="http://127.0.0.1:8000{% static 'media/logo.png' %}" alt="Logo">
+            <img src="http://localhost:8000{{ invoice.invoice_owner.logo.url }}" alt="{{ invoice.invoice_owner.name }} Logo">
             <h1 class="fw-bold" style="font-size: 1.9rem;">{{ invoice.invoice_owner.name }}</h1>
             <h4>{{ invoice.invoice_owner.address }}</h4>
             <h4>{{ invoice.invoice_owner.phone }}{% if invoice.invoice_owner.phone_2 %}, {{ invoice.invoice_owner.phone_2 }} {% endif %}</h4>
@@ -163,10 +163,14 @@
         <!-- Signature -->  
         <div class="col-6 text-end" style="text-align: center; margin-top: -36px;">
             <div style="display: inline-block; text-align: center; padding-left: 120px;">
-                <img 
-                    style="width: 220px; display: inline-block; object-fit: contain; margin-right: auto; margin-bottom: -60px;" 
-                    src="http://127.0.0.1:8000{% static 'media/sign.png' %}" 
-                    alt="CEO Signature">
+                {% if invoice.invoice_owner.signature %}
+                    <img 
+                        style="width: 220px; display: inline-block; object-fit: contain; margin-right: auto; margin-bottom: -60px;" 
+                        src="http://localhost:8000{{ invoice.invoice_owner.signature.url }}"
+                        alt="CEO Signature">
+                {% else %}
+                    <div style="width: 220px; height: 104px; background: transparent;"></div>
+                {% endif %}
                 <p style="border-top: 1px solid #000; margin-top: -5px; padding-top: 5px; display: inline-block; width: auto;">
                     <small>Chief Executive Officer</small>
                 </p>

@@ -9,8 +9,10 @@ def dump_queries() :
 
 def upload_logo(instance, filename):
     ext = filename.split('.')[-1]
-    return os.path.join('invoice_app', 'static', 'media', f'logo.{ext}')
+    account_folder = str(instance.pk) if instance.pk else "temp"
+    return os.path.join('invoice_app', 'static', 'media', account_folder, f'logo.{ext}')
 
 def upload_sign(instance, filename):
     ext = filename.split('.')[-1]
-    return os.path.join('invoice_app', 'static', 'media', f'sign.{ext}')
+    account_folder = str(instance.pk) if instance.pk else "temp"
+    return os.path.join('invoice_app', 'static', 'media', account_folder, f'sign.{ext}')
