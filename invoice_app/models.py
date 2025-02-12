@@ -11,15 +11,15 @@ from .storage import OverwriteStorage
 
 
 class InvoiceOwner(AbstractUser):
-    address = models.TextField(max_length=255)
+    address = models.TextField(max_length=255, blank=True, null=True)
     phone = models.CharField(max_length=12)
     phone_2 = models.CharField(max_length=12, blank=True, null=True)
-    ntn_number = models.CharField(max_length=13, unique=True)
+    ntn_number = models.CharField(max_length=13, unique=True, blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-    bank = models.CharField(max_length=55)
-    account_title = models.CharField(max_length=24)
-    iban = models.CharField(max_length=34)
+    bank = models.CharField(max_length=55, blank=True, null=True)
+    account_title = models.CharField(max_length=24, blank=True, null=True)
+    iban = models.CharField(max_length=34, blank=True, null=True)
     logo = ProcessedImageField(
         upload_to=upload_logo,
         storage=OverwriteStorage(),

@@ -133,3 +133,13 @@ class InvoiceItemOut(Schema):
     quantity: float
     unit_price: float
     total_price: float
+
+# --------- Password Reset Schemas ---------
+class ForgotPasswordRequestSchema(Schema):
+    email: str
+
+class ResetPasswordSchema(Schema):
+    token: str
+    uidb64: str
+    new_password: str
+    confirm_password: str

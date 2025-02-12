@@ -1,6 +1,5 @@
 import os
 import environ
-from datetime import timedelta
 
 # Initialize environment variables
 env = environ.Env()
@@ -160,15 +159,15 @@ CACHES = {
 }
 
 # -----------------------------------------------------------------------------
-# JWT (ninja_jwt) Configuration
+# Email Configuration (Replace with your SMTP settings)
 # -----------------------------------------------------------------------------
-# If you're using ninja_jwt, you can customize its settings here.
-# Refer to the ninja_jwt documentation for available settings.
-NINJA_JWT = {
-    "SIGNING_KEY": env('SECRET_KEY'),              # Use your SECRET_KEY for signing tokens
-    "ALGORITHM": "HS256",
-    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=60),
-    "REFRESH_TOKEN_LIFETIME": timedelta(days=1),
-    "AUTH_HEADER_TYPES": ("Bearer",),
-    "AUTH_HEADER_NAME": "HTTP_AUTHORIZATION",
-}
+EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+EMAIL_HOST = "smtp.gmail.com"
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = env('EMAIL')
+EMAIL_HOST_PASSWORD = env('PASSWORD')
+
+PASSWORD_RESET_TIMEOUT = 300  # 300 seconds = 5 minutes
+# Frontend URL for Reset Link
+FRONTEND_URL = "http://localhost:3000"
