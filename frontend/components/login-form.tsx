@@ -30,14 +30,18 @@ export function LoginForm({
           <form>
             <div className="grid gap-6">
               <div className="flex flex-col gap-4">
-                <Button variant="outline" className="w-full">
-                  <FcGoogle size={32} />
-                  Login with Google
-                </Button>
+                <Link href={'#'}>
+                  <Button variant="outline" className="w-full">
+                    <FcGoogle size={32} />
+                    Login with Google
+                  </Button>
+                </Link>
+                <Link href={'#'}>
                 <Button variant="outline" className="w-full">
                   <AiFillGithub size={32} />
                   Login with Github
                 </Button>
+                </Link>
               </div>
               <div className="relative text-center text-sm after:absolute after:inset-0 after:top-1/2 after:z-0 after:flex after:items-center after:border-t after:border-zinc-200 dark:after:border-zinc-800">
                 <span className="relative z-10 bg-white px-2 text-zinc-500 dark:bg-zinc-950 dark:text-zinc-400">
@@ -51,6 +55,7 @@ export function LoginForm({
                     id="email"
                     type="email"
                     placeholder="m@example.com"
+                    required
                   />
                 </div>
                 <div className="grid gap-2">
@@ -63,7 +68,7 @@ export function LoginForm({
                       Forgot your password?
                     </Link>
                   </div>
-                  <Input id="password" type="password" placeholder="Enter your password" />
+                  <Input id="password" type="password" placeholder="Enter your password" required/>
                 </div>
                 <Button type="submit" className="w-full">
                   Login

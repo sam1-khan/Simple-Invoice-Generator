@@ -80,14 +80,18 @@ export function SignupForm({
             <div className="grid gap-6">
               {/* Social Signup Buttons */}
               <div className="flex flex-col gap-4">
+              <Link href={'#'}>
                 <Button variant="outline" className="w-full">
                   <FcGoogle size={32} />
                   Sign up with Google
                 </Button>
+              </Link>
+              <Link href={'#'}>
                 <Button variant="outline" className="w-full">
                   <AiFillGithub size={32} />
                   Sign up with Github
                 </Button>
+              </Link>
               </div>
               {/* Divider */}
               <div className="relative text-center text-sm after:absolute after:inset-0 after:top-1/2 after:z-0 after:flex after:items-center after:border-t after:border-zinc-200 dark:after:border-zinc-800">
@@ -103,6 +107,7 @@ export function SignupForm({
                     id="name"
                     type="text"
                     placeholder="John Doe"
+                    required
                     {...register("name")}
                   />
                   {errors.name && (
@@ -117,6 +122,7 @@ export function SignupForm({
                     id="email"
                     type="email"
                     placeholder="m@example.com"
+                    required
                     {...register("email")}
                   />
                   {errors.email && (
@@ -131,6 +137,7 @@ export function SignupForm({
                     id="password"
                     type="password"
                     placeholder="Enter your password"
+                    required
                     {...register("password")}
                   />
                   {errors.password && (
@@ -145,6 +152,7 @@ export function SignupForm({
                     id="confirmPassword"
                     type="password"
                     placeholder="Re-enter your password"
+                    required
                     {...register("confirmPassword")}
                   />
                   {errors.confirmPassword && (
