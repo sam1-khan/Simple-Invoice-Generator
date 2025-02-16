@@ -69,7 +69,7 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
-
+CORS_ALLOW_CREDENTIALS = True
 # CORS configuration (allow requests from your frontend, e.g., Next.js)
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",

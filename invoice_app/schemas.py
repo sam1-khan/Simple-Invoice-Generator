@@ -11,13 +11,14 @@ class LoginSchema(Schema):
 class InvoiceOwnerCreate(Schema):
     email: str
     name: str
-    address: str
     phone: str
-    ntn_number: str
-    bank: str
-    account_title: str
-    iban: str
     password: str
+    confirm_password: str
+    address: Optional[str] = None
+    ntn_number: Optional[str] = None
+    bank: Optional[str] = None
+    account_title: Optional[str] = None
+    iban: Optional[str] = None
     phone_2: Optional[str] = None
     logo: Optional[str] = None        # Assuming string paths/URLs for images
     signature: Optional[str] = None
