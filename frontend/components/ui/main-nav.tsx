@@ -15,19 +15,19 @@ export function MainNav({
         href="#"
         className="text-sm font-medium transition-colors hover:text-primary"
       >
-        Overview
+        Dashboard
       </Link>
       <Link
         href="#"
         className="text-sm font-medium text-muted-foreground transition-colors hover:text-primary"
       >
-        Customers
+        Invoices
       </Link>
       <Link
         href="#"
         className="text-sm font-medium text-muted-foreground transition-colors hover:text-primary"
       >
-        Products
+        Clients
       </Link>
       <Link
         href="#"
