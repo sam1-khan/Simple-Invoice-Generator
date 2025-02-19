@@ -1,8 +1,8 @@
-"use client"
+"use client";
 
-import { TrendingUp, ReceiptText,  Quote } from "lucide-react"
+import { TrendingUp } from "lucide-react";
 
-import { Bar, BarChart, CartesianGrid, XAxis } from "recharts"
+import { Bar, BarChart, CartesianGrid, XAxis } from "recharts";
 
 import {
   Card,
@@ -11,13 +11,13 @@ import {
   CardFooter,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card"
+} from "@/components/ui/card";
 import {
   ChartConfig,
   ChartContainer,
   ChartTooltip,
   ChartTooltipContent,
-} from "@/components/ui/chart"
+} from "@/components/ui/chart";
 
 const chartData = [
   { month: "January", invoice: 186, quotation: 80 },
@@ -26,20 +26,18 @@ const chartData = [
   { month: "April", invoice: 73, quotation: 190 },
   { month: "May", invoice: 209, quotation: 130 },
   { month: "June", invoice: 214, quotation: 140 },
-]
+];
 
 const chartConfig = {
   invoice: {
     label: "Invoice",
     color: "hsl(var(--chart-1))",
-    icon: ReceiptText,
   },
   quotation: {
     label: "Quotation",
     color: "hsl(var(--chart-2))",
-    icon: Quote,
   },
-} satisfies ChartConfig
+} satisfies ChartConfig;
 
 export function Overview() {
   return (
@@ -61,7 +59,7 @@ export function Overview() {
             />
             <ChartTooltip
               cursor={false}
-              content={<ChartTooltipContent indicator="dashed" />}
+              content={<ChartTooltipContent indicator="dot" />}
             />
             <Bar dataKey="invoice" fill="var(--color-invoice)" radius={4} />
             <Bar dataKey="quotation" fill="var(--color-quotation)" radius={4} />
@@ -77,5 +75,5 @@ export function Overview() {
         </div>
       </CardFooter>
     </Card>
-  )
+  );
 }
