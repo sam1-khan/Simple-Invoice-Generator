@@ -11,6 +11,7 @@ from .storage import OverwriteStorage
 
 
 class InvoiceOwner(AbstractUser):
+    is_onboarded = models.BooleanField(default=False)
     address = models.TextField(max_length=255, blank=True, null=True)
     phone = models.CharField(max_length=12)
     phone_2 = models.CharField(max_length=12, blank=True, null=True)

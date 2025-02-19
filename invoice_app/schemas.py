@@ -1,6 +1,10 @@
 from ninja import Schema
 from datetime import datetime
-from typing import List, Optional
+from typing import List, Optional, Union
+
+# ---------- Error Schema ----------
+class ErrorSchema(Schema):
+    detail: Union[str, List[str]]
 
 # ---------- Authentication Schema ----------
 class LoginSchema(Schema):
@@ -40,13 +44,13 @@ class InvoiceOwnerOut(Schema):
     id: int
     email: str
     name: str
-    address: str
+    address: Optional[str] = None
     phone: str
     phone_2: Optional[str] = None
-    ntn_number: str
-    bank: str
-    account_title: str
-    iban: str
+    ntn_number: Optional[str] = None
+    bank: Optional[str] = None
+    account_title: Optional[str] = None
+    iban: Optional[str] = None
     logo: Optional[str] = None
     signature: Optional[str] = None
     created_at: datetime

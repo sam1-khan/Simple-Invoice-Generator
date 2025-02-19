@@ -1,3 +1,7 @@
+"use client";
+
+import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import {
@@ -17,6 +21,48 @@ export function LoginForm({
   className,
   ...props
 }: React.ComponentPropsWithoutRef<"div">) {
+  const router = useRouter();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    // Check if fields are empty
+    if (!email.trim() || !password.trim()) {
+      setError("Email and password are required.");
+      return;
+    }
+
+    setLoading(true);
+    setError("");
+
+    try {
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/v1/auth/login/`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email, password }),
+        }
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "Login failed");
+      }
+
+      router.push(data.is_onboarded ? "/" : "/onboarding");
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className={cn("flex flex-col gap-6", className)} {...props}>
       <Card>
@@ -27,20 +73,28 @@ export function LoginForm({
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <form>
+          <form
+            onSubmit={handleSubmit}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                e.preventDefault();
+                handleSubmit(e);
+              }
+            }}
+          >
             <div className="grid gap-6">
               <div className="flex flex-col gap-4">
-                <Link href={'#'}>
+                <Link href={"#"}>
                   <Button variant="outline" className="w-full">
                     <FcGoogle size={32} />
                     Login with Google
                   </Button>
                 </Link>
-                <Link href={'#'}>
-                <Button variant="outline" className="w-full">
-                  <AiFillGithub size={32} />
-                  Login with Github
-                </Button>
+                <Link href={"#"}>
+                  <Button variant="outline" className="w-full">
+                    <AiFillGithub size={32} />
+                    Login with Github
+                  </Button>
                 </Link>
               </div>
               <div className="relative text-center text-sm after:absolute after:inset-0 after:top-1/2 after:z-0 after:flex after:items-center after:border-t after:border-zinc-200 dark:after:border-zinc-800">
@@ -55,6 +109,8 @@ export function LoginForm({
                     id="email"
                     type="email"
                     placeholder="m@example.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
                     required
                   />
                 </div>
@@ -68,10 +124,18 @@ export function LoginForm({
                       Forgot your password?
                     </Link>
                   </div>
-                  <Input id="password" type="password" placeholder="Enter your password" required/>
+                  <Input
+                    id="password"
+                    type="password"
+                    placeholder="Enter your password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    required
+                  />
                 </div>
-                <Button type="submit" className="w-full">
-                  Login
+                {error && <p className="text-red-500 text-sm">{error}</p>}
+                <Button type="submit" className="w-full" disabled={loading}>
+                  {loading ? "Logging in..." : "Login"}
                 </Button>
               </div>
               <div className="text-center text-sm">
@@ -84,9 +148,18 @@ export function LoginForm({
           </form>
         </CardContent>
       </Card>
-      <div className="text-balance text-center text-xs text-zinc-500 [&_a]:underline [&_a]:underline-offset-4 [&_a]:hover:text-zinc-900  dark:text-zinc-400 dark:[&_a]:hover:text-zinc-50">
-        <p>By clicking continue, you agree to our{" "}<Link href="#"> {" "}Terms of Service</Link>{" "}
-        and{" "}<Link href="#">Privacy Policy</Link>.</p>
+      <div className="text-center text-xs text-zinc-500 dark:text-zinc-400">
+        <p>
+          By clicking continue, you agree to our{" "}
+          <Link href="#" className="underline">
+            Terms of Service
+          </Link>{" "}
+          and{" "}
+          <Link href="#" className="underline">
+            Privacy Policy
+          </Link>
+          .
+        </p>
       </div>
     </div>
   );

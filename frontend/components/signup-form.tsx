@@ -17,13 +17,25 @@ import Link from "next/link";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
+import { useState } from "react";
+import { useRouter } from "next/navigation";
 
 const SignupSchema = z
   .object({
     name: z.string().min(2, "Name is required"),
     email: z.string().email("Invalid email"),
-    password: z.string().min(6, "Password must be at least 6 characters"),
-    confirmPassword: z.string().min(6, "Please confirm your password"),
+    phone: z.string().min(10, "Phone number is required"),
+    password: z
+      .string()
+      .min(8, "Password must be at least 8 characters")
+      .regex(/[A-Z]/, "Password must contain at least one uppercase letter")
+      .regex(/[a-z]/, "Password must contain at least one lowercase letter")
+      .regex(/[0-9]/, "Password must contain at least one number")
+      .regex(
+        /[!@#$%^&*(),.?\":{}|<>]/,
+        "Password must contain one special character"
+      ),
+    confirmPassword: z.string(),
   })
   .refine((data) => data.password === data.confirmPassword, {
     message: "Passwords do not match",
@@ -39,30 +51,71 @@ export function SignupForm({
   const {
     register,
     handleSubmit,
-    formState: { errors },
+    getValues,
+    formState: { errors, isValid },
   } = useForm<SignupFormValues>({
     resolver: zodResolver(SignupSchema),
+    mode: "onBlur",
   });
 
-  const onSubmit = async (data: SignupFormValues) => {
-    try {
-      const response = await fetch("http://localhost:8000/signup", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(data),
-      });
+  const [error, setError] = useState<string | string[] | null>(null);
+  const [loading, setLoading] = useState(false);
+  const router = useRouter();
 
+  // This function is similar to your login form's handler
+  const customSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const values = getValues();
+    // Check manually if any required field is empty
+    if (
+      !values.name.trim() ||
+      !values.email.trim() ||
+      !values.phone.trim() ||
+      !values.password.trim() ||
+      !values.confirmPassword.trim()
+    ) {
+      setError("All fields are required.");
+      return;
+    }
+    // Call the react-hook-form validated onSubmit
+    await handleSubmit(onSubmit)();
+  };
+
+  const onSubmit = async (data: SignupFormValues) => {
+    setLoading(true);
+    setError("");
+
+    try {
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/v1/auth/register/`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            name: data.name,
+            email: data.email,
+            phone: data.phone,
+            password: data.password,
+            confirm_password: data.confirmPassword,
+          }),
+        }
+      );
+
+      const resData = await response.json();
       if (!response.ok) {
-        throw new Error("Failed to sign up");
+        if (Array.isArray(resData.detail)) {
+          setError(resData.detail); // assuming it's an array of strings
+        } else {
+          setError([resData.detail || "Failed to sign up"]);
+        }
+        return;
       }
 
-      const responseData = await response.json();
-      console.log("API Response:", responseData);
-      // Optionally, you can redirect or update UI based on responseData
-    } catch (error) {
-      console.error("Error during signup:", error);
+      router.push(resData.is_onboarded ? "/" : "/onboarding");
+    } catch (err: any) {
+      setError(err.message || "An error occurred.");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -76,30 +129,35 @@ export function SignupForm({
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleSubmit(onSubmit)}>
+          <form
+            onSubmit={customSubmit}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                e.preventDefault();
+                customSubmit(e);
+              }
+            }}
+          >
             <div className="grid gap-6">
-              {/* Social Signup Buttons */}
               <div className="flex flex-col gap-4">
-              <Link href={'#'}>
-                <Button variant="outline" className="w-full">
-                  <FcGoogle size={32} />
-                  Sign up with Google
-                </Button>
-              </Link>
-              <Link href={'#'}>
-                <Button variant="outline" className="w-full">
-                  <AiFillGithub size={32} />
-                  Sign up with Github
-                </Button>
-              </Link>
+                <Link href={"#"}>
+                  <Button variant="outline" className="w-full">
+                    <FcGoogle size={32} />
+                    Sign up with Google
+                  </Button>
+                </Link>
+                <Link href={"#"}>
+                  <Button variant="outline" className="w-full">
+                    <AiFillGithub size={32} />
+                    Sign up with Github
+                  </Button>
+                </Link>
               </div>
-              {/* Divider */}
               <div className="relative text-center text-sm after:absolute after:inset-0 after:top-1/2 after:z-0 after:flex after:items-center after:border-t after:border-zinc-200 dark:after:border-zinc-800">
                 <span className="relative z-10 bg-white px-2 text-zinc-500 dark:bg-zinc-950 dark:text-zinc-400">
                   Or continue with
                 </span>
               </div>
-              {/* Form Fields */}
               <div className="grid gap-6">
                 <div className="grid gap-2">
                   <Label htmlFor="name">Full Name</Label>
@@ -107,7 +165,6 @@ export function SignupForm({
                     id="name"
                     type="text"
                     placeholder="John Doe"
-                    required
                     {...register("name")}
                   />
                   {errors.name && (
@@ -122,7 +179,6 @@ export function SignupForm({
                     id="email"
                     type="email"
                     placeholder="m@example.com"
-                    required
                     {...register("email")}
                   />
                   {errors.email && (
@@ -132,12 +188,25 @@ export function SignupForm({
                   )}
                 </div>
                 <div className="grid gap-2">
+                  <Label htmlFor="phone">Phone</Label>
+                  <Input
+                    id="phone"
+                    type="text"
+                    placeholder="Enter your phone number"
+                    {...register("phone")}
+                  />
+                  {errors.phone && (
+                    <p className="text-red-500 text-sm">
+                      {errors.phone.message}
+                    </p>
+                  )}
+                </div>
+                <div className="grid gap-2">
                   <Label htmlFor="password">Password</Label>
                   <Input
                     id="password"
                     type="password"
                     placeholder="Enter your password"
-                    required
                     {...register("password")}
                   />
                   {errors.password && (
@@ -152,7 +221,6 @@ export function SignupForm({
                     id="confirmPassword"
                     type="password"
                     placeholder="Re-enter your password"
-                    required
                     {...register("confirmPassword")}
                   />
                   {errors.confirmPassword && (
@@ -161,11 +229,19 @@ export function SignupForm({
                     </p>
                   )}
                 </div>
-                <Button type="submit" className="w-full">
-                  Sign Up
+                {error && Array.isArray(error) ? (
+                  <ul className="text-red-500 text-sm">
+                    {error.map((errMsg, index) => (
+                      <li key={index}>{errMsg}</li>
+                    ))}
+                  </ul>
+                ) : (
+                  error && <p className="text-red-500 text-sm">{error}</p>
+                )}
+                <Button type="submit" className="w-full" disabled={loading}>
+                  {loading ? "Signing up..." : "Sign Up"}
                 </Button>
               </div>
-              {/* Redirect Link */}
               <div className="text-center text-sm">
                 Already have an account?{" "}
                 <Link href="/login" className="underline underline-offset-4">
@@ -176,12 +252,17 @@ export function SignupForm({
           </form>
         </CardContent>
       </Card>
-      {/* Terms and Privacy */}
-      <div className="text-balance text-center text-xs text-zinc-500 [&_a]:underline [&_a]:underline-offset-4 [&_a]:hover:text-zinc-900 dark:text-zinc-400 dark:[&_a]:hover:text-zinc-50">
+      <div className="text-center text-xs text-zinc-500 dark:text-zinc-400">
         <p>
           By clicking continue, you agree to our{" "}
-          <Link href="#">Terms of Service</Link> and{" "}
-          <Link href="#">Privacy Policy</Link>.
+          <Link href="#" className="underline">
+            Terms of Service
+          </Link>{" "}
+          and{" "}
+          <Link href="#" className="underline">
+            Privacy Policy
+          </Link>
+          .
         </p>
       </div>
     </div>

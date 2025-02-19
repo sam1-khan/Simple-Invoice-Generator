@@ -31,6 +31,7 @@ from .schemas import (
     InvoiceItemOut,
     ResetPasswordSchema,
     ForgotPasswordRequestSchema,
+    ErrorSchema,
 )
 
 api = NinjaAPI(title="Invoice Generator API", version="1.0.0", auth=django_auth)
@@ -39,7 +40,7 @@ api = NinjaAPI(title="Invoice Generator API", version="1.0.0", auth=django_auth)
 # Authentication & Rate Limiting
 # -------------------------
 
-@api.post("/auth/register/", response={201: InvoiceOwnerOut}, auth=None)
+@api.post("/auth/register/", response={201: InvoiceOwnerOut, 400: ErrorSchema}, auth=None)
 @ratelimit(key="ip", rate="100/m", block=True)
 def register_invoice_owner(request, payload: InvoiceOwnerCreate):
     if InvoiceOwner.objects.filter(email=payload.email).exists():
@@ -66,7 +67,7 @@ def login(request, payload: LoginSchema):
     user = authenticate(request, email=payload.email, password=payload.password)
     if user:
         django_login(request, user)
-        return 200, {"detail": "Successfully logged in.", "session_key": request.session.session_key}
+        return 200, {"detail": "Successfully logged in.", "session_key": request.session.session_key, "is_onboarded": user.is_onboarded,}
     return 401, {"detail": "Invalid credentials"}
 
 @api.post("/auth/logout/", response={200: dict}, auth=django_auth)
@@ -74,6 +75,12 @@ def logout(request):
     django_logout(request)
     return 200, {"detail": "Successfully logged out."}
 
+@api.post("/complete-onboarding")
+def complete_onboarding(request):
+    user = request.user  # Assuming authentication is handled
+    user.is_onboarded = True
+    user.save()
+    return 200, {"detail": "Onboarding completed"}
 # -------------------------
 # InvoiceOwner Endpoints
 # -------------------------
