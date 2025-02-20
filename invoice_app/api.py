@@ -75,12 +75,9 @@ def logout(request):
     django_logout(request)
     return 200, {"detail": "Successfully logged out."}
 
-@api.post("/complete-onboarding")
-def complete_onboarding(request):
-    user = request.user  # Assuming authentication is handled
-    user.is_onboarded = True
-    user.save()
-    return 200, {"detail": "Onboarding completed"}
+@api.get("auth/current-user/", response=InvoiceOwnerOut, auth=django_auth)
+def current_user(request):
+    return request.user
 # -------------------------
 # InvoiceOwner Endpoints
 # -------------------------

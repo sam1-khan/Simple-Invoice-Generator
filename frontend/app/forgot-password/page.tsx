@@ -3,11 +3,20 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
+import { useAuth } from "@/app/context/AuthContext";
+import { useRouter } from "next/navigation";
+import { useEffect } from "react";
 
 const ForgotPasswordSchema = z.object({
   email: z.string().email("Invalid email"),
@@ -23,28 +32,22 @@ export default function ForgotPasswordPage() {
   } = useForm<ForgotPasswordFormValues>({
     resolver: zodResolver(ForgotPasswordSchema),
   });
+  const { user, loading } = useAuth();
+  const router = useRouter();
 
-  const onSubmit = async (data: ForgotPasswordFormValues) => {
-    try {
-      const response = await fetch("http://localhost:8000/forgot-password", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(data),
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to send reset password request");
-      }
-
-      const result = await response.json();
-      console.log("Reset password email sent:", result);
-      // Optionally, show a success message or redirect the user.
-    } catch (error) {
-      console.error("Error sending reset password request:", error);
+  useEffect(() => {
+    if (!loading && user) {
+      router.replace("/");
     }
-  };
+  }, [user, loading, router]);
+
+  if (loading || user) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-zinc-100 dark:bg-zinc-800">
+        <p className="text-xl">Redirecting...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="flex min-h-screen flex-col items-center justify-center gap-6 bg-zinc-100 p-6 md:p-10 dark:bg-zinc-800">
@@ -57,7 +60,11 @@ export default function ForgotPasswordPage() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <form onSubmit={handleSubmit(onSubmit)}>
+            <form
+              onSubmit={handleSubmit((data) => {
+                // Your onSubmit logic here
+              })}
+            >
               <div className="grid gap-6">
                 <div className="grid gap-2">
                   <Label htmlFor="email">Email</Label>
@@ -69,7 +76,9 @@ export default function ForgotPasswordPage() {
                     {...register("email")}
                   />
                   {errors.email && (
-                    <p className="text-red-500 text-sm">{errors.email.message}</p>
+                    <p className="text-red-500 text-sm">
+                      {errors.email.message}
+                    </p>
                   )}
                 </div>
                 <Button type="submit" className="w-full">

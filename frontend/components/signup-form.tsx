@@ -19,6 +19,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { useAuth } from "@/app/context/AuthContext";
 
 const SignupSchema = z
   .object({
@@ -32,7 +33,7 @@ const SignupSchema = z
       .regex(/[a-z]/, "Password must contain at least one lowercase letter")
       .regex(/[0-9]/, "Password must contain at least one number")
       .regex(
-        /[!@#$%^&*(),.?\":{}|<>]/,
+        /[!@#$%^&*(),.?":{}|<>]/,
         "Password must contain one special character"
       ),
     confirmPassword: z.string(),
@@ -61,12 +62,11 @@ export function SignupForm({
   const [error, setError] = useState<string | string[] | null>(null);
   const [loading, setLoading] = useState(false);
   const router = useRouter();
+  const { refreshUser } = useAuth();
 
-  // This function is similar to your login form's handler
   const customSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const values = getValues();
-    // Check manually if any required field is empty
     if (
       !values.name.trim() ||
       !values.email.trim() ||
@@ -77,14 +77,12 @@ export function SignupForm({
       setError("All fields are required.");
       return;
     }
-    // Call the react-hook-form validated onSubmit
     await handleSubmit(onSubmit)();
   };
 
   const onSubmit = async (data: SignupFormValues) => {
     setLoading(true);
     setError("");
-
     try {
       const response = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/api/v1/auth/register/`,
@@ -98,19 +96,19 @@ export function SignupForm({
             password: data.password,
             confirm_password: data.confirmPassword,
           }),
+          credentials: "include",
         }
       );
-
       const resData = await response.json();
       if (!response.ok) {
         if (Array.isArray(resData.detail)) {
-          setError(resData.detail); // assuming it's an array of strings
+          setError(resData.detail);
         } else {
           setError([resData.detail || "Failed to sign up"]);
         }
         return;
       }
-
+      refreshUser();
       router.push(resData.is_onboarded ? "/" : "/onboarding");
     } catch (err: any) {
       setError(err.message || "An error occurred.");

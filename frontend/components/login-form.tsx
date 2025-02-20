@@ -16,12 +16,14 @@ import { Label } from "@/components/ui/label";
 import { FcGoogle } from "react-icons/fc";
 import { AiFillGithub } from "react-icons/ai";
 import Link from "next/link";
+import { useAuth } from "@/app/context/AuthContext";
 
 export function LoginForm({
   className,
   ...props
 }: React.ComponentPropsWithoutRef<"div">) {
   const router = useRouter();
+  const { refreshUser } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -29,16 +31,12 @@ export function LoginForm({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
-    // Check if fields are empty
     if (!email.trim() || !password.trim()) {
       setError("Email and password are required.");
       return;
     }
-
     setLoading(true);
     setError("");
-
     try {
       const response = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/api/v1/auth/login/`,
@@ -46,15 +44,14 @@ export function LoginForm({
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ email, password }),
+          credentials: "include",
         }
       );
-
       const data = await response.json();
-
       if (!response.ok) {
         throw new Error(data.error || "Login failed");
       }
-
+      await refreshUser();
       router.push(data.is_onboarded ? "/" : "/onboarding");
     } catch (err: any) {
       setError(err.message);
