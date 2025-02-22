@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -28,6 +28,16 @@ export function LoginForm({
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [isOnboarded, setIsOnboarded] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    if (isOnboarded !== null) {
+      setTimeout(() => {
+        console.log("Redirecting to:", isOnboarded ? "/" : "/onboarding");
+        router.replace(isOnboarded ? "/" : "/onboarding");
+      }, 100);
+    }
+  }, [isOnboarded, router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -51,8 +61,13 @@ export function LoginForm({
       if (!response.ok) {
         throw new Error(data.error || "Login failed");
       }
+      console.log("API response:", data);
+      
+      // Set onboarding state
+      setIsOnboarded(data.is_onboarded);
+
+      // Refresh user session before redirect
       await refreshUser();
-      router.push(data.is_onboarded ? "/" : "/onboarding");
     } catch (err: any) {
       setError(err.message);
     } finally {

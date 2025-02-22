@@ -1,4 +1,5 @@
-from ninja import NinjaAPI
+import json
+from ninja import File, Form, NinjaAPI, UploadedFile
 from django.contrib.auth import authenticate, login as django_login, logout as django_logout
 from django.views.decorators.cache import cache_page
 from django_ratelimit.decorators import ratelimit
@@ -12,6 +13,8 @@ from django.shortcuts import get_object_or_404
 from django.template.loader import render_to_string
 from django.utils.html import strip_tags
 from typing import List
+from django.core.files.storage import default_storage
+from django.core.files.base import ContentFile
 from ninja.security import django_auth
 from ninja.pagination import paginate
 from .models import InvoiceOwner, Client, Invoice, InvoiceItem
@@ -96,20 +99,68 @@ def get_invoice_owner(request, id: int):
         return 403, {"detail": "You do not have permission to view this user."}
     return get_object_or_404(InvoiceOwner, id=id)
 
-@api.patch("/invoice-owners/{id}/", response=InvoiceOwnerOut, auth=django_auth)
-def partial_update_invoice_owner(request, id: int, payload: InvoiceOwnerUpdate):
+@api.patch(
+    "/invoice-owners/{id}/",
+    response={200: InvoiceOwnerOut, 400: ErrorSchema, 422: ErrorSchema},
+    auth=django_auth,
+)
+def partial_update_invoice_owner(
+    request, payload: InvoiceOwnerUpdate, id: int
+):
+    print(f"DEBUG: {id, payload.address, payload.ntn_number, request}")
     if not request.user.is_staff and id != request.user.id:
         return 403, {"detail": "You do not have permission to update this user."}
+
     user = get_object_or_404(InvoiceOwner, id=id)
-    data = payload.dict(exclude_unset=True)
-    for attr, value in data.items():
-        setattr(user, attr, value)
+
+    user.address = payload.address
+    if payload.ntn_number is not None:
+        user.ntn_number = payload.ntn_number
+    if payload.bank is not None:
+        user.bank = payload.bank
+    if payload.account_title is not None:
+        user.account_title = payload.account_title
+    if payload.iban is not None:
+        user.iban = payload.iban
+    if payload.phone_2 is not None:
+        user.phone_2 = payload.phone_2
+
+    user.is_onboarded = True
+
     try:
         user.full_clean()
     except ValidationError as e:
         return 400, {"detail": e.messages}
+
     user.save()
-    return user
+    return 200, user
+
+@api.post(
+    "/invoice-owners/{id}/upload-files/",
+    response={200: InvoiceOwnerOut, 400: ErrorSchema, 422: ErrorSchema, 403: ErrorSchema},
+    auth=django_auth,
+)
+def upload_files(
+    request,
+    id: int,
+    logo: UploadedFile = File(...),
+    signature: UploadedFile = File(...),
+):
+    if not request.user.is_staff and id != request.user.id:
+        return 403, {"detail": "You do not have permission to update this user."}
+
+    user = get_object_or_404(InvoiceOwner, id=id)
+    
+    user.logo = logo
+    user.signature = signature
+
+    try:
+        user.full_clean()
+        user.save()
+    except ValidationError as e:
+        return 400, {"detail": e.messages}
+
+    return 200, user
 
 @api.delete("/invoice-owners/{id}/", response={204: None}, auth=django_auth)
 def delete_invoice_owner(request, id: int):

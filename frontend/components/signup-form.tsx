@@ -108,8 +108,8 @@ export function SignupForm({
         }
         return;
       }
-      refreshUser();
-      router.push(resData.is_onboarded ? "/" : "/onboarding");
+      await refreshUser();
+      router.push("/login");
     } catch (err: any) {
       setError(err.message || "An error occurred.");
     } finally {

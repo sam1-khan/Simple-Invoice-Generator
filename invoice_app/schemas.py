@@ -18,14 +18,6 @@ class InvoiceOwnerCreate(Schema):
     phone: str
     password: str
     confirm_password: str
-    address: Optional[str] = None
-    ntn_number: Optional[str] = None
-    bank: Optional[str] = None
-    account_title: Optional[str] = None
-    iban: Optional[str] = None
-    phone_2: Optional[str] = None
-    logo: Optional[str] = None        # Assuming string paths/URLs for images
-    signature: Optional[str] = None
 
 class InvoiceOwnerUpdate(Schema):
     email: Optional[str] = None
@@ -37,8 +29,6 @@ class InvoiceOwnerUpdate(Schema):
     bank: Optional[str] = None
     account_title: Optional[str] = None
     iban: Optional[str] = None
-    logo: Optional[str] = None
-    signature: Optional[str] = None
 
 class InvoiceOwnerOut(Schema):
     id: int
@@ -53,6 +43,7 @@ class InvoiceOwnerOut(Schema):
     iban: Optional[str] = None
     logo: Optional[str] = None
     signature: Optional[str] = None
+    is_onboarded: bool = False
     created_at: datetime
     updated_at: datetime
 

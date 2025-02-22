@@ -15,7 +15,7 @@ class InvoiceOwner(AbstractUser):
     address = models.TextField(max_length=255, blank=True, null=True)
     phone = models.CharField(max_length=12)
     phone_2 = models.CharField(max_length=12, blank=True, null=True)
-    ntn_number = models.CharField(max_length=13, unique=True, blank=True, null=True)
+    ntn_number = models.CharField(max_length=13, blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     bank = models.CharField(max_length=55, blank=True, null=True)
@@ -45,11 +45,11 @@ class InvoiceOwner(AbstractUser):
     last_name = None
 
     email = models.EmailField(_("email address"), unique=True)
-    name = models.CharField(max_length=255, unique=True)
+    name = models.CharField(max_length=255)
 
     USERNAME_FIELD = "email"
     FIRST_NAME_FIELD = "name"
-    REQUIRED_FIELDS = ['name', 'address', 'ntn_number', 'phone', 'iban', 'bank', 'account_title']
+    REQUIRED_FIELDS = ['name', 'address', 'phone']
 
     objects = CustomUserManager()
 
@@ -57,19 +57,24 @@ class InvoiceOwner(AbstractUser):
         verbose_name = "Invoice Owner"
 
     def clean(self):
+        super().clean()
+
         if self.phone and not self.phone.replace("-", "").isdigit():
-            if self.phone_2 and not self.phone_2.replace("-", "").isdigit():
-                raise ValidationError(_("Phone number should contain only digits and dashes (-)."))
             raise ValidationError(_("Phone number should contain only digits and dashes (-)."))
 
         if self.phone and not (11 <= len(self.phone) <= 12):
-            if self.phone_2 and not (11 <= len(self.phone_2) <= 12):
-                raise ValidationError("Phone Number must be 11 to 12 characters long. Pattern: 0123-4567890")
-            raise ValidationError("Phone Number must be 11 to 12 characters long. Pattern: 0123-4567890")
+            raise ValidationError(_("Phone Number must be 11 to 12 characters long. Pattern: 0123-4567890"))
+
+        if self.phone_2 and not self.phone_2.replace("-", "").isdigit():
+            raise ValidationError(_("Alternate phone number should contain only digits and dashes (-)."))
+
+        if self.phone_2 and not (11 <= len(self.phone_2) <= 12):
+            raise ValidationError(_("Alternate Phone Number must be 11 to 12 characters long. Pattern: 0123-4567890"))
 
         if self.ntn_number and not (7 <= len(self.ntn_number) <= 13):
-            raise ValidationError("NTN number must be 7 to 13 characters long. Pattern: 01234-5678901 or 0123456-78901")
-
+            print("DEBUG: Invalid NTN number length")
+            raise ValidationError(_("NTN number must be 7 to 13 characters long. Pattern: 01234-5678901 or 0123456-78901"))
+    
     def __str__(self):
         return self.name
 

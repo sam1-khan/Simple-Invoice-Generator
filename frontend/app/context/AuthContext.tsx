@@ -6,6 +6,8 @@ type User = {
   id: number;
   name: string;
   email: string;
+  phone: string;
+  is_onboarded: boolean;
   // other fields as needed
 } | null;
 

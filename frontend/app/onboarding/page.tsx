@@ -3,7 +3,7 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/app/context/AuthContext";
 import { cn } from "@/lib/utils";
@@ -18,20 +18,21 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import Link from "next/link";
+import Cookies from "js-cookie";
 
 const OnboardingSchema = z.object({
   address: z.string().min(1, "Address is required"),
+  ntn_number: z.string().optional(),
+  bank: z.string().optional(),
+  account_title: z.string().optional(),
+  iban: z.string().optional(),
+  phone_2: z.string().optional(),
   logo: z
     .any()
     .refine((files) => files && files.length > 0, "Logo is required"),
   signature: z
     .any()
     .refine((files) => files && files.length > 0, "Signature is required"),
-  ntn_number: z.string().optional(),
-  bank: z.string().optional(),
-  account_title: z.string().optional(),
-  iban: z.string().optional(),
-  phone_2: z.string().optional(),
 });
 
 type OnboardingFormValues = z.infer<typeof OnboardingSchema>;
@@ -48,13 +49,20 @@ export default function OnboardingPage() {
     resolver: zodResolver(OnboardingSchema),
     mode: "onBlur",
   });
+
   const [error, setError] = useState<string | string[] | null>(null);
   const [formLoading, setFormLoading] = useState(false);
 
-  if (loading) {
+  useEffect(() => {
+    if (!loading && user?.is_onboarded) {
+      router.replace("/");
+    }
+  }, [user, loading, router]);
+
+  if (loading || user?.is_onboarded) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-zinc-100 dark:bg-zinc-800 p-6">
-        <p className="text-xl">Loading...</p>
+        <p className="text-xl">{user?.is_onboarded ? 'Redirecting...' : 'Loading...'}</p>
       </div>
     );
   }
@@ -64,13 +72,13 @@ export default function OnboardingPage() {
       <div className="flex min-h-screen items-center justify-center bg-zinc-100 dark:bg-zinc-800 p-6">
         <Card className="w-full max-w-md shadow-lg">
           <CardHeader className="text-center">
-            <CardTitle className="text-2xl font-bold">Not Logged In</CardTitle>
+            <CardTitle className="text-xl font-bold my-1">Not Logged In</CardTitle>
             <CardDescription>
               Please log in to complete onboarding.
             </CardDescription>
           </CardHeader>
           <CardContent className="text-center">
-            <Button onClick={() => router.push("/login")} className="mt-4">
+            <Button onClick={() => router.push("/login")} className="mt-2">
               Log In
             </Button>
           </CardContent>
@@ -84,38 +92,83 @@ export default function OnboardingPage() {
   const onSubmit = async (data: OnboardingFormValues) => {
     setError(null);
     setFormLoading(true);
-    try {
-      const formData = new FormData();
-      formData.append("address", data.address);
-      if (data.logo && data.logo[0]) formData.append("logo", data.logo[0]);
-      if (data.signature && data.signature[0])
-        formData.append("signature", data.signature[0]);
-      if (data.ntn_number) formData.append("ntn_number", data.ntn_number);
-      if (data.bank) formData.append("bank", data.bank);
-      if (data.account_title)
-        formData.append("account_title", data.account_title);
-      if (data.iban) formData.append("iban", data.iban);
-      if (data.phone_2) formData.append("phone_2", data.phone_2);
 
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/v1/invoice-owners/${userId}/`,
-        {
-          method: "PATCH",
-          body: formData,
-        }
-      );
-      const resData = await response.json();
-      if (!response.ok) {
+    try {
+      const csrfToken = Cookies.get("csrftoken");
+      if (!csrfToken) {
         setError(
-          Array.isArray(resData.detail)
-            ? resData.detail
-            : [resData.detail || "Failed to update profile"]
+          "CSRF token not found. Please refresh the page and try again."
         );
         return;
       }
+
+      const formDataResponse = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/v1/invoice-owners/${userId}/`,
+        {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+            "X-CSRFToken": csrfToken,
+          },
+          credentials: "include",
+          body: JSON.stringify({
+            address: data.address,
+            ntn_number: data.ntn_number,
+            bank: data.bank,
+            account_title: data.account_title,
+            iban: data.iban,
+            phone_2: data.phone_2,
+          }),
+        }
+      );
+
+      const formDataRes = await formDataResponse.json();
+
+      if (!formDataResponse.ok) {
+        const errorMessages = Array.isArray(formDataRes.detail)
+          ? formDataRes.detail
+          : [formDataRes.detail || "Failed to update profile"];
+        setError(errorMessages);
+        return;
+      }
+
+      const fileFormData = new FormData();
+      if (data.logo && data.logo[0]) {
+        fileFormData.append("logo", data.logo[0]);
+      }
+      if (data.signature && data.signature[0]) {
+        fileFormData.append("signature", data.signature[0]);
+      }
+
+      const fileUploadResponse = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/v1/invoice-owners/${userId}/upload-files/`,
+        {
+          method: "POST",
+          headers: {
+            "X-CSRFToken": csrfToken,
+          },
+          credentials: "include",
+          body: fileFormData,
+        }
+      );
+
+      const fileUploadRes = await fileUploadResponse.json();
+
+      if (!fileUploadResponse.ok) {
+        const errorMessages = Array.isArray(fileUploadRes.detail)
+          ? fileUploadRes.detail
+          : [fileUploadRes.detail || "Failed to upload files"];
+        setError(errorMessages);
+        return;
+      }
+
       router.push("/");
-    } catch (err: any) {
-      setError([err.message || "An error occurred."]);
+    } catch (err) {
+      if (err instanceof Error) {
+        setError([err.message || "An error occurred."]);
+      } else {
+        setError(["An unknown error occurred."]);
+      }
     } finally {
       setFormLoading(false);
     }
@@ -136,7 +189,7 @@ export default function OnboardingPage() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleSubmit(onSubmit)} autoComplete="off">
+          <form onSubmit={handleSubmit(onSubmit)} encType="multipart/form-data">
             <div className="grid gap-6">
               <div className="grid gap-2">
                 <Label htmlFor="address">Address</Label>
@@ -148,7 +201,7 @@ export default function OnboardingPage() {
                 />
                 {errors.address && (
                   <p className="text-red-500 text-sm">
-                    {errors.address.message as string}
+                    {errors.address.message}
                   </p>
                 )}
               </div>
@@ -162,7 +215,7 @@ export default function OnboardingPage() {
                 />
                 {errors.logo && (
                   <p className="text-red-500 text-sm">
-                    {errors.logo.message as string}
+                    {errors.logo.message?.toString()}
                   </p>
                 )}
               </div>
@@ -176,7 +229,7 @@ export default function OnboardingPage() {
                 />
                 {errors.signature && (
                   <p className="text-red-500 text-sm">
-                    {errors.signature.message as string}
+                    {errors.signature.message?.toString()}
                   </p>
                 )}
               </div>
@@ -190,7 +243,7 @@ export default function OnboardingPage() {
                 />
                 {errors.ntn_number && (
                   <p className="text-red-500 text-sm">
-                    {errors.ntn_number.message as string}
+                    {errors.ntn_number.message}
                   </p>
                 )}
               </div>
@@ -203,9 +256,7 @@ export default function OnboardingPage() {
                   {...register("bank")}
                 />
                 {errors.bank && (
-                  <p className="text-red-500 text-sm">
-                    {errors.bank.message as string}
-                  </p>
+                  <p className="text-red-500 text-sm">{errors.bank.message}</p>
                 )}
               </div>
               <div className="grid gap-2">
@@ -218,7 +269,7 @@ export default function OnboardingPage() {
                 />
                 {errors.account_title && (
                   <p className="text-red-500 text-sm">
-                    {errors.account_title.message as string}
+                    {errors.account_title.message}
                   </p>
                 )}
               </div>
@@ -231,9 +282,7 @@ export default function OnboardingPage() {
                   {...register("iban")}
                 />
                 {errors.iban && (
-                  <p className="text-red-500 text-sm">
-                    {errors.iban.message as string}
-                  </p>
+                  <p className="text-red-500 text-sm">{errors.iban.message}</p>
                 )}
               </div>
               <div className="grid gap-2">
@@ -246,19 +295,19 @@ export default function OnboardingPage() {
                 />
                 {errors.phone_2 && (
                   <p className="text-red-500 text-sm">
-                    {errors.phone_2.message as string}
+                    {errors.phone_2.message}
                   </p>
                 )}
               </div>
               {error && Array.isArray(error) ? (
                 <ul className="text-red-500 text-sm">
-                  {error.map((errMsg, idx) => (
-                    <li key={idx}>{errMsg}</li>
+                  {error.map((errMsg, index) => (
+                    <li key={index}>{errMsg}</li>
                   ))}
                 </ul>
-              ) : error ? (
-                <p className="text-red-500 text-sm">{error}</p>
-              ) : null}
+              ) : (
+                error && <p className="text-red-500 text-sm">{error}</p>
+              )}
               <Button type="submit" className="w-full" disabled={formLoading}>
                 {formLoading ? "Saving..." : "Complete Onboarding"}
               </Button>
@@ -269,9 +318,6 @@ export default function OnboardingPage() {
       <div className="text-center text-xs text-zinc-500 dark:text-zinc-400">
         <p>
           Please ensure your details are accurate.{" "}
-          <Link href="/" className="underline">
-            Back to Dashboard
-          </Link>
         </p>
       </div>
     </div>
