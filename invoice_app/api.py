@@ -1,5 +1,4 @@
-import json
-from ninja import File, Form, NinjaAPI, UploadedFile
+from ninja import File, NinjaAPI, UploadedFile
 from django.contrib.auth import authenticate, login as django_login, logout as django_logout
 from django.views.decorators.cache import cache_page
 from django_ratelimit.decorators import ratelimit
@@ -13,10 +12,10 @@ from django.shortcuts import get_object_or_404
 from django.template.loader import render_to_string
 from django.utils.html import strip_tags
 from typing import List
-from django.core.files.storage import default_storage
-from django.core.files.base import ContentFile
 from ninja.security import django_auth
 from ninja.pagination import paginate
+from ninja.responses import Response
+from django_ratelimit.exceptions import Ratelimited
 from .models import InvoiceOwner, Client, Invoice, InvoiceItem
 from .schemas import (
     LoginSchema,
@@ -42,6 +41,10 @@ api = NinjaAPI(title="Invoice Generator API", version="1.0.0", auth=django_auth)
 # -------------------------
 # Authentication & Rate Limiting
 # -------------------------
+
+@api.exception_handler(Ratelimited)
+def handle_ratelimit_exception(request, exc: Ratelimited):
+    return Response({"detail": "Rate limit exceeded. Please try again later."}, status=429)
 
 @api.post("/auth/register/", response={201: InvoiceOwnerOut, 400: ErrorSchema}, auth=None)
 @ratelimit(key="ip", rate="100/m", block=True)

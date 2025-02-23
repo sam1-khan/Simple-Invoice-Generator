@@ -16,7 +16,7 @@ import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { useAuth } from "@/app/context/AuthContext";
 import { useRouter } from "next/navigation";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 
 const ForgotPasswordSchema = z.object({
   email: z.string().email("Invalid email"),
@@ -34,6 +34,8 @@ export default function ForgotPasswordPage() {
   });
   const { user, loading } = useAuth();
   const router = useRouter();
+  const [error, setError] = useState<string | null>(null); // Added error state
+  const [isSubmitting, setIsSubmitting] = useState(false); // Added loading state for form submission
 
   useEffect(() => {
     if (!loading && user) {
@@ -49,6 +51,33 @@ export default function ForgotPasswordPage() {
     );
   }
 
+  const onSubmit = async (data: ForgotPasswordFormValues) => {
+    setIsSubmitting(true);
+    setError(null); // Reset error before submitting
+
+    try {
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/v1/auth/forgot-password/`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email: data.email }),
+          credentials: "include",
+        }
+      );
+      const result = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(result.error || "Password reset failed");
+      }
+      // Handle success (optional, you could show a success message or redirect)
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   return (
     <div className="flex min-h-screen flex-col items-center justify-center gap-6 bg-zinc-100 p-6 md:p-10 dark:bg-zinc-800">
       <div className="w-full max-w-sm md:max-w-md lg:max-w-lg">
@@ -61,9 +90,13 @@ export default function ForgotPasswordPage() {
           </CardHeader>
           <CardContent>
             <form
-              onSubmit={handleSubmit((data) => {
-                // Your onSubmit logic here
-              })}
+              onSubmit={handleSubmit(onSubmit)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  handleSubmit(onSubmit)(e); // Handle enter key submission
+                }
+              }}
             >
               <div className="grid gap-6">
                 <div className="grid gap-2">
@@ -81,8 +114,15 @@ export default function ForgotPasswordPage() {
                     </p>
                   )}
                 </div>
-                <Button type="submit" className="w-full">
-                  Reset Password
+                {error && <p className="text-red-500 text-sm">{error}</p>} {/* Display global error */}
+                <Button
+                  type="submit"
+                  className="w-full"
+                  disabled={isSubmitting} // Ensure the button is disabled while submitting
+                >
+                  {isSubmitting
+                    ? "Sending password reset mail..."
+                    : "Reset password"}
                 </Button>
               </div>
             </form>
