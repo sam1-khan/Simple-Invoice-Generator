@@ -34,6 +34,7 @@ from .schemas import (
     ResetPasswordSchema,
     ForgotPasswordRequestSchema,
     ErrorSchema,
+    SuccessSchema,
 )
 
 api = NinjaAPI(title="Invoice Generator API", version="1.0.0", auth=django_auth)
@@ -355,7 +356,7 @@ def request_password_reset(request, payload: ForgotPasswordRequestSchema):
         pass
     return 200, {"detail": "If the email exists, a password reset link has been sent."}
 
-@api.post("/auth/reset-password/", auth=None)
+@api.post("/auth/reset-password/", response={400: ErrorSchema, 422: ErrorSchema, 200: SuccessSchema}, auth=None)
 @ratelimit(key="ip", rate="5/m", block=True)
 def reset_password(request, payload: ResetPasswordSchema):
     try:
@@ -373,4 +374,12 @@ def reset_password(request, payload: ResetPasswordSchema):
         return 400, {"detail": e.messages}
     user.set_password(payload.new_password)
     user.save()
+    
+    try:
+        context = {"user": user, "settings": settings}
+        html_message = render_to_string("emails/password_reset_successful.html", context)
+        plain_message = strip_tags(html_message)
+        user.email_user(subject="Password Reset Successfully", message=plain_message, html_message=html_message)
+    except Exception:
+        pass
     return 200, {"detail": "Password has been reset successfully."}

@@ -1,5 +1,4 @@
 "use client";
-
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -34,8 +33,10 @@ export default function ForgotPasswordPage() {
   });
   const { user, loading } = useAuth();
   const router = useRouter();
-  const [error, setError] = useState<string | null>(null); // Added error state
-  const [isSubmitting, setIsSubmitting] = useState(false); // Added loading state for form submission
+  const [error, setError] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [rateLimited, setRateLimited] = useState(false);
+  const [responseMessage, setResponseMessage] = useState<string | null>(null);
 
   useEffect(() => {
     if (!loading && user) {
@@ -53,7 +54,9 @@ export default function ForgotPasswordPage() {
 
   const onSubmit = async (data: ForgotPasswordFormValues) => {
     setIsSubmitting(true);
-    setError(null); // Reset error before submitting
+    setRateLimited(false);
+    setError(null);
+    setResponseMessage(null);
 
     try {
       const response = await fetch(
@@ -66,14 +69,28 @@ export default function ForgotPasswordPage() {
         }
       );
       const result = await response.json();
-      
+
       if (!response.ok) {
-        throw new Error(result.error || "Password reset failed");
+        if (response.status === 429) {
+          setError("Calm down bro, let me catch my breath!");
+          setRateLimited(true);
+          setTimeout(() => {
+            setIsSubmitting(false);
+            setRateLimited(false);
+          }, 20000);
+        } else {
+          setError(result.detail || "Password reset failed");
+          setIsSubmitting(false);
+        }
+        return;
       }
-      // Handle success (optional, you could show a success message or redirect)
+
+      setTimeout(() => {
+        setResponseMessage("Password reset email sent successfully.");
+        setIsSubmitting(false);
+      }, 2000);
     } catch (err: any) {
-      setError(err.message);
-    } finally {
+      setError(err.message || "An error occurred");
       setIsSubmitting(false);
     }
   };
@@ -92,9 +109,9 @@ export default function ForgotPasswordPage() {
             <form
               onSubmit={handleSubmit(onSubmit)}
               onKeyDown={(e) => {
-                if (e.key === "Enter") {
+                if (e.key === "Enter" && !isSubmitting) {
                   e.preventDefault();
-                  handleSubmit(onSubmit)(e); // Handle enter key submission
+                  handleSubmit(onSubmit)(e);
                 }
               }}
             >
@@ -114,13 +131,18 @@ export default function ForgotPasswordPage() {
                     </p>
                   )}
                 </div>
-                {error && <p className="text-red-500 text-sm">{error}</p>} {/* Display global error */}
+                {error && <p className="text-red-500 text-sm">{error}</p>}
+                {responseMessage && (
+                  <p className="text-green-500 text-sm">{responseMessage}</p>
+                )}
                 <Button
                   type="submit"
                   className="w-full"
-                  disabled={isSubmitting} // Ensure the button is disabled while submitting
+                  disabled={isSubmitting}
                 >
-                  {isSubmitting
+                  {rateLimited
+                    ? "Taking a rest..."
+                    : isSubmitting
                     ? "Sending password reset mail..."
                     : "Reset password"}
                 </Button>

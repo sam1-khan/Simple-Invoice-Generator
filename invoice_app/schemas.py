@@ -2,6 +2,10 @@ from ninja import Schema
 from datetime import datetime
 from typing import List, Optional, Union
 
+# ---------- Success Schema ----------
+class SuccessSchema(Schema):
+    detail: str
+
 # ---------- Error Schema ----------
 class ErrorSchema(Schema):
     detail: Union[str, List[str]]
