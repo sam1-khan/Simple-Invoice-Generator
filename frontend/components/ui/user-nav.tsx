@@ -4,6 +4,7 @@ import { useAuth } from "@/app/context/AuthContext";
 import { useRouter } from "next/navigation";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -15,10 +16,20 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import Cookies from "js-cookie";
+import { useEffect } from "react";
+
+const isInputField = (element: HTMLElement) => {
+  return (
+    element instanceof HTMLInputElement ||
+    element instanceof HTMLTextAreaElement ||
+    element?.closest(".shadcn-input")
+  );
+};
 
 export function UserNav() {
   const { user, refreshUser } = useAuth();
   const router = useRouter();
+
   const handleLogout = async () => {
     try {
       const csrfToken = Cookies.get("csrftoken");
@@ -43,6 +54,42 @@ export function UserNav() {
       console.error("Logout error:", error);
     }
   };
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {      
+      const activeElement = document.activeElement as HTMLElement;
+
+      if (isInputField(activeElement)) {
+        return;
+      }
+
+      if (!user) return;
+
+
+      if (e.shiftKey) {
+        // Settings Shortcut: shift+s
+        if (e.key.toLowerCase() === "s") {
+          router.replace("/settings");
+        }
+        // Account Shortcut: shift+a
+        if (e.key.toLowerCase() === "a") {
+          router.replace("/settings/account");
+        }
+        // Logout Shortcut: shift+q
+        if (e.key.toLowerCase() === "q") {
+          handleLogout();
+        }
+      }
+    };
+
+
+    window.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [user, router]);
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -67,24 +114,25 @@ export function UserNav() {
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
         <DropdownMenuGroup>
-          <DropdownMenuItem>
-            Profile
-            <DropdownMenuShortcut>⇧⌘P</DropdownMenuShortcut>
+          <DropdownMenuItem onClick={() => router.push("/settings/account")}>
+            Account
+            <div className="ml-auto">
+            <Badge className="text-xs p-1">Shift+a</Badge>
+          </div>
           </DropdownMenuItem>
-          <DropdownMenuItem>
-            Billing
-            <DropdownMenuShortcut>⌘B</DropdownMenuShortcut>
-          </DropdownMenuItem>
-          <DropdownMenuItem>
+          <DropdownMenuItem onClick={() => router.push("/settings")}>
             Settings
-            <DropdownMenuShortcut>⌘S</DropdownMenuShortcut>
+            <div className="ml-auto">
+            <Badge className="text-xs p-1">Shift+s</Badge>
+          </div>
           </DropdownMenuItem>
-          <DropdownMenuItem>New Team</DropdownMenuItem>
         </DropdownMenuGroup>
         <DropdownMenuSeparator />
         <DropdownMenuItem onClick={handleLogout}>
           Log out
-          <DropdownMenuShortcut>⇧⌘Q</DropdownMenuShortcut>
+          <div className="ml-auto">
+            <Badge className="text-xs p-1">Shift+q</Badge>
+          </div>
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

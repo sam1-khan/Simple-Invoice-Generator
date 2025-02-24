@@ -284,6 +284,8 @@ def delete_invoice(request, id: int):
 # InvoiceItem Endpoints
 # -------------------------
 
+@cache_page(60 * 5)
+@paginate
 @api.get("/invoices/{invoice_id}/items/", response=List[InvoiceItemOut], auth=django_auth)
 def list_invoice_items(request, invoice_id: int):
     if request.user.is_staff:
