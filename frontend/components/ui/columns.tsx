@@ -1,16 +1,14 @@
-"use client"
+"use client";
 
-import { ColumnDef } from "@tanstack/react-table"
+import { ColumnDef } from "@tanstack/react-table";
+import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
+import { DataTableColumnHeader } from "@/components/ui/data-table-column-header";
+import { DataTableRowActions } from "@/components/ui/data-table-row-actions";
+import { taxStatusOptions, invoiceTypeOptions, transitChargeOptions } from "@/app/transactions/data/data";
+import { Transaction } from "@/app/transactions/data/schema";
 
-import { Badge } from "@/components/ui/badge"
-import { Checkbox } from "@/components/ui/checkbox"
-
-import { labels, priorities, statuses } from "@/app/tasks/data/data"
-import { Task } from "@/app/tasks/data/schema"
-import { DataTableColumnHeader } from "@/components/ui/data-table-column-header"
-import { DataTableRowActions } from "@/components/ui/data-table-row-actions"
-
-export const columns: ColumnDef<Task>[] = [
+export const columns: ColumnDef<Transaction>[] = [
   {
     id: "select",
     header: ({ table }) => (
@@ -36,88 +34,116 @@ export const columns: ColumnDef<Task>[] = [
     enableHiding: false,
   },
   {
-    accessorKey: "id",
+    id: "reference_number",
+    accessorKey: "reference_number",
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Task" />
+      <DataTableColumnHeader column={column} title="Reference #" />
     ),
-    cell: ({ row }) => <div className="w-[80px]">{row.getValue("id")}</div>,
-    enableSorting: false,
-    enableHiding: false,
+    cell: ({ row }) => (
+      <div className="max-w-[300px] truncate">
+        {row.getValue("reference_number")}
+      </div>
+    ),
   },
   {
-    accessorKey: "title",
+    id: "clientName",
+    accessorFn: (row) => row.client?.name,
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Title" />
+      <DataTableColumnHeader column={column} title="Client" />
     ),
-    cell: ({ row }) => {
-      const label = labels.find((label) => label.value === row.original.label)
-
-      return (
-        <div className="flex space-x-2">
-          {label && <Badge variant="outline">{label.label}</Badge>}
-          <span className="max-w-[500px] truncate font-medium">
-            {row.getValue("title")}
-          </span>
-        </div>
-      )
+    cell: ({ row }) => (
+      <div className="max-w-[200px] truncate">{row.getValue("clientName")}</div>
+    ),
+  },
+  {
+    id: "total",
+    accessorFn: (row) => (row.is_taxed ? row.grand_total : row.total_price),
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Total" />
+    ),
+    cell: ({ getValue }) => {
+      const value = getValue() as number;
+      return <div>${value.toFixed(2)}</div>;
     },
-  },
+  },  
   {
-    accessorKey: "status",
+    id: "date",
+    accessorFn: (row) => row.date || row.created_at,
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Status" />
+      <DataTableColumnHeader column={column} title="Date" />
+    ),
+    cell: ({ getValue }) => {
+      const value = getValue() as string;
+      // Create a date object from the value
+      const d = new Date(value);
+      // Format date using en-GB options then convert to lower-case for month
+      const formattedDate = d
+        .toLocaleDateString("en-GB", {
+          day: "numeric",
+          month: "short",
+          year: "numeric",
+        })
+      return <div>{formattedDate}</div>;
+    },
+  },  
+  {
+    id: "is_taxed",
+    accessorKey: "is_taxed",
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Tax Status" />
     ),
     cell: ({ row }) => {
-      const status = statuses.find(
-        (status) => status.value === row.getValue("status")
-      )
-
-      if (!status) {
-        return null
-      }
-
+      const taxed = row.getValue("is_taxed");
       return (
-        <div className="flex w-[100px] items-center">
-          {status.icon && (
-            <status.icon className="mr-2 h-4 w-4 text-muted-foreground" />
-          )}
-          <span>{status.label}</span>
-        </div>
-      )
+        <Badge variant={taxed ? "default" : "secondary"}>
+          {taxed ? "Taxed" : "Not Taxed"}
+        </Badge>
+      );
     },
     filterFn: (row, id, value) => {
-      return value.includes(row.getValue(id))
+      return value.includes(row.getValue(id) ? "true" : "false");
     },
   },
   {
-    accessorKey: "priority",
+    id: "is_quotation",
+    accessorKey: "is_quotation",
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Priority" />
+      <DataTableColumnHeader column={column} title="Type" />
     ),
     cell: ({ row }) => {
-      const priority = priorities.find(
-        (priority) => priority.value === row.getValue("priority")
-      )
-
-      if (!priority) {
-        return null
-      }
-
+      const isQuotation = row.getValue("is_quotation");
       return (
-        <div className="flex items-center">
-          {priority.icon && (
-            <priority.icon className="mr-2 h-4 w-4 text-muted-foreground" />
-          )}
-          <span>{priority.label}</span>
-        </div>
-      )
+        <Badge variant={isQuotation ? "outline" : "default"}>
+          {isQuotation ? "Quotation" : "Invoice"}
+        </Badge>
+      );
     },
     filterFn: (row, id, value) => {
-      return value.includes(row.getValue(id))
+      return value.includes(row.getValue(id) ? "quotation" : "invoice");
     },
   },
+  {
+    id: "transit_charges",
+    accessorKey: "transit_charges",
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Transit Charges" />
+    ),
+    cell: ({ row }) => {
+      // Ensure the value is a number; if not, default to 0.
+      const charges = row.getValue("transit_charges");
+      const amount = typeof charges === "number" ? charges : 0;
+      return <div>${amount.toFixed(2)}</div>;
+    },
+    filterFn: (row, id, value) => {
+      const charges = row.getValue(id);
+      const amount = typeof charges === "number" ? charges : 0;
+      if (value.includes("has") && amount > 0) return true;
+      if (value.includes("none") && amount <= 0) return true;
+      return false;
+    },
+  },  
   {
     id: "actions",
     cell: ({ row }) => <DataTableRowActions row={row} />,
   },
-]
+];

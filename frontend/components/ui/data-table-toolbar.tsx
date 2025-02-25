@@ -1,47 +1,50 @@
-"use client"
+"use client";
 
-import { Table } from "@tanstack/react-table"
-import { X } from "lucide-react"
-
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { DataTableViewOptions } from "@/components/ui/data-table-view-options"
-
-import { priorities, statuses } from "@/app/tasks/data/data"
-import { DataTableFacetedFilter } from "./data-table-faceted-filter"
+import { Table } from "@tanstack/react-table";
+import { X } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { DataTableViewOptions } from "@/components/ui/data-table-view-options";
+import { DataTableFacetedFilter } from "./data-table-faceted-filter";
+import { taxStatusOptions, invoiceTypeOptions, transitChargeOptions } from "@/app/transactions/data/data";
 
 interface DataTableToolbarProps<TData> {
-  table: Table<TData>
+  table: Table<TData>;
 }
 
-export function DataTableToolbar<TData>({
-  table,
-}: DataTableToolbarProps<TData>) {
-  const isFiltered = table.getState().columnFilters.length > 0
+export function DataTableToolbar<TData>({ table }: DataTableToolbarProps<TData>) {
+  const isFiltered = table.getState().columnFilters.length > 0;
 
   return (
     <div className="flex items-center justify-between">
       <div className="flex flex-1 items-center space-x-2">
         <Input
-          placeholder="Filter tasks..."
-          value={(table.getColumn("title")?.getFilterValue() as string) ?? ""}
+          placeholder="Filter by Reference..."
+          value={(table.getColumn("reference_number")?.getFilterValue() as string) ?? ""}
           onChange={(event) =>
-            table.getColumn("title")?.setFilterValue(event.target.value)
+            table.getColumn("reference_number")?.setFilterValue(event.target.value)
           }
           className="h-8 w-[150px] lg:w-[250px]"
         />
-        {table.getColumn("status") && (
+        {table.getColumn("is_taxed") && (
           <DataTableFacetedFilter
-            column={table.getColumn("status")}
-            title="Status"
-            options={statuses}
+            column={table.getColumn("is_taxed")}
+            title="Tax Status"
+            options={taxStatusOptions}
           />
         )}
-        {table.getColumn("priority") && (
+        {table.getColumn("is_quotation") && (
           <DataTableFacetedFilter
-            column={table.getColumn("priority")}
-            title="Priority"
-            options={priorities}
+            column={table.getColumn("is_quotation")}
+            title="Type"
+            options={invoiceTypeOptions}
+          />
+        )}
+        {table.getColumn("transit_charges") && (
+          <DataTableFacetedFilter
+            column={table.getColumn("transit_charges")}
+            title="Transit Charges"
+            options={transitChargeOptions}
           />
         )}
         {isFiltered && (
@@ -57,5 +60,5 @@ export function DataTableToolbar<TData>({
       </div>
       <DataTableViewOptions table={table} />
     </div>
-  )
+  );
 }

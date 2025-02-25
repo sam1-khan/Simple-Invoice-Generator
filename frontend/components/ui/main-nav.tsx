@@ -18,10 +18,10 @@ export function MainNav({
         Dashboard
       </Link>
       <Link
-        href="/invoices"
+        href="/transactions"
         className="text-sm font-medium text-muted-foreground transition-colors hover:text-primary"
       >
-        Invoices
+        Transactions
       </Link>
       <Link
         href="/clients"

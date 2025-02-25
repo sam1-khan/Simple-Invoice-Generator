@@ -39,6 +39,58 @@ from .schemas import (
 
 api = NinjaAPI(title="Invoice Generator API", version="1.0.0", auth=django_auth)
 
+# -----------------------------------------------
+# Helper functions to serialize date fields to ISO strings
+# -----------------------------------------------
+def serialize_invoice_owner(owner):
+    return {
+        "id": owner.id,
+        "email": owner.email,
+        "name": owner.name,
+        "address": owner.address,
+        "phone": owner.phone,
+        "phone_2": owner.phone_2,
+        "ntn_number": owner.ntn_number,
+        "bank": owner.bank,
+        "account_title": owner.account_title,
+        "iban": owner.iban,
+        "logo": owner.logo.url if owner.logo else None,
+        "signature": owner.signature.url if owner.signature else None,
+        "is_onboarded": owner.is_onboarded,
+        "created_at": owner.created_at.isoformat(),
+        "updated_at": owner.updated_at.isoformat(),
+    }
+
+def serialize_client(client):
+    return {
+        "id": client.id,
+        "name": client.name,
+        "address": client.address,
+        "ntn_number": client.ntn_number,
+        "phone": client.phone,
+        "created_at": client.created_at.isoformat(),
+        "updated_at": client.updated_at.isoformat(),
+    }
+
+def serialize_invoice(invoice):
+    return {
+        "id": invoice.id,
+        "invoice_owner": serialize_invoice_owner(invoice.invoice_owner),
+        "client": serialize_client(invoice.client),
+        "reference_number": invoice.reference_number,
+        "tax_percentage": invoice.tax_percentage,
+        "total_price": invoice.total_price,
+        "tax": invoice.tax,
+        "grand_total": invoice.grand_total,
+        "date": invoice.date.isoformat() if invoice.date else None,
+        "notes": invoice.notes,
+        "is_taxed": invoice.is_taxed,
+        "is_quotation": invoice.is_quotation,
+        "transit_charges": invoice.transit_charges,
+        "created_at": invoice.created_at.isoformat(),
+        "updated_at": invoice.updated_at.isoformat(),
+    }
+
 # -------------------------
 # Authentication & Rate Limiting
 # -------------------------
@@ -74,7 +126,7 @@ def login(request, payload: LoginSchema):
     user = authenticate(request, email=payload.email, password=payload.password)
     if user:
         django_login(request, user)
-        return 200, {"detail": "Successfully logged in.", "session_key": request.session.session_key, "is_onboarded": user.is_onboarded,}
+        return 200, {"detail": "Successfully logged in.", "session_key": request.session.session_key, "is_onboarded": user.is_onboarded}
     return 401, {"detail": "Invalid credentials"}
 
 @api.post("/auth/logout/", response={200: dict}, auth=django_auth)
@@ -85,6 +137,7 @@ def logout(request):
 @api.get("auth/current-user/", response=InvoiceOwnerOut, auth=django_auth)
 def current_user(request):
     return request.user
+
 # -------------------------
 # InvoiceOwner Endpoints
 # -------------------------
@@ -103,14 +156,8 @@ def get_invoice_owner(request, id: int):
         return 403, {"detail": "You do not have permission to view this user."}
     return get_object_or_404(InvoiceOwner, id=id)
 
-@api.patch(
-    "/invoice-owners/{id}/",
-    response={200: InvoiceOwnerOut, 400: ErrorSchema, 422: ErrorSchema},
-    auth=django_auth,
-)
-def partial_update_invoice_owner(
-    request, payload: InvoiceOwnerUpdate, id: int
-):
+@api.patch("/invoice-owners/{id}/", response={200: InvoiceOwnerOut, 400: ErrorSchema, 422: ErrorSchema}, auth=django_auth)
+def partial_update_invoice_owner(request, payload: InvoiceOwnerUpdate, id: int):
     print(f"DEBUG: {id, payload.address, payload.ntn_number, request}")
     if not request.user.is_staff and id != request.user.id:
         return 403, {"detail": "You do not have permission to update this user."}
@@ -139,22 +186,12 @@ def partial_update_invoice_owner(
     user.save()
     return 200, user
 
-@api.post(
-    "/invoice-owners/{id}/upload-files/",
-    response={200: InvoiceOwnerOut, 400: ErrorSchema, 422: ErrorSchema, 403: ErrorSchema},
-    auth=django_auth,
-)
-def upload_files(
-    request,
-    id: int,
-    logo: UploadedFile = File(...),
-    signature: UploadedFile = File(...),
-):
+@api.post("/invoice-owners/{id}/upload-files/", response={200: InvoiceOwnerOut, 400: ErrorSchema, 422: ErrorSchema, 403: ErrorSchema}, auth=django_auth)
+def upload_files(request, id: int, logo: UploadedFile = File(...), signature: UploadedFile = File(...)):
     if not request.user.is_staff and id != request.user.id:
         return 403, {"detail": "You do not have permission to update this user."}
 
     user = get_object_or_404(InvoiceOwner, id=id)
-    
     user.logo = logo
     user.signature = signature
 
@@ -236,8 +273,12 @@ def delete_client(request, id: int):
 @api.get("/invoices/", response=List[InvoiceOut], auth=django_auth)
 def list_invoices(request):
     if request.user.is_staff:
-        return Invoice.objects.all()
-    return Invoice.objects.filter(invoice_owner=request.user)
+        invoices = Invoice.objects.all()
+    else:
+        invoices = Invoice.objects.filter(invoice_owner=request.user)
+    # Serialize each invoice so that date fields are ISO strings.
+    serialized = [serialize_invoice(inv) for inv in invoices]
+    return serialized
 
 @api.post("/invoices/", response={201: InvoiceOut}, auth=django_auth)
 def create_invoice(request, payload: InvoiceCreate):
@@ -247,13 +288,15 @@ def create_invoice(request, payload: InvoiceCreate):
     except ValidationError as e:
         return 400, {"detail": e.messages}
     invoice.save()
-    return 201, invoice
+    return 201, serialize_invoice(invoice)
 
 @api.get("/invoices/{id}/", response=InvoiceOut, auth=django_auth)
 def get_invoice(request, id: int):
     if request.user.is_staff:
-        return get_object_or_404(Invoice, id=id)
-    return get_object_or_404(Invoice, id=id, invoice_owner=request.user)
+        invoice = get_object_or_404(Invoice, id=id)
+    else:
+        invoice = get_object_or_404(Invoice, id=id, invoice_owner=request.user)
+    return serialize_invoice(invoice)
 
 @api.patch("/invoices/{id}/", response=InvoiceOut, auth=django_auth)
 def update_invoice(request, id: int, payload: InvoiceUpdate):
@@ -269,7 +312,7 @@ def update_invoice(request, id: int, payload: InvoiceUpdate):
     except ValidationError as e:
         return 400, {"detail": e.messages}
     invoice.save()
-    return invoice
+    return serialize_invoice(invoice)
 
 @api.delete("/invoices/{id}/", response={204: None}, auth=django_auth)
 def delete_invoice(request, id: int):
