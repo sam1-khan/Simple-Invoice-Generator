@@ -149,3 +149,6 @@ GitHub.sublime-settings
 
 # Database #
 invoice_project/db.sqlite3
+
+# Media #
+invoice_app/static/media/*
