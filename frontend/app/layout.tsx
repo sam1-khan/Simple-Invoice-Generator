@@ -2,6 +2,8 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "./context/AuthContext";
 import Navbar from "@/components/navbar";
+import { Suspense } from "react";
+import Loading from "@/app/loading";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -28,7 +30,9 @@ export default function RootLayout({
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
         <AuthProvider>
           <Navbar />
-          <div>{children}</div>
+          <Suspense fallback={<Loading />}>
+            <main>{children}</main>
+          </Suspense>
         </AuthProvider>
       </body>
     </html>

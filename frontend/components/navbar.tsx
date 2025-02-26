@@ -10,8 +10,8 @@ export default function Navbar() {
 
   const noNavbarPages = ["/login", "/signup", "/forgot-password", "/reset-password/[user]/[token]", "/onboarding"];
   const resetPasswordRegex = /^\/reset-password\/[^/]+\/[^/]+$/;
-  const showNavbar =
-    !noNavbarPages.includes(pathname) && !resetPasswordRegex.test(pathname);
+  const showNavbar = !noNavbarPages.includes(pathname) && !resetPasswordRegex.test(pathname);
+
   return (
     <>
       {showNavbar && (

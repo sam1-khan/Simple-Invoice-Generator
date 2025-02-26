@@ -1,40 +1,48 @@
-import Link from "next/link"
+import Link from "next/link";
+import { cn } from "@/lib/utils";
+import { usePathname } from "next/navigation";
 
-import { cn } from "@/lib/utils"
+export function MainNav({ className, ...props }: React.HTMLAttributes<HTMLElement>) {
+  const pathname = usePathname();
 
-export function MainNav({
-  className,
-  ...props
-}: React.HTMLAttributes<HTMLElement>) {
   return (
-    <nav
-      className={cn("flex items-center space-x-4 lg:space-x-6", className)}
-      {...props}
-    >
+    <nav className={cn("flex items-center space-x-4 lg:space-x-6", className)} {...props}>
       <Link
         href="/"
-        className="text-sm font-medium transition-colors hover:text-primary"
+        className={cn(
+          "text-sm font-medium transition-colors hover:text-primary",
+          pathname === "/" ? "text-primary font-semibold" : "text-muted-foreground"
+        )}
       >
         Dashboard
       </Link>
       <Link
         href="/transactions"
-        className="text-sm font-medium text-muted-foreground transition-colors hover:text-primary"
+        className={cn(
+          "text-sm font-medium transition-colors hover:text-primary",
+          pathname.startsWith("/transactions") ? "text-primary font-semibold" : "text-muted-foreground"
+        )}
       >
         Transactions
       </Link>
       <Link
         href="/clients"
-        className="text-sm font-medium text-muted-foreground transition-colors hover:text-primary"
+        className={cn(
+          "text-sm font-medium transition-colors hover:text-primary",
+          pathname.startsWith("/clients") ? "text-primary font-semibold" : "text-muted-foreground"
+        )}
       >
         Clients
       </Link>
       <Link
         href="/settings"
-        className="text-sm font-medium text-muted-foreground transition-colors hover:text-primary"
+        className={cn(
+          "text-sm font-medium transition-colors hover:text-primary",
+          pathname.startsWith("/settings") ? "text-primary font-semibold" : "text-muted-foreground"
+        )}
       >
         Settings
       </Link>
     </nav>
-  )
+  );
 }

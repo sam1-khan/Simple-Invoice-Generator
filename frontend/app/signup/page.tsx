@@ -6,16 +6,16 @@ import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 
 export default function SignupPage() {
-  const { user, loading } = useAuth();
+  const { user } = useAuth();
   const router = useRouter();
 
   useEffect(() => {
-    if (!loading && user) {
+    if (user) {
       router.replace("/");
     }
-  }, [user, loading, router]);
+  }, [user, router]);
 
-  if (loading || user) {
+  if (user) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-zinc-100 dark:bg-zinc-800">
         <p className="text-xl">Redirecting...</p>

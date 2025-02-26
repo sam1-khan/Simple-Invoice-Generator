@@ -63,10 +63,8 @@ export function LoginForm({
       }
       console.log("API response:", data);
       
-      // Set onboarding state
       setIsOnboarded(data.is_onboarded);
 
-      // Refresh user session before redirect
       await refreshUser();
     } catch (err: any) {
       setError(err.message);

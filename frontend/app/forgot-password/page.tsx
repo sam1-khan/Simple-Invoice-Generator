@@ -31,7 +31,7 @@ export default function ForgotPasswordPage() {
   } = useForm<ForgotPasswordFormValues>({
     resolver: zodResolver(ForgotPasswordSchema),
   });
-  const { user, loading } = useAuth();
+  const { user } = useAuth();
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -39,18 +39,10 @@ export default function ForgotPasswordPage() {
   const [responseMessage, setResponseMessage] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!loading && user) {
+    if (user) {
       router.replace("/");
     }
-  }, [user, loading, router]);
-
-  if (loading || user) {
-    return (
-      <div className="flex items-center justify-center min-h-screen bg-zinc-100 dark:bg-zinc-800">
-        <p className="text-xl">Redirecting...</p>
-      </div>
-    );
-  }
+  }, [user, router]);
 
   const onSubmit = async (data: ForgotPasswordFormValues) => {
     setIsSubmitting(true);
