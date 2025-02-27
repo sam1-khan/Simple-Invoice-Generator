@@ -37,7 +37,7 @@ export function Search() {
         ref={searchInputRef}
         type="search"
         placeholder="Search..."
-        className="md:w-[100px] lg:w-[300px] pr-12"
+        className="md:w-[100px] lg:w-[300px] pr-14"
       />
       <div className="absolute right-2 top-1/2 transform -translate-y-1/2">
         <Badge className="text-xs p-1">{shortcut}</Badge>

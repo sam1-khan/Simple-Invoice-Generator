@@ -116,23 +116,19 @@ export function UserNav() {
         <DropdownMenuGroup>
           <DropdownMenuItem onClick={() => router.push("/settings/account")}>
             Account
-            <div className="ml-auto">
-            <Badge className="text-xs p-1">Shift+a</Badge>
-          </div>
+            <DropdownMenuShortcut>
+            Shift+a
+            </DropdownMenuShortcut>
           </DropdownMenuItem>
           <DropdownMenuItem onClick={() => router.push("/settings")}>
             Settings
-            <div className="ml-auto">
-            <Badge className="text-xs p-1">Shift+s</Badge>
-          </div>
+            <DropdownMenuShortcut>Shift+s</DropdownMenuShortcut>
           </DropdownMenuItem>
         </DropdownMenuGroup>
         <DropdownMenuSeparator />
         <DropdownMenuItem onClick={handleLogout}>
           Log out
-          <div className="ml-auto">
-            <Badge className="text-xs p-1">Shift+q</Badge>
-          </div>
+          <DropdownMenuShortcut>Shift+q</DropdownMenuShortcut>
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
