@@ -35,6 +35,18 @@ export const columns: ColumnDef<Transaction>[] = [
     enableHiding: false,
   },
   {
+    id: "id",
+    accessorKey: "id",
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} className="hidden" title="id" />
+    ),
+    cell: ({ row }) => (
+      <div className="hidden">
+        {row.getValue("id")}
+      </div>
+    ),
+  },
+  {
     id: "reference_number",
     accessorKey: "reference_number",
     header: ({ column }) => (
