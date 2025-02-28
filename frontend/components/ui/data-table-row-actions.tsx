@@ -55,7 +55,7 @@ export function DataTableRowActions<TData>({ row }: DataTableRowActionsProps<TDa
       setIsPaid(newStatus);
 
       toast(
-        `${row.getValue("is_quotation") ? "Quotation" : "Invoice"} ${row.getValue("reference_number")} has been marked as ${
+        `${row.getValue("reference_number")} has been marked as ${
           newStatus ? "paid" : "unpaid"
         }`,
         {
@@ -72,6 +72,42 @@ export function DataTableRowActions<TData>({ row }: DataTableRowActionsProps<TDa
       });
     }
   };
+
+  const handleDelete = async () => {
+    try {
+      const csrfToken = Cookies.get("csrftoken");
+      if (!csrfToken) {
+        throw new Error("CSRF token not found!");
+      }
+
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/v1/invoices/${row.getValue("id")}/`,
+        {
+          method: "DELETE",
+          headers: {
+            "Content-Type": "application/json",
+            "X-CSRFToken": csrfToken,
+          },
+          credentials: "include",
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error(`Failed to delete ${row.getValue('reference_number')}.`);
+      }
+
+      toast(
+        `${row.getValue("reference_number")} has been deleted.`,
+        {
+          description: "This action can't be undone.",
+        }
+      );
+    } catch (error) {
+      toast("Error", {
+        description: `Failed to delete ${row.getValue('reference_number')}.`,
+      });
+    }
+  }
 
   const downloadPdf = async () => {
     return;
@@ -92,7 +128,7 @@ export function DataTableRowActions<TData>({ row }: DataTableRowActionsProps<TDa
         </DropdownMenuItem>
         <DropdownMenuItem onClick={downloadPdf}>Download pdf</DropdownMenuItem>
         <DropdownMenuSeparator />
-        <DropdownMenuItem>Delete</DropdownMenuItem>
+        <DropdownMenuItem onClick={handleDelete}>Delete</DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
   );
