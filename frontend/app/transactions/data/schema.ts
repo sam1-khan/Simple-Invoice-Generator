@@ -40,6 +40,7 @@ export const transactionSchema = z.object({
   date: z.string().nullable().optional(),
   notes: z.string().nullable().optional(),
   is_taxed: z.boolean(),
+  is_paid: z.boolean(),
   is_quotation: z.boolean(),
   transit_charges: z.number().optional().nullable(),
   created_at: z.string(),

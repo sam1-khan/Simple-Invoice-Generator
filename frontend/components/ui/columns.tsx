@@ -5,30 +5,31 @@ import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { DataTableColumnHeader } from "@/components/ui/data-table-column-header";
 import { DataTableRowActions } from "@/components/ui/data-table-row-actions";
-import { taxStatusOptions, invoiceTypeOptions, transitChargeOptions } from "@/app/transactions/data/data";
 import { Transaction } from "@/app/transactions/data/schema";
 
 export const columns: ColumnDef<Transaction>[] = [
   {
     id: "select",
     header: ({ table }) => (
-      <Checkbox
-        checked={
-          table.getIsAllPageRowsSelected() ||
-          (table.getIsSomePageRowsSelected() && "indeterminate")
-        }
-        onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
-        aria-label="Select all"
-        className="translate-y-[2px]"
-      />
+      <div className="flex items-center justify-center">
+        <Checkbox
+          checked={
+            table.getIsAllPageRowsSelected() ||
+            (table.getIsSomePageRowsSelected() && "indeterminate")
+          }
+          onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
+          aria-label="Select all"
+        />
+      </div>
     ),
     cell: ({ row }) => (
-      <Checkbox
-        checked={row.getIsSelected()}
-        onCheckedChange={(value) => row.toggleSelected(!!value)}
-        aria-label="Select row"
-        className="translate-y-[2px]"
-      />
+      <div className="flex items-center justify-center">
+        <Checkbox
+          checked={row.getIsSelected()}
+          onCheckedChange={(value) => row.toggleSelected(!!value)}
+          aria-label="Select row"
+        />
+      </div>
     ),
     enableSorting: false,
     enableHiding: false,
@@ -74,9 +75,7 @@ export const columns: ColumnDef<Transaction>[] = [
     ),
     cell: ({ getValue }) => {
       const value = getValue() as string;
-      // Create a date object from the value
       const d = new Date(value);
-      // Format date using en-GB options then convert to lower-case for month
       const formattedDate = d
         .toLocaleDateString("en-GB", {
           day: "numeric",
@@ -84,6 +83,26 @@ export const columns: ColumnDef<Transaction>[] = [
           year: "numeric",
         })
       return <div>{formattedDate}</div>;
+    },
+  },
+  {
+    id: "is_paid",
+    accessorKey: "is_paid",
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Payment" />
+    ),
+    cell: ({ row }) => {
+      const isQuotation = row.getValue("is_quotation");
+      if (isQuotation) return;
+      const paid = row.getValue("is_paid");
+      return (
+        <Badge variant={paid ? "default" : "outline"}>
+          {paid ? "Paid" : "Unpaid"}
+        </Badge>
+      );
+    },
+    filterFn: (row, id, value) => {
+      return value.includes(row.getValue(id) ? "true" : "false");
     },
   },  
   {
@@ -95,7 +114,7 @@ export const columns: ColumnDef<Transaction>[] = [
     cell: ({ row }) => {
       const taxed = row.getValue("is_taxed");
       return (
-        <Badge variant={taxed ? "default" : "secondary"}>
+        <Badge variant={taxed ? "default" : "outline"}>
           {taxed ? "Taxed" : "Not Taxed"}
         </Badge>
       );
@@ -129,7 +148,6 @@ export const columns: ColumnDef<Transaction>[] = [
       <DataTableColumnHeader column={column} title="Transit Charges" />
     ),
     cell: ({ row }) => {
-      // Ensure the value is a number; if not, default to 0.
       const charges = row.getValue("transit_charges");
       const amount = typeof charges === "number" ? charges : 0;
       return <div>${amount.toFixed(2)}</div>;

@@ -1,9 +1,11 @@
-// app/transactions/data/data.tsx
-// Define filter options for invoices
-
 export const taxStatusOptions = [
   { value: "true", label: "Taxed" },
   { value: "false", label: "Not Taxed" },
+];
+
+export const paymentOptions = [
+  { value: "true", label: "Paid" },
+  { value: "false", label: "Unpaid" },
 ];
 
 export const invoiceTypeOptions = [

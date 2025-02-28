@@ -40,7 +40,7 @@ export function Search() {
         className="md:w-[100px] lg:w-[300px] pr-12"
       />
       <div className="absolute right-2 top-1/2 transform -translate-y-1/2">
-        <Badge className="text-xs p-1">{shortcut}</Badge>
+        <Badge variant={"outline"} className="text-xs p-1">{shortcut}</Badge>
       </div>
     </div>
   );

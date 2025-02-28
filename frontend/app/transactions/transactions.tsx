@@ -29,7 +29,21 @@ async function getTransactions() {
   }
 
   const data = await res.json();
-  return z.array(transactionSchema).parse(data);
+  const transactions = z.array(transactionSchema).parse(data);
+
+  const updatedTransactions = transactions.map((transaction) => {
+    const tax = transaction.tax;
+
+    if (tax != null && tax != 0) {
+      return {
+        ...transaction,
+        is_taxed: true,
+      };
+    }
+    return transaction;
+  });
+
+  return updatedTransactions;
 }
 
 export default async function TransactionPage() {

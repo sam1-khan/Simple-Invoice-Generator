@@ -77,7 +77,7 @@ class ClientOut(Schema):
 class InvoiceCreate(Schema):
     client_id: int
     tax_percentage: Optional[float] = None
-    date: Optional[str] = None           # Date string (ISO format) or adjust to a date type if needed
+    date: Optional[str] = None
     notes: Optional[str] = None
     is_taxed: Optional[bool] = False
     is_quotation: Optional[bool] = False
@@ -89,6 +89,7 @@ class InvoiceUpdate(Schema):
     date: Optional[str] = None
     notes: Optional[str] = None
     is_taxed: Optional[bool] = None
+    is_paid: Optional[bool] = False
     is_quotation: Optional[bool] = None
     transit_charges: Optional[float] = None
 
@@ -104,6 +105,7 @@ class InvoiceOut(Schema):
     date: Optional[str] = None
     notes: Optional[str] = None
     is_taxed: bool
+    is_paid: Optional[bool] = False
     is_quotation: bool
     transit_charges: Optional[float] = None
     created_at: datetime

@@ -120,6 +120,7 @@ class Invoice(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
     is_taxed = models.BooleanField(default=False)
     is_quotation = models.BooleanField(default=False)
+    is_paid = models.BooleanField(default=False)
     transit_charges = models.DecimalField(max_digits=16, default=0, decimal_places=3, null=True, blank=True)
 
     def clean(self):
@@ -129,13 +130,11 @@ class Invoice(models.Model):
 
     def calculate_totals(self):
         """Calculate total_price, tax, and grand_total."""
-        # Recalculate total price from all items
         self.total_price = sum(item.total_price for item in self.items.all())
         
         if self.transit_charges:
             self.total_price += self.transit_charges
  
-        # Calculate tax and grand total based on the invoice tax_percentage
         self.tax = self.total_price * (self.tax_percentage / 100) if self.tax_percentage else 0
         self.grand_total = self.total_price + self.tax
 
@@ -144,24 +143,24 @@ class Invoice(models.Model):
         """Generate the next reference number in sequence."""
         
         if last_invoice:
-            last_number = int(last_invoice.reference_number.split('-')[1])  # Extract last sequence number (xxxx)
+            last_number = int(last_invoice.reference_number.split('-')[1])
             next_number = last_number + 1
         else:
             next_number = 1
         
         if is_quotation:
-            return f"Q_SAE-{next_number:04d}"  # Quotation reference number (Q-xxxx)
+            return f"Q_SAE-{next_number:04d}"  # Quotation reference number (Q_SAE-xxxx)
         else:
-            return f"I_SAE-{next_number:04d}"  # Invoice reference number (I-xxxx)
+            return f"I_SAE-{next_number:04d}"  # Invoice reference number (I_SAE-xxxx)
 
     def save(self, *args, **kwargs):
         """Override save to set the reference number before saving, and handle is_quotation changes."""
         
         is_quotation_changed = False
         
-        if self.pk:  # Check if this is an existing object (not a new one)
+        if self.pk:
             old_invoice = Invoice.objects.get(pk=self.pk)
-            is_quotation_changed = old_invoice.is_quotation != self.is_quotation  # Check if the type changed
+            is_quotation_changed = old_invoice.is_quotation != self.is_quotation
 
         if not self.reference_number or is_quotation_changed:
             if self.is_quotation:
@@ -172,12 +171,9 @@ class Invoice(models.Model):
                 self.reference_number = Invoice.get_next_reference_number(last_invoice, is_quotation=False)
         
         super().save(*args, **kwargs)
-        # Now calculate totals after the instance is saved
         self.calculate_totals()
 
-        # Save again with updated totals
         super().save(*args, **kwargs)
-
 
     def __str__(self):
         return f"Invoice {self.reference_number}"
@@ -185,8 +181,8 @@ class Invoice(models.Model):
 
 class InvoiceItem(models.Model):
     invoice = models.ForeignKey(Invoice, on_delete=models.CASCADE, related_name="items")
-    unit = models.CharField(max_length=55)  # Added back 'unit' field
-    description = models.TextField(null=True, blank=True)  # Added back 'description' field
+    unit = models.CharField(max_length=55)
+    description = models.TextField(null=True, blank=True)
     name = models.CharField(max_length=255)
     quantity = models.DecimalField(max_digits=16, decimal_places=3, validators=[MinValueValidator(0)])
     unit_price = models.DecimalField(max_digits=16, decimal_places=3, validators=[MinValueValidator(0)])

@@ -6,7 +6,7 @@ from .models import Invoice, InvoiceOwner, InvoiceItem, Client
 class InvoiceForm(forms.ModelForm):
     class Meta:
         model = Invoice
-        fields = ['invoice_owner', 'client', 'is_quotation', 'is_taxed', 'tax_percentage', 'transit_charges', 'date', 'notes',]
+        fields = ['invoice_owner', 'client', 'is_paid', 'is_quotation', 'is_taxed', 'tax_percentage', 'transit_charges', 'date', 'notes',]
         widgets = {
             'invoice_owner': forms.Select(attrs={
                 'autofocus': 'autofocus', 

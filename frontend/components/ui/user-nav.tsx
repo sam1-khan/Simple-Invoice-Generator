@@ -117,13 +117,13 @@ export function UserNav() {
           <DropdownMenuItem onClick={() => router.push("/settings/account")}>
             Account
             <div className="ml-auto">
-            <Badge className="text-xs p-1">Shift+a</Badge>
+            <Badge variant={"outline"} className="text-xs p-1">Shift+a</Badge>
           </div>
           </DropdownMenuItem>
           <DropdownMenuItem onClick={() => router.push("/settings")}>
             Settings
             <div className="ml-auto">
-            <Badge className="text-xs p-1">Shift+s</Badge>
+            <Badge variant={"outline"} className="text-xs p-1">Shift+s</Badge>
           </div>
           </DropdownMenuItem>
         </DropdownMenuGroup>
@@ -131,7 +131,7 @@ export function UserNav() {
         <DropdownMenuItem onClick={handleLogout}>
           Log out
           <div className="ml-auto">
-            <Badge className="text-xs p-1">Shift+q</Badge>
+            <Badge variant={"outline"} className="text-xs p-1">Shift+q</Badge>
           </div>
         </DropdownMenuItem>
       </DropdownMenuContent>
