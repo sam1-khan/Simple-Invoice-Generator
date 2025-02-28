@@ -33,6 +33,7 @@ class InvoiceOwnerUpdate(Schema):
     bank: Optional[str] = None
     account_title: Optional[str] = None
     iban: Optional[str] = None
+    is_onboarded: Optional[bool] = None
 
 class InvoiceOwnerOut(Schema):
     id: int
@@ -47,7 +48,7 @@ class InvoiceOwnerOut(Schema):
     iban: Optional[str] = None
     logo: Optional[str] = None
     signature: Optional[str] = None
-    is_onboarded: bool = False
+    is_onboarded: bool
     created_at: datetime
     updated_at: datetime
 
@@ -79,8 +80,8 @@ class InvoiceCreate(Schema):
     tax_percentage: Optional[float] = None
     date: Optional[str] = None
     notes: Optional[str] = None
-    is_taxed: Optional[bool] = False
-    is_quotation: Optional[bool] = False
+    is_taxed: Optional[bool] = None
+    is_quotation: Optional[bool] = None
     transit_charges: Optional[float] = None
 
 class InvoiceUpdate(Schema):
@@ -89,7 +90,7 @@ class InvoiceUpdate(Schema):
     date: Optional[str] = None
     notes: Optional[str] = None
     is_taxed: Optional[bool] = None
-    is_paid: Optional[bool] = False
+    is_paid: Optional[bool] = None
     is_quotation: Optional[bool] = None
     transit_charges: Optional[float] = None
 
@@ -105,7 +106,7 @@ class InvoiceOut(Schema):
     date: Optional[str] = None
     notes: Optional[str] = None
     is_taxed: bool
-    is_paid: Optional[bool] = False
+    is_paid: bool
     is_quotation: bool
     transit_charges: Optional[float] = None
     created_at: datetime

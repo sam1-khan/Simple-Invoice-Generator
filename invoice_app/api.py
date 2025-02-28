@@ -84,6 +84,7 @@ def serialize_invoice(invoice):
         "grand_total": invoice.grand_total,
         "date": invoice.date.isoformat() if invoice.date else None,
         "notes": invoice.notes,
+        "is_paid": invoice.is_paid,
         "is_taxed": invoice.is_taxed,
         "is_quotation": invoice.is_quotation,
         "transit_charges": invoice.transit_charges,
@@ -144,21 +145,20 @@ def current_user(request):
 
 @cache_page(60 * 5)
 @paginate
-@api.get("/invoice-owners/", response=List[InvoiceOwnerOut], auth=django_auth)
+@api.get("/invoice-owners/", response={200: List[InvoiceOwnerOut], 403: ErrorSchema, 500: ErrorSchema}, auth=django_auth)
 def list_invoice_owners(request):
     if request.user.is_staff:
         return InvoiceOwner.objects.all()
     return InvoiceOwner.objects.filter(id=request.user.id)
 
-@api.get("/invoice-owners/{id}/", response=InvoiceOwnerOut, auth=django_auth)
+@api.get("/invoice-owners/{id}/", response={200: InvoiceOwnerOut, 403: ErrorSchema, 404: ErrorSchema, 500: ErrorSchema}, auth=django_auth)
 def get_invoice_owner(request, id: int):
     if not request.user.is_staff and id != request.user.id:
         return 403, {"detail": "You do not have permission to view this user."}
     return get_object_or_404(InvoiceOwner, id=id)
 
-@api.patch("/invoice-owners/{id}/", response={200: InvoiceOwnerOut, 400: ErrorSchema, 422: ErrorSchema}, auth=django_auth)
+@api.patch("/invoice-owners/{id}/", response={200: InvoiceOwnerOut, 400: ErrorSchema, 403: ErrorSchema, 404: ErrorSchema, 422: ErrorSchema, 500: ErrorSchema}, auth=django_auth)
 def partial_update_invoice_owner(request, payload: InvoiceOwnerUpdate, id: int):
-    print(f"DEBUG: {id, payload.address, payload.ntn_number, request}")
     if not request.user.is_staff and id != request.user.id:
         return 403, {"detail": "You do not have permission to update this user."}
 
@@ -186,7 +186,7 @@ def partial_update_invoice_owner(request, payload: InvoiceOwnerUpdate, id: int):
     user.save()
     return 200, user
 
-@api.post("/invoice-owners/{id}/upload-files/", response={200: InvoiceOwnerOut, 400: ErrorSchema, 422: ErrorSchema, 403: ErrorSchema}, auth=django_auth)
+@api.post("/invoice-owners/{id}/upload-files/", response={200: InvoiceOwnerOut, 400: ErrorSchema, 403: ErrorSchema, 404: ErrorSchema, 422: ErrorSchema, 500: ErrorSchema}, auth=django_auth)
 def upload_files(request, id: int, logo: UploadedFile = File(...), signature: UploadedFile = File(...)):
     if not request.user.is_staff and id != request.user.id:
         return 403, {"detail": "You do not have permission to update this user."}
@@ -203,7 +203,7 @@ def upload_files(request, id: int, logo: UploadedFile = File(...), signature: Up
 
     return 200, user
 
-@api.delete("/invoice-owners/{id}/", response={204: None}, auth=django_auth)
+@api.delete("/invoice-owners/{id}/", response={204: None, 403: ErrorSchema, 404: ErrorSchema, 500: ErrorSchema}, auth=django_auth)
 def delete_invoice_owner(request, id: int):
     if not request.user.is_staff and id != request.user.id:
         return 403, {"detail": "You do not have permission to delete this user."}
@@ -217,13 +217,13 @@ def delete_invoice_owner(request, id: int):
 
 @cache_page(60 * 5)
 @paginate
-@api.get("/clients/", response=List[ClientOut], auth=django_auth)
+@api.get("/clients/", response={200: List[ClientOut], 403: ErrorSchema, 500: ErrorSchema}, auth=django_auth)
 def list_clients(request):
     if request.user.is_staff:
         return Client.objects.all()
     return Client.objects.filter(invoices__invoice_owner=request.user).distinct()
 
-@api.post("/clients/", response={201: ClientOut}, auth=django_auth)
+@api.post("/clients/", response={201: ClientOut, 400: ErrorSchema, 403: ErrorSchema, 500: ErrorSchema}, auth=django_auth)
 def create_client(request, payload: ClientCreate):
     client = Client(**payload.dict())
     try:
@@ -233,13 +233,13 @@ def create_client(request, payload: ClientCreate):
     client.save()
     return 201, client
 
-@api.get("/clients/{id}/", response=ClientOut, auth=django_auth)
+@api.get("/clients/{id}/", response={200: ClientOut, 403: ErrorSchema, 404: ErrorSchema, 500: ErrorSchema}, auth=django_auth)
 def get_client(request, id: int):
     if request.user.is_staff:
         return get_object_or_404(Client, id=id)
     return get_object_or_404(Client, id=id, invoices__invoice_owner=request.user)
 
-@api.patch("/clients/{id}/", response=ClientOut, auth=django_auth)
+@api.patch("/clients/{id}/", response={200: ClientOut, 400: ErrorSchema, 403: ErrorSchema, 404: ErrorSchema, 500: ErrorSchema}, auth=django_auth)
 def partial_update_client(request, id: int, payload: ClientUpdate):
     if request.user.is_staff:
         client = get_object_or_404(Client, id=id)
@@ -255,7 +255,7 @@ def partial_update_client(request, id: int, payload: ClientUpdate):
     client.save()
     return client
 
-@api.delete("/clients/{id}/", response={204: None}, auth=django_auth)
+@api.delete("/clients/{id}/", response={204: None, 403: ErrorSchema, 404: ErrorSchema, 500: ErrorSchema}, auth=django_auth)
 def delete_client(request, id: int):
     if request.user.is_staff:
         client = get_object_or_404(Client, id=id)
@@ -270,17 +270,16 @@ def delete_client(request, id: int):
 
 @cache_page(60 * 5)
 @paginate
-@api.get("/invoices/", response=List[InvoiceOut], auth=django_auth)
+@api.get("/invoices/", response={200: List[InvoiceOut], 403: ErrorSchema, 500: ErrorSchema}, auth=django_auth)
 def list_invoices(request):
     if request.user.is_staff:
         invoices = Invoice.objects.all()
     else:
         invoices = Invoice.objects.filter(invoice_owner=request.user)
-    # Serialize each invoice so that date fields are ISO strings.
     serialized = [serialize_invoice(inv) for inv in invoices]
     return serialized
 
-@api.post("/invoices/", response={201: InvoiceOut}, auth=django_auth)
+@api.post("/invoices/", response={201: InvoiceOut, 400: ErrorSchema, 403: ErrorSchema, 500: ErrorSchema}, auth=django_auth)
 def create_invoice(request, payload: InvoiceCreate):
     invoice = Invoice(invoice_owner=request.user, **payload.dict())
     try:
@@ -290,7 +289,7 @@ def create_invoice(request, payload: InvoiceCreate):
     invoice.save()
     return 201, serialize_invoice(invoice)
 
-@api.get("/invoices/{id}/", response=InvoiceOut, auth=django_auth)
+@api.get("/invoices/{id}/", response={200: InvoiceOut, 403: ErrorSchema, 404: ErrorSchema, 500: ErrorSchema}, auth=django_auth)
 def get_invoice(request, id: int):
     if request.user.is_staff:
         invoice = get_object_or_404(Invoice, id=id)
@@ -298,7 +297,7 @@ def get_invoice(request, id: int):
         invoice = get_object_or_404(Invoice, id=id, invoice_owner=request.user)
     return serialize_invoice(invoice)
 
-@api.patch("/invoices/{id}/", response=InvoiceOut, auth=django_auth)
+@api.patch("/invoices/{id}/", response={200: InvoiceOut, 400: ErrorSchema, 403: ErrorSchema, 404: ErrorSchema, 500: ErrorSchema}, auth=django_auth)
 def update_invoice(request, id: int, payload: InvoiceUpdate):
     if request.user.is_staff:
         invoice = get_object_or_404(Invoice, id=id)
@@ -314,7 +313,7 @@ def update_invoice(request, id: int, payload: InvoiceUpdate):
     invoice.save()
     return serialize_invoice(invoice)
 
-@api.delete("/invoices/{id}/", response={204: None}, auth=django_auth)
+@api.delete("/invoices/{id}/", response={204: None, 403: ErrorSchema, 404: ErrorSchema, 500: ErrorSchema}, auth=django_auth)
 def delete_invoice(request, id: int):
     if request.user.is_staff:
         invoice = get_object_or_404(Invoice, id=id)
@@ -329,7 +328,7 @@ def delete_invoice(request, id: int):
 
 @cache_page(60 * 5)
 @paginate
-@api.get("/invoices/{invoice_id}/items/", response=List[InvoiceItemOut], auth=django_auth)
+@api.get("/invoices/{invoice_id}/items/", response={200: List[InvoiceItemOut], 403: ErrorSchema, 404: ErrorSchema, 500: ErrorSchema}, auth=django_auth)
 def list_invoice_items(request, invoice_id: int):
     if request.user.is_staff:
         invoice = get_object_or_404(Invoice, id=invoice_id)
@@ -337,7 +336,7 @@ def list_invoice_items(request, invoice_id: int):
         invoice = get_object_or_404(Invoice, id=invoice_id, invoice_owner=request.user)
     return InvoiceItem.objects.filter(invoice=invoice)
 
-@api.post("/invoices/{invoice_id}/items/", response={201: InvoiceItemOut}, auth=django_auth)
+@api.post("/invoices/{invoice_id}/items/", response={201: InvoiceItemOut, 400: ErrorSchema, 403: ErrorSchema, 404: ErrorSchema, 500: ErrorSchema}, auth=django_auth)
 def create_invoice_item(request, invoice_id: int, payload: InvoiceItemCreate):
     if request.user.is_staff:
         invoice = get_object_or_404(Invoice, id=invoice_id)
@@ -347,7 +346,7 @@ def create_invoice_item(request, invoice_id: int, payload: InvoiceItemCreate):
     item.save()
     return 201, item
 
-@api.get("/invoices/{invoice_id}/items/{id}/", response=InvoiceItemOut, auth=django_auth)
+@api.get("/invoices/{invoice_id}/items/{id}/", response={200: InvoiceItemOut, 403: ErrorSchema, 404: ErrorSchema, 500: ErrorSchema}, auth=django_auth)
 def get_invoice_item(request, invoice_id: int, id: int):
     if request.user.is_staff:
         invoice = get_object_or_404(Invoice, id=invoice_id)
@@ -355,7 +354,7 @@ def get_invoice_item(request, invoice_id: int, id: int):
         invoice = get_object_or_404(Invoice, id=invoice_id, invoice_owner=request.user)
     return get_object_or_404(InvoiceItem, id=id, invoice=invoice)
 
-@api.patch("/invoices/{invoice_id}/items/{id}/", response=InvoiceItemOut, auth=django_auth)
+@api.patch("/invoices/{invoice_id}/items/{id}/", response={200: InvoiceItemOut, 400: ErrorSchema, 403: ErrorSchema, 404: ErrorSchema, 500: ErrorSchema}, auth=django_auth)
 def update_invoice_item(request, invoice_id: int, id: int, payload: InvoiceItemUpdate):
     if request.user.is_staff:
         invoice = get_object_or_404(Invoice, id=invoice_id)
@@ -368,7 +367,7 @@ def update_invoice_item(request, invoice_id: int, id: int, payload: InvoiceItemU
     item.save()
     return item
 
-@api.delete("/invoices/{invoice_id}/items/{id}/", response={204: None}, auth=django_auth)
+@api.delete("/invoices/{invoice_id}/items/{id}/", response={204: None, 403: ErrorSchema, 404: ErrorSchema, 500: ErrorSchema}, auth=django_auth)
 def delete_invoice_item(request, invoice_id: int, id: int):
     if request.user.is_staff:
         invoice = get_object_or_404(Invoice, id=invoice_id)
