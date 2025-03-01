@@ -12,8 +12,3 @@ export const invoiceTypeOptions = [
   { value: "quotation", label: "Quotation" },
   { value: "invoice", label: "Invoice" },
 ];
-
-export const transitChargeOptions = [
-  { value: "has", label: "Has Charges" },
-  { value: "none", label: "No Charges" },
-];

@@ -48,3 +48,4 @@ export const transactionSchema = z.object({
 });
 
 export type Transaction = z.infer<typeof transactionSchema>;
+export type Client = z.infer<typeof clientSchema>;

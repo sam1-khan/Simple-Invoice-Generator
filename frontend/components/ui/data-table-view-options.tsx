@@ -26,7 +26,7 @@ export function DataTableViewOptions<TData>({
         <Button
           variant="outline"
           size="sm"
-          className="ml-auto hidden h-8 lg:flex"
+          className="ml-auto h-8 flex"
         >
           <Settings2 />
           View
@@ -39,7 +39,7 @@ export function DataTableViewOptions<TData>({
           .getAllColumns()
           .filter(
             (column) =>
-              typeof column.accessorFn !== "undefined" && column.getCanHide()
+              typeof column.accessorFn !== "undefined" && column.getCanHide() && column.id !== 'id'
           )
           .map((column) => {
             return (
@@ -49,7 +49,7 @@ export function DataTableViewOptions<TData>({
                 checked={column.getIsVisible()}
                 onCheckedChange={(value) => column.toggleVisibility(!!value)}
               >
-                {column.id}
+                {column.id.replace("_", " ")}
               </DropdownMenuCheckboxItem>
             )
           })}

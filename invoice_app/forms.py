@@ -27,6 +27,7 @@ class InvoiceForm(forms.ModelForm):
                 'placeholder': 'Enter additional notes',
             }),
         }
+    is_paid = forms.BooleanField(label='Payment', required=False)
     is_taxed = forms.BooleanField(label='Tax Included', required=False)
     is_quotation = forms.BooleanField(label='Quotation', required=False)
     tax_percentage = forms.DecimalField(

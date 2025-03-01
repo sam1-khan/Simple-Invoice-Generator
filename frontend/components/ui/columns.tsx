@@ -35,6 +35,18 @@ export const columns: ColumnDef<Transaction>[] = [
     enableHiding: false,
   },
   {
+    id: "id",
+    accessorKey: "id",
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} className="hidden" title="id" />
+    ),
+    cell: ({ row }) => (
+      <div className="hidden">
+        {row.getValue("id")}
+      </div>
+    ),
+  },
+  {
     id: "reference_number",
     accessorKey: "reference_number",
     header: ({ column }) => (
@@ -47,13 +59,13 @@ export const columns: ColumnDef<Transaction>[] = [
     ),
   },
   {
-    id: "clientName",
+    id: "client_name",
     accessorFn: (row) => row.client?.name,
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="Client" />
     ),
     cell: ({ row }) => (
-      <div className="max-w-[200px] truncate">{row.getValue("clientName")}</div>
+      <div className="max-w-[200px] truncate">{row.getValue("client_name")}</div>
     ),
   },
   {
@@ -106,24 +118,6 @@ export const columns: ColumnDef<Transaction>[] = [
     },
   },  
   {
-    id: "is_taxed",
-    accessorKey: "is_taxed",
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Tax Status" />
-    ),
-    cell: ({ row }) => {
-      const taxed = row.getValue("is_taxed");
-      return (
-        <Badge variant={taxed ? "default" : "outline"}>
-          {taxed ? "Taxed" : "Not Taxed"}
-        </Badge>
-      );
-    },
-    filterFn: (row, id, value) => {
-      return value.includes(row.getValue(id) ? "true" : "false");
-    },
-  },
-  {
     id: "is_quotation",
     accessorKey: "is_quotation",
     header: ({ column }) => (
@@ -142,24 +136,23 @@ export const columns: ColumnDef<Transaction>[] = [
     },
   },
   {
-    id: "transit_charges",
-    accessorKey: "transit_charges",
+    id: "is_taxed",
+    accessorKey: "is_taxed",
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Transit Charges" />
+      <DataTableColumnHeader column={column} title="Tax Status" />
     ),
     cell: ({ row }) => {
-      const charges = row.getValue("transit_charges");
-      const amount = typeof charges === "number" ? charges : 0;
-      return <div>${amount.toFixed(2)}</div>;
+      const taxed = row.getValue("is_taxed");
+      return (
+        <Badge variant={taxed ? "default" : "outline"}>
+          {taxed ? "Taxed" : "Not Taxed"}
+        </Badge>
+      );
     },
     filterFn: (row, id, value) => {
-      const charges = row.getValue(id);
-      const amount = typeof charges === "number" ? charges : 0;
-      if (value.includes("has") && amount > 0) return true;
-      if (value.includes("none") && amount <= 0) return true;
-      return false;
+      return value.includes(row.getValue(id) ? "true" : "false");
     },
-  },  
+  }, 
   {
     id: "actions",
     cell: ({ row }) => <DataTableRowActions row={row} />,
