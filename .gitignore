@@ -152,3 +152,6 @@ invoice_project/db.sqlite3
 
 # Media #
 invoice_app/static/media/*
+
+# Migrations #
+invoice_app/migrations/*
