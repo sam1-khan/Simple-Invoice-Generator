@@ -67,13 +67,13 @@ export function UserNav() {
 
 
       if (e.shiftKey) {
-        // Settings Shortcut: shift+s
-        if (e.key.toLowerCase() === "s") {
-          router.replace("/settings");
+        // Appearance Shortcut: shift+s
+        if (e.key.toLowerCase() === "d") {
+          router.replace("settings/appearance");
         }
         // Account Shortcut: shift+a
         if (e.key.toLowerCase() === "a") {
-          router.replace("/settings/account");
+          router.replace("/settings/");
         }
         // Logout Shortcut: shift+q
         if (e.key.toLowerCase() === "q") {
@@ -114,16 +114,16 @@ export function UserNav() {
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
         <DropdownMenuGroup>
-          <DropdownMenuItem onClick={() => router.push("/settings/account")}>
+          <DropdownMenuItem onClick={() => router.push("/settings")}>
             Account
             <div className="ml-auto">
             <Badge variant={"outline"} className="text-xs p-1">Shift+a</Badge>
           </div>
           </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => router.push("/settings")}>
-            Settings
+          <DropdownMenuItem onClick={() => router.push("/setting/appearance")}>
+            Appearance
             <div className="ml-auto">
-            <Badge variant={"outline"} className="text-xs p-1">Shift+s</Badge>
+            <Badge variant={"outline"} className="text-xs p-1">Shift+d</Badge>
           </div>
           </DropdownMenuItem>
         </DropdownMenuGroup>
