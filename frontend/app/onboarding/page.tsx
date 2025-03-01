@@ -115,6 +115,7 @@ export default function OnboardingPage() {
             account_title: data.account_title,
             iban: data.iban,
             phone_2: data.phone_2,
+            is_onboarded: true
           }),
         }
       );

@@ -22,6 +22,13 @@ export function DataTableRowActions<TData>({ row }: DataTableRowActionsProps<TDa
   const [isPaid, setIsPaid] = useState<boolean>(row.getValue("is_paid"));
 
   const togglePaymentStatus = async () => {
+    if (row.getValue("is_quotation")) {
+      toast("Not an Invoice", {
+        description: "Quotation can't be marked as paid.",
+      });
+      return;
+    }
+    
     const newStatus = !isPaid;
 
     try {

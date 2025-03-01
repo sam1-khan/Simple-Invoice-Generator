@@ -6,11 +6,8 @@ from .models import Invoice, InvoiceOwner, InvoiceItem, Client
 class InvoiceForm(forms.ModelForm):
     class Meta:
         model = Invoice
-        fields = ['invoice_owner', 'client', 'is_paid', 'is_quotation', 'is_taxed', 'tax_percentage', 'transit_charges', 'date', 'notes',]
+        fields = ['client', 'is_paid', 'is_quotation', 'is_taxed', 'tax_percentage', 'transit_charges', 'date', 'notes']
         widgets = {
-            'invoice_owner': forms.Select(attrs={
-                'autofocus': 'autofocus', 
-            }),
             'transit_charges': NoTrailingZeroNumberInput(attrs={
                 'min': '0',
                 'step': '0.001',  # Use 0.01 for decimal precision
@@ -18,10 +15,8 @@ class InvoiceForm(forms.ModelForm):
             }),
             'date': forms.DateInput(
                 format=('%Y-%m-%d'),
-                attrs={
-                    'placeholder': 'Select a date',
-                    'type': 'date'
-            }),
+                attrs={'placeholder': 'Select a date', 'type': 'date'}
+            ),
             'notes': forms.Textarea(attrs={
                 'rows': 3,
                 'placeholder': 'Enter additional notes',
@@ -34,7 +29,7 @@ class InvoiceForm(forms.ModelForm):
         required=False,
         initial=0,
         max_digits=5,
-        decimal_places=2,
+        decimal_places=3,
         widget=NoTrailingZeroNumberInput(attrs={
             'min': '0',
             'max': '99999',
@@ -42,8 +37,17 @@ class InvoiceForm(forms.ModelForm):
             'placeholder': 'Enter tax percentage (without "%")',
         })
     )
+
     client = forms.ModelChoiceField(queryset=Client.objects.all(), empty_label="Select Client or Create New", required=True)
 
+    def clean(self):
+        cleaned_data = super().clean()
+
+        client = cleaned_data.get('client')
+        if client:
+            cleaned_data['invoice_owner'] = client.invoice_owner
+
+        return cleaned_data
 
 class InvoiceOwnerCreationForm(UserCreationForm):
     class Meta:
@@ -106,7 +110,7 @@ class InvoiceItemForm(forms.ModelForm):
                 'placeholder': 'Enter item description',
                 'rows': 3,
             }),
-                'unit': forms.TextInput(attrs={
+            'unit': forms.TextInput(attrs={
                 'placeholder': 'Enter quantity unit i.e pc(s), box(es), unit(s)',
             })
         }

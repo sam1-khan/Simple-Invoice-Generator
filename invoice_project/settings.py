@@ -67,6 +67,7 @@ MIDDLEWARE = [
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
+    'django.middleware.locale.LocaleMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 CORS_ALLOW_CREDENTIALS = True
@@ -126,6 +127,7 @@ AUTH_PASSWORD_VALIDATORS = [
 
 # Internationalization settings
 LANGUAGE_CODE = 'en-us'
+DEFAULT_PHONE_REGION = 'PK'
 TIME_ZONE = 'Asia/Karachi'
 USE_I18N = True
 USE_L10N = True

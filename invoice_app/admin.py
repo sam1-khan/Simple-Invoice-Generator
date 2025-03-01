@@ -63,15 +63,19 @@ class InvoiceItemInline(admin.TabularInline):
 
 
 class InvoiceAdmin(admin.ModelAdmin):
-    list_display = ('reference_number', 'invoice_owner', 'get_client_name', 'total_price', 'grand_total', 'updated_at')
+    list_display = ('reference_number', 'get_invoice_owner', 'get_client_name', 'total_price', 'grand_total', 'updated_at')
     search_fields = ('items', 'reference_number', 'client__name')
     list_filter = ('updated_at',)
     ordering = ('-updated_at',)
     date_hierarchy = 'updated_at'
     readonly_fields = ('total_price', 'tax', 'grand_total', 'created_at', 'updated_at', 'reference_number')
-#    exclude = ('tax',)
-    
+
     inlines = [InvoiceItemInline,]
+
+    def get_invoice_owner(self, obj):
+        return obj.client.invoice_owner.name if obj.client and obj.client.invoice_owner else None
+    
+    get_invoice_owner.short_description = 'Invoice Owner'
 
     def get_client_name(self, obj):
         return obj.client.name  

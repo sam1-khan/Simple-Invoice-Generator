@@ -21,6 +21,7 @@ export const invoiceOwnerSchema = z.object({
 export const clientSchema = z.object({
   id: z.number(),
   name: z.string(),
+  invoice_owner: invoiceOwnerSchema,
   address: z.string().nullable().optional(),
   ntn_number: z.string().nullable().optional(),
   phone: z.string().nullable().optional(),
@@ -30,7 +31,6 @@ export const clientSchema = z.object({
 
 export const transactionSchema = z.object({
   id: z.number(),
-  invoice_owner: invoiceOwnerSchema,
   client: clientSchema,
   reference_number: z.string(),
   tax_percentage: z.number().optional().nullable(),

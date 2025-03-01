@@ -64,6 +64,7 @@ def serialize_invoice_owner(owner):
 def serialize_client(client):
     return {
         "id": client.id,
+        "invoice_owner": serialize_invoice_owner(client.invoice_owner),
         "name": client.name,
         "address": client.address,
         "ntn_number": client.ntn_number,
@@ -75,7 +76,6 @@ def serialize_client(client):
 def serialize_invoice(invoice):
     return {
         "id": invoice.id,
-        "invoice_owner": serialize_invoice_owner(invoice.invoice_owner),
         "client": serialize_client(invoice.client),
         "reference_number": invoice.reference_number,
         "tax_percentage": invoice.tax_percentage,
@@ -164,19 +164,9 @@ def partial_update_invoice_owner(request, payload: InvoiceOwnerUpdate, id: int):
 
     user = get_object_or_404(InvoiceOwner, id=id)
 
-    user.address = payload.address
-    if payload.ntn_number is not None:
-        user.ntn_number = payload.ntn_number
-    if payload.bank is not None:
-        user.bank = payload.bank
-    if payload.account_title is not None:
-        user.account_title = payload.account_title
-    if payload.iban is not None:
-        user.iban = payload.iban
-    if payload.phone_2 is not None:
-        user.phone_2 = payload.phone_2
-
-    user.is_onboarded = True
+    data = payload.dict(exclude_unset=True)
+    for attr, value in data.items():
+        setattr(user, attr, value)
 
     try:
         user.full_clean()
@@ -221,11 +211,11 @@ def delete_invoice_owner(request, id: int):
 def list_clients(request):
     if request.user.is_staff:
         return Client.objects.all()
-    return Client.objects.filter(invoices__invoice_owner=request.user).distinct()
+    return Client.objects.filter(invoice_owner=request.user)
 
 @api.post("/clients/", response={201: ClientOut, 400: ErrorSchema, 403: ErrorSchema, 500: ErrorSchema}, auth=django_auth)
 def create_client(request, payload: ClientCreate):
-    client = Client(**payload.dict())
+    client = Client(invoice_owner=request.user, **payload.dict())
     try:
         client.full_clean()
     except ValidationError as e:
@@ -237,14 +227,14 @@ def create_client(request, payload: ClientCreate):
 def get_client(request, id: int):
     if request.user.is_staff:
         return get_object_or_404(Client, id=id)
-    return get_object_or_404(Client, id=id, invoices__invoice_owner=request.user)
+    return get_object_or_404(Client, id=id, invoice_owner=request.user)
 
 @api.patch("/clients/{id}/", response={200: ClientOut, 400: ErrorSchema, 403: ErrorSchema, 404: ErrorSchema, 500: ErrorSchema}, auth=django_auth)
 def partial_update_client(request, id: int, payload: ClientUpdate):
     if request.user.is_staff:
         client = get_object_or_404(Client, id=id)
     else:
-        client = get_object_or_404(Client, id=id, invoices__invoice_owner=request.user)
+        client = get_object_or_404(Client, id=id, invoice_owner=request.user)
     data = payload.dict(exclude_unset=True)
     for attr, value in data.items():
         setattr(client, attr, value)
@@ -260,7 +250,7 @@ def delete_client(request, id: int):
     if request.user.is_staff:
         client = get_object_or_404(Client, id=id)
     else:
-        client = get_object_or_404(Client, id=id, invoices__invoice_owner=request.user)
+        client = get_object_or_404(Client, id=id, invoice_owner=request.user)
     client.delete()
     return 204, None
 
@@ -275,13 +265,13 @@ def list_invoices(request):
     if request.user.is_staff:
         invoices = Invoice.objects.all()
     else:
-        invoices = Invoice.objects.filter(invoice_owner=request.user)
+        invoices = Invoice.objects.filter(client__invoice_owner=request.user)
     serialized = [serialize_invoice(inv) for inv in invoices]
     return serialized
 
 @api.post("/invoices/", response={201: InvoiceOut, 400: ErrorSchema, 403: ErrorSchema, 500: ErrorSchema}, auth=django_auth)
 def create_invoice(request, payload: InvoiceCreate):
-    invoice = Invoice(invoice_owner=request.user, **payload.dict())
+    invoice = Invoice(client__invoice_owner=request.user, **payload.dict())
     try:
         invoice.full_clean()
     except ValidationError as e:
@@ -294,7 +284,7 @@ def get_invoice(request, id: int):
     if request.user.is_staff:
         invoice = get_object_or_404(Invoice, id=id)
     else:
-        invoice = get_object_or_404(Invoice, id=id, invoice_owner=request.user)
+        invoice = get_object_or_404(Invoice, id=id, client__invoice_owner=request.user)
     return serialize_invoice(invoice)
 
 @api.patch("/invoices/{id}/", response={200: InvoiceOut, 400: ErrorSchema, 403: ErrorSchema, 404: ErrorSchema, 500: ErrorSchema}, auth=django_auth)
@@ -302,7 +292,7 @@ def update_invoice(request, id: int, payload: InvoiceUpdate):
     if request.user.is_staff:
         invoice = get_object_or_404(Invoice, id=id)
     else:
-        invoice = get_object_or_404(Invoice, id=id, invoice_owner=request.user)
+        invoice = get_object_or_404(Invoice, id=id, client__invoice_owner=request.user)
     data = payload.dict(exclude_unset=True)
     for attr, value in data.items():
         setattr(invoice, attr, value)
@@ -318,7 +308,7 @@ def delete_invoice(request, id: int):
     if request.user.is_staff:
         invoice = get_object_or_404(Invoice, id=id)
     else:
-        invoice = get_object_or_404(Invoice, id=id, invoice_owner=request.user)
+        invoice = get_object_or_404(Invoice, id=id, client__invoice_owner=request.user)
     invoice.delete()
     return 204, None
 
@@ -333,7 +323,7 @@ def list_invoice_items(request, invoice_id: int):
     if request.user.is_staff:
         invoice = get_object_or_404(Invoice, id=invoice_id)
     else:
-        invoice = get_object_or_404(Invoice, id=invoice_id, invoice_owner=request.user)
+        invoice = get_object_or_404(Invoice, id=invoice_id, client__invoice_owner=request.user)
     return InvoiceItem.objects.filter(invoice=invoice)
 
 @api.post("/invoices/{invoice_id}/items/", response={201: InvoiceItemOut, 400: ErrorSchema, 403: ErrorSchema, 404: ErrorSchema, 500: ErrorSchema}, auth=django_auth)
@@ -341,7 +331,7 @@ def create_invoice_item(request, invoice_id: int, payload: InvoiceItemCreate):
     if request.user.is_staff:
         invoice = get_object_or_404(Invoice, id=invoice_id)
     else:
-        invoice = get_object_or_404(Invoice, id=invoice_id, invoice_owner=request.user)
+        invoice = get_object_or_404(Invoice, id=invoice_id, client__invoice_owner=request.user)
     item = InvoiceItem(invoice=invoice, **payload.dict())
     item.save()
     return 201, item
@@ -351,7 +341,7 @@ def get_invoice_item(request, invoice_id: int, id: int):
     if request.user.is_staff:
         invoice = get_object_or_404(Invoice, id=invoice_id)
     else:
-        invoice = get_object_or_404(Invoice, id=invoice_id, invoice_owner=request.user)
+        invoice = get_object_or_404(Invoice, id=invoice_id, client__invoice_owner=request.user)
     return get_object_or_404(InvoiceItem, id=id, invoice=invoice)
 
 @api.patch("/invoices/{invoice_id}/items/{id}/", response={200: InvoiceItemOut, 400: ErrorSchema, 403: ErrorSchema, 404: ErrorSchema, 500: ErrorSchema}, auth=django_auth)
@@ -359,7 +349,7 @@ def update_invoice_item(request, invoice_id: int, id: int, payload: InvoiceItemU
     if request.user.is_staff:
         invoice = get_object_or_404(Invoice, id=invoice_id)
     else:
-        invoice = get_object_or_404(Invoice, id=invoice_id, invoice_owner=request.user)
+        invoice = get_object_or_404(Invoice, id=invoice_id, client__invoice_owner=request.user)
     item = get_object_or_404(InvoiceItem, id=id, invoice=invoice)
     data = payload.dict(exclude_unset=True)
     for attr, value in data.items():
@@ -372,7 +362,7 @@ def delete_invoice_item(request, invoice_id: int, id: int):
     if request.user.is_staff:
         invoice = get_object_or_404(Invoice, id=invoice_id)
     else:
-        invoice = get_object_or_404(Invoice, id=invoice_id, invoice_owner=request.user)
+        invoice = get_object_or_404(Invoice, id=invoice_id, client__invoice_owner=request.user)
     item = get_object_or_404(InvoiceItem, id=id, invoice=invoice)
     item.delete()
     return 204, None

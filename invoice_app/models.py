@@ -4,7 +4,7 @@ from django.utils.translation import gettext_lazy as _
 from django.core.validators import MinValueValidator
 from django.contrib.auth.models import AbstractUser
 from .managers import CustomUserManager
-from .utils import upload_logo, upload_sign
+from .utils import upload_logo, upload_sign, validate_phone_number
 from imagekit.models import ProcessedImageField
 from imagekit.processors import ResizeToFill
 from .storage import OverwriteStorage
@@ -13,9 +13,9 @@ from .storage import OverwriteStorage
 class InvoiceOwner(AbstractUser):
     is_onboarded = models.BooleanField(default=False)
     address = models.TextField(max_length=255, blank=True, null=True)
-    phone = models.CharField(max_length=12)
-    phone_2 = models.CharField(max_length=12, blank=True, null=True)
-    ntn_number = models.CharField(max_length=13, blank=True, null=True)
+    phone = models.CharField(max_length=15)
+    phone_2 = models.CharField(max_length=15, blank=True, null=True)
+    ntn_number = models.CharField(max_length=15, blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     bank = models.CharField(max_length=55, blank=True, null=True)
@@ -59,21 +59,13 @@ class InvoiceOwner(AbstractUser):
     def clean(self):
         super().clean()
 
-        if self.phone and not self.phone.replace("-", "").isdigit():
-            raise ValidationError(_("Phone number should contain only digits and dashes (-)."))
+        validate_phone_number(self.phone)
 
-        if self.phone and not (11 <= len(self.phone) <= 12):
-            raise ValidationError(_("Phone Number must be 11 to 12 characters long. Pattern: 0123-4567890"))
+        if self.phone_2:
+            validate_phone_number(self.phone_2)
 
-        if self.phone_2 and not self.phone_2.replace("-", "").isdigit():
-            raise ValidationError(_("Alternate phone number should contain only digits and dashes (-)."))
-
-        if self.phone_2 and not (11 <= len(self.phone_2) <= 12):
-            raise ValidationError(_("Alternate Phone Number must be 11 to 12 characters long. Pattern: 0123-4567890"))
-
-        if self.ntn_number and not (7 <= len(self.ntn_number) <= 13):
-            print("DEBUG: Invalid NTN number length")
-            raise ValidationError(_("NTN number must be 7 to 13 characters long. Pattern: 01234-5678901 or 0123456-78901"))
+        if self.ntn_number and not (7 <= len(self.ntn_number) <= 15):
+            raise ValidationError(_("NTN number must be 7 to 15 characters long."))
     
     def __str__(self):
         return self.name
@@ -82,8 +74,9 @@ class InvoiceOwner(AbstractUser):
 class Client(models.Model):
     name = models.CharField(max_length=255)
     address = models.TextField(max_length=255, null=True, blank=True)
-    ntn_number = models.CharField(max_length=13, null=True, blank=True)
-    phone = models.CharField(max_length=12, blank=True, null=True)
+    ntn_number = models.CharField(max_length=15, null=True, blank=True)
+    phone = models.CharField(max_length=15, blank=True, null=True)
+    invoice_owner = models.ForeignKey(InvoiceOwner, on_delete=models.CASCADE)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -91,22 +84,18 @@ class Client(models.Model):
         ordering = ('-updated_at',)
 
     def clean(self):
-        if self.phone and not self.phone.replace("-", "").isdigit():
-            raise ValidationError(_("Phone number should contain only digits and dashes (-)."))
+        if self.phone:
+            validate_phone_number(self.phone)
 
-        if self.phone and not (11 <= len(self.phone) <= 12):
-            raise ValidationError("Phone Number must be 11 to 12 characters long. Pattern: 0123-4567890")
-
-        if self.ntn_number and not (7 <= len(self.ntn_number) <= 13):
-            raise ValidationError("NTN number must be 7 to 13 characters long. Pattern: 01234-5678901 or 0123456-78901")
+        if self.ntn_number and not (7 <= len(self.ntn_number) <= 15):
+            raise ValidationError("NTN number must be 7 to 15 characters long.")
 
     def __str__(self):
         return self.name
 
 
 class Invoice(models.Model):
-    invoice_owner = models.ForeignKey(InvoiceOwner, on_delete=models.CASCADE)
-    client = models.ForeignKey(Client, related_name='invoices', on_delete=models.CASCADE)
+    client = models.ForeignKey(Client, on_delete=models.CASCADE, related_name="invoices")
     reference_number = models.CharField(max_length=14, editable=False)
     tax_percentage = models.DecimalField(
         max_digits=5, blank=True, null=True, decimal_places=3, validators=[MinValueValidator(0)]
@@ -170,7 +159,6 @@ class Invoice(models.Model):
                 last_invoice = Invoice.objects.filter(is_quotation=False).order_by('-id').first()
                 self.reference_number = Invoice.get_next_reference_number(last_invoice, is_quotation=False)
         
-        super().save(*args, **kwargs)
         self.calculate_totals()
 
         super().save(*args, **kwargs)

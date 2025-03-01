@@ -68,6 +68,7 @@ class ClientUpdate(Schema):
 class ClientOut(Schema):
     id: int
     name: str
+    invoice_owner: InvoiceOwnerOut
     address: Optional[str] = None
     ntn_number: Optional[str] = None
     phone: Optional[str] = None
@@ -96,7 +97,6 @@ class InvoiceUpdate(Schema):
 
 class InvoiceOut(Schema):
     id: int
-    invoice_owner: InvoiceOwnerOut
     client: ClientOut
     reference_number: str
     tax_percentage: Optional[float] = None
