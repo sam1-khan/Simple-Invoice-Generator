@@ -159,8 +159,8 @@ class Invoice(models.Model):
                 last_invoice = Invoice.objects.filter(is_quotation=False).order_by('-id').first()
                 self.reference_number = Invoice.get_next_reference_number(last_invoice, is_quotation=False)
         
+        super().save(*args, **kwargs)
         self.calculate_totals()
-
         super().save(*args, **kwargs)
 
     def __str__(self):

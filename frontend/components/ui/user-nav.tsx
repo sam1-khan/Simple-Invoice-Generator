@@ -120,7 +120,7 @@ export function UserNav() {
             <Badge variant={"outline"} className="text-xs p-1">Shift+a</Badge>
           </div>
           </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => router.push("/setting/appearance")}>
+          <DropdownMenuItem onClick={() => router.push("/settings/appearance")}>
             Appearance
             <div className="ml-auto">
             <Badge variant={"outline"} className="text-xs p-1">Shift+d</Badge>

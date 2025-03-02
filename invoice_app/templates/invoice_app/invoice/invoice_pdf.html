@@ -44,12 +44,12 @@
     <div class="container">
         <!-- Header Section -->
         <div class="header">
-            <img src="http://localhost:8000{{ invoice.invoice_owner.logo.url }}" alt="{{ invoice.invoice_owner.name }} Logo">
-            <h1 class="fw-bold" style="font-size: 1.9rem;">{{ invoice.invoice_owner.name }}</h1>
-            <h4>{{ invoice.invoice_owner.address }}</h4>
-            <h4>{{ invoice.invoice_owner.phone }}{% if invoice.invoice_owner.phone_2 %}, {{ invoice.invoice_owner.phone_2 }} {% endif %}</h4>
-            <h4>{{ invoice.invoice_owner.email }}</h4>
-            <h4><strong>NTN No: {{ invoice.invoice_owner.ntn_number }}</strong></h4>
+            <img src="http://localhost:8000{{ invoice.client.invoice_owner.logo.url }}" alt="{{ invoice.client.invoice_owner.name }} Logo">
+            <h1 class="fw-bold" style="font-size: 1.9rem;">{{ invoice.client.invoice_owner.name }}</h1>
+            <h4>{{ invoice.client.invoice_owner.address }}</h4>
+            <h4>{{ invoice.client.invoice_owner.phone }}{% if invoice.client.invoice_owner.phone_2 %}, {{ invoice.client.invoice_owner.phone_2 }} {% endif %}</h4>
+            <h4>{{ invoice.client.invoice_owner.email }}</h4>
+            <h4><strong>NTN No: {{ invoice.client.invoice_owner.ntn_number }}</strong></h4>
         </div>
 
         <p class="text-center fw-bold mb-2">{{ invoice.is_quotation|yesno:"Quotation,Invoice" }}</p>
@@ -74,9 +74,9 @@
                 <p class="mb-0"><small><strong>Ref #:</strong> {{ invoice.reference_number }}</small></p>
                 <p class="mb-0"><small><strong>Date:</strong>
                     {% if invoice.date %}
-                        {{ invoice.date|date:"d-m-Y" }}
+                        {{ invoice.date|date:"Y-m-d" }}
                     {% else %}
-                        {{ invoice.created_at|date:"d-m-Y" }}
+                        {{ invoice.created_at|date:"Y-m-d" }}
                     {% endif %}
                 </small></p>
             </div>
@@ -148,11 +148,11 @@
     <div class="row footer">
         <div class="col-6">
             {% if not invoice.is_quotation %}
-                {% if invoice.invoice_owner.bank %}
+                {% if invoice.client.invoice_owner.bank %}
                 <p class="mb-2"><strong>Payment Details:</strong></p>
-                <p class="mb-0"><small><strong>Bank: </strong>{{ invoice.invoice_owner.bank }}</small></p>
-                <p class="mb-0"><small><strong>Title: </strong>{{ invoice.invoice_owner.account_title }}</small></p>
-                <p><small><strong>IBAN: </strong>{{ invoice.invoice_owner.iban }}</small></p>
+                <p class="mb-0"><small><strong>Bank: </strong>{{ invoice.client.invoice_owner.bank }}</small></p>
+                <p class="mb-0"><small><strong>Title: </strong>{{ invoice.client.invoice_owner.account_title }}</small></p>
+                <p><small><strong>IBAN: </strong>{{ invoice.client.invoice_owner.iban }}</small></p>
                 {% endif %}
             {% endif %}
             {% if invoice.notes %}
@@ -163,10 +163,10 @@
         <!-- Signature -->  
         <div class="col-6 text-end" style="text-align: center; margin-top: -36px;">
             <div style="display: inline-block; text-align: center; padding-left: 120px;">
-                {% if invoice.invoice_owner.signature %}
+                {% if invoice.client.invoice_owner.signature %}
                     <img 
                         style="width: 220px; display: inline-block; object-fit: contain; margin-right: auto; margin-bottom: -60px;" 
-                        src="http://localhost:8000{{ invoice.invoice_owner.signature.url }}"
+                        src="http://localhost:8000{{ invoice.client.invoice_owner.signature.url }}"
                         alt="CEO Signature">
                 {% else %}
                     <div style="width: 220px; height: 104px; background: transparent;"></div>

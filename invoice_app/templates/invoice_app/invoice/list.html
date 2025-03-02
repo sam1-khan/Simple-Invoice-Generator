@@ -75,9 +75,9 @@
           <p class="card-text text-muted">
             <small><strong>Date: </strong>
               {% if invoice.date %}
-                {{ invoice.date|date:"d-m-Y" }}
+                {{ invoice.date|date:"Y-m-d" }}
               {% else %}
-                {{ invoice.created_at|date:"d-m-Y" }}
+                {{ invoice.created_at|date:"Y-m-d" }}
               {% endif %}
             </small>
           </p>
