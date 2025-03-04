@@ -2,9 +2,8 @@ import { Metadata } from "next";
 import { cookies } from "next/headers";
 import { z } from "zod";
 
-import { columns } from "@/components/ui/columns";
-import { DataTable } from "@/components/ui/data-table";
 import { transactionSchema } from "./data/schema";
+import { TransactionsTable } from "@/components/transactions-table";
 
 export const metadata: Metadata = {
   title: "Transactions",
@@ -19,7 +18,7 @@ async function getTransactions() {
   const res = await fetch(url, {
     headers: {
       Cookie: cookieHeader,
-    },
+    }
   });
 
   if (!res.ok) {
@@ -31,19 +30,10 @@ async function getTransactions() {
   const data = await res.json();
   const transactions = z.array(transactionSchema).parse(data);
 
-  const updatedTransactions = transactions.map((transaction) => {
-    const tax = transaction.tax;
-
-    if (tax != null && tax != 0) {
-      return {
-        ...transaction,
-        is_taxed: true,
-      };
-    }
-    return transaction;
-  });
-
-  return updatedTransactions;
+  return transactions.map((transaction) => ({
+    ...transaction,
+    is_taxed: transaction.tax != null && transaction.tax !== 0,
+  }));
 }
 
 export default async function TransactionPage() {
@@ -59,7 +49,7 @@ export default async function TransactionPage() {
           </p>
         </div>
       </div>
-      <DataTable data={transactions} columns={columns} />
+      <TransactionsTable transactions={transactions} /> 
     </div>
   );
 }

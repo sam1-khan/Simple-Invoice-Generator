@@ -16,68 +16,94 @@ import { useAuth } from "@/app/context/AuthContext";
 import { useRouter } from "next/navigation";
 import { useEffect, useState, useCallback, useMemo } from "react";
 import { z } from "zod";
-import { transactionSchema, clientSchema } from "@/app/transactions/data/schema";
-
-// Utility function to format currency
-const formatCurrency = (amount: number, currency: string) => {
-  return new Intl.NumberFormat(undefined, {
-    style: "currency",
-    currency,
-  }).format(amount);
-};
+import {
+  transactionSchema,
+  clientSchema,
+} from "@/app/transactions/data/schema";
+import {
+  getCountryFromIP,
+  getCurrencyFromCountry,
+  formatCurrency,
+} from "@/lib/utils";
 
 export default function Dashboard() {
   const { user, loading } = useAuth();
   const router = useRouter();
 
-  // State for dashboard stats
   const [stats, setStats] = useState({
+    revenue_change: "0%",
+    invoices_change: "0%",
+    quotations_change: "0%",
+    clients_change: "0%",
     revenue: 0,
     invoices: 0,
     quotations: 0,
     clients: 0,
-    recentInvoices: [] as { name: string; phone: string; ntn_number: string; purchase: number }[],
+    recentInvoices: [] as {
+      name: string;
+      phone: string;
+      ntn_number: string;
+      purchase: string;
+    }[],
   });
 
-  // State for currency
   const [currency, setCurrency] = useState<string>("PKR");
 
-  // Fetch currency based on user's IP
   useEffect(() => {
-    const getCountryFromIP = async (): Promise<string> => {
-      try {
-        const res = await fetch("https://ipinfo.io/json?token=a7b20789cf45dd");
-        const data = await res.json();
-        return data.country || "PK";
-      } catch (error) {
-        console.error("Error fetching country:", error);
-        return "PK";
-      }
-    };
-
-    const getCurrencyFromCountry = (countryCode: string): string => {
-      const currencyMap: Record<string, string> = {
-        US: "USD", GB: "GBP", CA: "CAD", AU: "AUD", FR: "EUR", DE: "EUR",
-        IN: "INR", JP: "JPY", CN: "CNY", PK: "PKR", AE: "AED", SA: "SAR",
-        RU: "RUB", BR: "BRL", MX: "MXN", ZA: "ZAR", NG: "NGN", KR: "KRW",
-        TR: "TRY", ID: "IDR", MY: "MYR", TH: "THB", VN: "VND", PH: "PHP",
-        BD: "BDT", EG: "EGP", SG: "SGD", HK: "HKD", NZ: "NZD", CH: "CHF",
-        SE: "SEK", NO: "NOK", DK: "DKK", IL: "ILS", CL: "CLP", CO: "COP",
-        AR: "ARS", KE: "KES", GH: "GHS", TW: "TWD"
-      };
-      return currencyMap[countryCode] || "PKR";
-    };
-
-    const fetchCurrency = async () => {
+    (async () => {
       const countryCode = await getCountryFromIP();
-      const currencyCode = getCurrencyFromCountry(countryCode);
-      setCurrency(currencyCode);
-    };
-
-    fetchCurrency();
+      setCurrency(getCurrencyFromCountry(countryCode));
+    })();
   }, []);
 
-  // Fetch dashboard data
+  const computeDashboardStats = useCallback((invoices: any[], clients: any[]) => {
+    const now = Date.now();
+    const thirtyDaysAgo = now - 30 * 24 * 60 * 60 * 1000;
+    const sixtyDaysAgo = now - 60 * 24 * 60 * 60 * 1000;
+
+    let totalRevenue = 0, prevRevenue = 0;
+    let totalInvoices = 0, prevInvoices = 0;
+    let totalQuotations = 0, prevQuotations = 0;
+    let recentInvoices: { name: string; phone: string; ntn_number: string; purchase: string }[] = [];
+
+    invoices.forEach((invoice) => {
+      const createdAt = new Date(invoice.date || invoice.created_at).getTime();
+      const amount = invoice.tax ? invoice.grand_total : invoice.total_price;
+
+      if (createdAt >= thirtyDaysAgo) {
+        invoice.is_quotation ? totalQuotations++ : (totalInvoices++, totalRevenue += amount);
+        if (!invoice.is_quotation && recentInvoices.length < 5) {
+          recentInvoices.push({
+            name: invoice.client.name,
+            phone: invoice.client.phone ?? "",
+            ntn_number: invoice.client.ntn_number ?? "",
+            purchase: amount,
+          });
+        }
+      } else if (createdAt >= sixtyDaysAgo) {
+        invoice.is_quotation ? prevQuotations++ : (prevInvoices++, prevRevenue += amount);
+      }
+    });
+
+    const percentageChange = (current: number, previous: number) => {
+      if (previous === 0) return current > 0 ? "+100%" : "0%";
+      const change = ((current - previous) / previous) * 100;
+      return `${change > 0 ? "+" : ""}${change.toFixed(1)}%`;
+    };
+
+    return {
+      revenue: totalRevenue,
+      invoices: totalInvoices,
+      quotations: totalQuotations,
+      clients: clients.length,
+      recentInvoices: recentInvoices.reverse(),
+      revenue_change: percentageChange(totalRevenue, prevRevenue),
+      invoices_change: percentageChange(totalInvoices, prevInvoices),
+      quotations_change: percentageChange(totalQuotations, prevQuotations),
+      clients_change: percentageChange(clients.length, clients.length - prevInvoices - prevQuotations),
+    };
+  }, []);
+
   const fetchDashboardData = useCallback(async () => {
     try {
       const [invoicesRes, clientsRes] = await Promise.all([
@@ -87,10 +113,7 @@ export default function Dashboard() {
 
       if (!invoicesRes.ok || !clientsRes.ok) throw new Error("Failed to fetch data");
 
-      const [invoicesData, clientsData] = await Promise.all([
-        invoicesRes.json(),
-        clientsRes.json(),
-      ]);
+      const [invoicesData, clientsData] = await Promise.all([invoicesRes.json(), clientsRes.json()]);
 
       const invoices = z.array(transactionSchema).parse(invoicesData);
       const clients = z.array(clientSchema).parse(clientsData);
@@ -99,66 +122,21 @@ export default function Dashboard() {
     } catch (error) {
       console.error("Error fetching dashboard data:", error);
     }
-  }, []);
+  }, [computeDashboardStats]);
 
-  // Fetch data when user is authenticated
   useEffect(() => {
-    if (!loading && !user) router.replace("/login");
-    if (!loading && user) fetchDashboardData();
+    if (!loading) {
+      if (!user) router.replace("/login");
+      else fetchDashboardData();
+    }
   }, [user, loading, router, fetchDashboardData]);
 
-  const computeDashboardStats = (invoices: any[], clients: any[]) => {
-    const thirtyDaysAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
-    let totalRevenue = 0;
-    let totalInvoices = 0;
-    let totalQuotations = 0;
-    let recentInvoices: { name: string; phone: string; ntn_number: string; purchase: number }[] = [];
-  
-    invoices.forEach((invoice) => {
-      let createdAt = new Date(invoice.created_at).getTime();
-      if (invoice.date) {
-        createdAt = new Date(invoice.date).getTime();
-      }
-      if (createdAt >= thirtyDaysAgo) {
-        if (invoice.is_quotation) {
-          totalQuotations++;
-        } else {
-          totalInvoices++;
-          let amount = invoice.tax ? invoice.grand_total : invoice.total_price;
-          totalRevenue += amount;
-  
-          if (recentInvoices.length < 5) {
-            recentInvoices.push({
-              name: invoice.client.name,
-              phone: invoice.client.phone ?? "",
-              ntn_number: invoice.client.ntn_number ?? "",
-              purchase: amount,
-            });
-          }
-        }
-      }
-    });
-
-    return {
-      revenue: totalRevenue,
-      invoices: totalInvoices,
-      quotations: totalQuotations,
-      clients: clients.length,
-      recentInvoices: recentInvoices.reverse(),
-    };
-  };
-
-  // Memoize the formatted revenue value
   const formattedRevenue = useMemo(() => formatCurrency(stats.revenue, currency), [stats.revenue, currency]);
-  const formattedPurchases = useMemo(() => stats.recentInvoices.map((inv) => formatCurrency(inv.purchase, currency)), [stats.recentInvoices, currency]);
   const formattedRecentInvoices = useMemo(() => 
-    stats.recentInvoices.map((invoice, index) => ({
-      ...invoice,
-      purchase: formattedPurchases[index],
-    })), 
-    [stats.recentInvoices, formattedPurchases]
+    stats.recentInvoices.map((inv) => ({ ...inv, purchase: formatCurrency(parseFloat(inv.purchase), currency) })), 
+    [stats.recentInvoices, currency]
   );
-  
+
   if (loading || !user) return null;
   return (
     <div className="flex-1 space-y-4 p-8 pt-6">
@@ -205,15 +183,13 @@ export default function Dashboard() {
               <CardContent>
                 <div className="text-2xl font-bold">{formattedRevenue}</div>
                 <p className="text-xs text-muted-foreground">
-                  +20.1% from last month
+                  {stats.revenue_change} from last month
                 </p>
               </CardContent>
             </Card>
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">
-                  Invoices
-                </CardTitle>
+                <CardTitle className="text-sm font-medium">Invoices</CardTitle>
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   viewBox="0 0 24 24"
@@ -231,9 +207,11 @@ export default function Dashboard() {
                 </svg>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">+{stats.invoices.toLocaleString()}</div>
+                <div className="text-2xl font-bold">
+                  +{stats.invoices.toLocaleString()}
+                </div>
                 <p className="text-xs text-muted-foreground">
-                  +19% from last month
+                {stats.invoices_change} from last month
                 </p>
               </CardContent>
             </Card>
@@ -257,9 +235,11 @@ export default function Dashboard() {
                 </svg>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">+{stats.quotations.toLocaleString()}</div>
+                <div className="text-2xl font-bold">
+                  +{stats.quotations.toLocaleString()}
+                </div>
                 <p className="text-xs text-muted-foreground">
-                  +201 since last hour
+                {stats.quotations_change} from last month
                 </p>
               </CardContent>
             </Card>
@@ -282,9 +262,11 @@ export default function Dashboard() {
                 </svg>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">+{stats.clients.toLocaleString()}</div>
+                <div className="text-2xl font-bold">
+                  +{stats.clients.toLocaleString()}
+                </div>
                 <p className="text-xs text-muted-foreground">
-                  +180.1% from last month
+                {stats.clients_change} from last month
                 </p>
               </CardContent>
             </Card>
@@ -305,4 +287,4 @@ export default function Dashboard() {
       </Tabs>
     </div>
   );
-};
+}

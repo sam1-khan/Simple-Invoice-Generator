@@ -263,9 +263,9 @@ def delete_client(request, id: int):
 @api.get("/invoices/", response={200: List[InvoiceOut], 403: ErrorSchema, 500: ErrorSchema}, auth=django_auth)
 def list_invoices(request):
     if request.user.is_staff:
-        invoices = Invoice.objects.all()
+        invoices = Invoice.objects.all().order_by('-updated_at')
     else:
-        invoices = Invoice.objects.filter(client__invoice_owner=request.user)
+        invoices = Invoice.objects.filter(client__invoice_owner=request.user).order_by('-updated_at')
     serialized = [serialize_invoice(inv) for inv in invoices]
     return serialized
 

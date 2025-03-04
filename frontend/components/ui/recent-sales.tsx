@@ -7,8 +7,8 @@ import {
 interface RecentSale {
   name: string;
   phone: string;
-  purchase: number;
   ntn_number: string;
+  purchase: string;
   avatarUrl?: string;
 }
 
