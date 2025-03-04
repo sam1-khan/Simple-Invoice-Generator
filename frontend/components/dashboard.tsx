@@ -72,7 +72,7 @@ export default function Dashboard() {
 
       if (createdAt >= thirtyDaysAgo) {
         invoice.is_quotation ? totalQuotations++ : (totalInvoices++, totalRevenue += amount);
-        if (!invoice.is_quotation && recentInvoices.length < 5) {
+        if (!invoice.is_quotation && recentInvoices.length < 6) {
           recentInvoices.push({
             name: invoice.client.name,
             phone: invoice.client.phone ?? "",
