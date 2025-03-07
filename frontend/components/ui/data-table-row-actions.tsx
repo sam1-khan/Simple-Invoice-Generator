@@ -23,7 +23,7 @@ export function DataTableRowActions<TData>({ row }: DataTableRowActionsProps<TDa
 
   const togglePaymentStatus = async () => {
     if (row.getValue("is_quotation")) {
-      toast("Not an Invoice", {
+      toast.info("Not an Invoice", {
         description: "Quotation can't be marked as paid.",
       });
       return;
@@ -61,7 +61,7 @@ export function DataTableRowActions<TData>({ row }: DataTableRowActionsProps<TDa
 
       setIsPaid(newStatus);
 
-      toast(
+      toast.success(
         `${row.getValue("reference_number")} has been marked as ${
           newStatus ? "paid" : "unpaid"
         }`,
@@ -74,7 +74,7 @@ export function DataTableRowActions<TData>({ row }: DataTableRowActionsProps<TDa
         }
       );
     } catch (error) {
-      toast("Error", {
+      toast.error("Error", {
         description: "Failed to update invoice status.",
       });
     }
@@ -103,14 +103,14 @@ export function DataTableRowActions<TData>({ row }: DataTableRowActionsProps<TDa
         throw new Error(`Failed to delete ${row.getValue('reference_number')}.`);
       }
 
-      toast(
+      toast.success(
         `${row.getValue("reference_number")} has been deleted.`,
         {
           description: "This action can't be undone.",
         }
       );
     } catch (error) {
-      toast("Error", {
+      toast.error("Error", {
         description: `Failed to delete ${row.getValue('reference_number')}.`,
       });
     }

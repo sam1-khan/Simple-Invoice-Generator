@@ -1,10 +1,12 @@
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import { FontProvider } from "@/components/font-provider";
 import { AuthProvider } from "./context/AuthContext";
 import Navbar from "@/components/navbar";
 import { Suspense } from "react";
 import Loading from "@/app/loading";
 import { Toaster } from "sonner";
+import { ThemeProvider } from "@/components/theme-provider";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -27,15 +29,26 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
-      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
-        <AuthProvider>
-          <Navbar />
-          <Suspense fallback={<Loading />}>
-            <main>{children}</main>
-            <Toaster />
-          </Suspense>
-        </AuthProvider>
+    <html lang="en" suppressHydrationWarning>
+      <body
+        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+      >
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="system"
+          enableSystem
+          disableTransitionOnChange
+        >
+          <FontProvider defaultFont="inter" storageKey="app-font">
+            <AuthProvider>
+              <Navbar />
+              <Suspense fallback={<Loading />}>
+                <main>{children}</main>
+                <Toaster />
+              </Suspense>
+            </AuthProvider>
+          </FontProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

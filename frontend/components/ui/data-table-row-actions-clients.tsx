@@ -41,14 +41,14 @@ export function DataTableRowActions<TData>({ row }: DataTableRowActionsProps<TDa
         throw new Error(`Failed to delete ${row.getValue('name')}.`);
       }
 
-      toast(
+      toast.success(
         `${row.getValue("name")} has been deleted.`,
         {
           description: "This action can't be undone.",
         }
       );
     } catch (error) {
-      toast("Error", {
+      toast.error("Error", {
         description: `Failed to delete ${row.getValue('name')}.`,
       });
     }
