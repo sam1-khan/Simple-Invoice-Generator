@@ -5,7 +5,7 @@ import { createContext, useContext, useEffect, useState } from "react";
 export type Font = "inter" | "manrope" | "system" | "geist" | "geist-mono";
 type FontProviderProps = {
   children: React.ReactNode;
-  defaultFont?: Font;
+  initialFont?: Font;
   storageKey?: string;
 };
 type FontProviderState = {
@@ -22,11 +22,11 @@ const FontProviderContext = createContext<FontProviderState>(initialState);
 
 export function FontProvider({
   children,
-  defaultFont = "system",
+  initialFont = "system",
   storageKey = "app-font",
   ...props
 }: FontProviderProps) {
-  const [font, setFont] = useState<Font>(defaultFont);
+  const [font, setFont] = useState<Font>(initialFont);
 
   useEffect(() => {
     if (typeof window !== "undefined") {

@@ -4,7 +4,7 @@ import { AuthProvider } from "./context/AuthContext";
 import Navbar from "@/components/navbar";
 import { Suspense } from "react";
 import Loading from "@/app/loading";
-import { Toaster } from "sonner";
+import { Toaster } from "@/components/ui/sonner";
 import { ThemeProvider } from "@/components/theme-provider";
 
 export const metadata = {

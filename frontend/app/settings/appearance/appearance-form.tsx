@@ -5,7 +5,7 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
-import { useFont, type Font } from "@/components/font-provider";
+import { useFont } from "@/components/font-provider";
 import { Button } from "@/components/ui/button";
 import {
   Form,
@@ -18,7 +18,7 @@ import {
 } from "@/components/ui/form";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useTheme } from "next-themes";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import {
   Select,
   SelectContent,
@@ -41,36 +41,34 @@ const appearanceFormSchema = z.object({
 
 type AppearanceFormValues = z.infer<typeof appearanceFormSchema>;
 
-const defaultValues: AppearanceFormValues = {
-  theme: "light",
-  font: "system",
-};
-
 const fonts = ["system", "inter", "manrope", "geist", "geist-mono"];
 
 export function AppearanceForm() {
   const { setTheme, theme } = useTheme();
   const { font, setFont } = useFont();
+  const [mounted, setMounted] = useState(false);
+
   const form = useForm<AppearanceFormValues>({
     resolver: zodResolver(appearanceFormSchema),
-    defaultValues,
+    defaultValues: {
+      theme: "light", // Set a safe default
+      font: "system",
+    },
   });
 
   useEffect(() => {
-    form.setValue("font", font);
-  }, [font, form]);
-
-  useEffect(() => {
-    if (theme === "light" || theme === "dark") {
-      form.setValue("theme", theme);
-    }
-  }, [theme, form]);
+    setMounted(true);
+    form.setValue("theme", theme === "dark" || theme === "light" ? theme : "light");
+    form.setValue("font", fonts.includes(font) ? font : "system");
+  }, [theme, font, form]);
 
   function onSubmit(data: AppearanceFormValues) {
     setTheme(data.theme);
     setFont(data.font);
     toast.success("Preferences updated successfully!");
   }
+
+  if (!mounted) return null; // Prevent hydration mismatch
 
   return (
     <Form {...form}>
@@ -83,19 +81,16 @@ export function AppearanceForm() {
               <FormLabel>Font</FormLabel>
               <div className="relative w-max">
                 <FormControl>
-                  <Select
-                    value={field.value}
-                    onValueChange={field.onChange}
-                  >
+                  <Select value={field.value} onValueChange={field.onChange}>
                     <SelectTrigger className="w-[180px]">
                       <SelectValue placeholder="Select a font">{field.value}</SelectValue>
                     </SelectTrigger>
                     <SelectContent>
                       <SelectGroup>
                         <SelectLabel>Fonts</SelectLabel>
-                        {fonts.map((f) => (
-                          <SelectItem key={f} value={f}>
-                            {f}
+                        {fonts.map((font) => (
+                          <SelectItem key={font} value={font}>
+                            {font}
                           </SelectItem>
                         ))}
                       </SelectGroup>
@@ -103,9 +98,7 @@ export function AppearanceForm() {
                   </Select>
                 </FormControl>
               </div>
-              <FormDescription>
-                Set the font you want to use in the dashboard.
-              </FormDescription>
+              <FormDescription>Set the font you want to use in the dashboard.</FormDescription>
               <FormMessage />
             </FormItem>
           )}
@@ -117,9 +110,7 @@ export function AppearanceForm() {
           render={({ field }) => (
             <FormItem className="space-y-1">
               <FormLabel>Theme</FormLabel>
-              <FormDescription>
-                Select the theme for the dashboard.
-              </FormDescription>
+              <FormDescription>Select the theme for the dashboard.</FormDescription>
               <FormMessage />
               <RadioGroup
                 onValueChange={field.onChange}
@@ -131,12 +122,7 @@ export function AppearanceForm() {
                     <FormControl>
                       <RadioGroupItem value="light" className="sr-only" />
                     </FormControl>
-                    <div
-                      className={cn(
-                        "items-center rounded-md p-1 cursor-pointer border-2 border-muted",
-                        field.value === "light" && "border-blue-500"
-                      )}
-                    >
+                    <div className={cn("items-center rounded-md p-1 cursor-pointer border-2 border-muted", field.value === "light" && "border-blue-500")}>
                       <div className="space-y-2 rounded-sm bg-[#ecedef] p-2">
                         <div className="space-y-2 rounded-md bg-white p-2 shadow-sm">
                           <div className="h-2 w-[80px] rounded-lg bg-[#ecedef]" />
@@ -152,9 +138,7 @@ export function AppearanceForm() {
                         </div>
                       </div>
                     </div>
-                    <span className="block w-full p-2 text-center font-normal">
-                      Light
-                    </span>
+                    <span className="block w-full p-2 text-center font-normal">Light</span>
                   </FormLabel>
                 </FormItem>
                 <FormItem>
@@ -162,12 +146,7 @@ export function AppearanceForm() {
                     <FormControl>
                       <RadioGroupItem value="dark" className="sr-only" />
                     </FormControl>
-                    <div
-                      className={cn(
-                        "items-center rounded-md p-1 cursor-pointer border-2 border-muted",
-                        field.value === "dark" && "border-blue-500"
-                      )}
-                    >
+                    <div className={cn("items-center rounded-md p-1 cursor-pointer border-2 border-muted", field.value === "dark" && "border-blue-500")}>
                       <div className="space-y-2 rounded-sm bg-slate-950 p-2">
                         <div className="space-y-2 rounded-md bg-slate-800 p-2 shadow-sm">
                           <div className="h-2 w-[80px] rounded-lg bg-slate-400" />
@@ -183,9 +162,7 @@ export function AppearanceForm() {
                         </div>
                       </div>
                     </div>
-                    <span className="block w-full p-2 text-center font-normal">
-                      Dark
-                    </span>
+                    <span className="block w-full p-2 text-center font-normal">Dark</span>
                   </FormLabel>
                 </FormItem>
               </RadioGroup>
