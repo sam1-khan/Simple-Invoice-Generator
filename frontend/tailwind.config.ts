@@ -1,4 +1,4 @@
-import type { Config } from "tailwindcss"
+import type { Config } from "tailwindcss";
 
 export default {
   darkMode: ["class"],
@@ -34,13 +34,26 @@ export default {
         chart3: "var(--chart-3)",
         chart4: "var(--chart-4)",
         chart5: "var(--chart-5)",
+        sidebar: "var(--sidebar)",
+        sidebarForeground: "var(--sidebar-foreground)",
+        sidebarPrimary: "var(--sidebar-primary)",
+        sidebarPrimaryForeground: "var(--sidebar-primary-foreground)",
+        sidebarAccent: "var(--sidebar-accent)",
+        sidebarAccentForeground: "var(--sidebar-accent-foreground)",
+        sidebarBorder: "var(--sidebar-border)",
+        sidebarRing: "var(--sidebar-ring)",
       },
       borderRadius: {
         lg: "var(--radius)",
         md: "calc(var(--radius) - 2px)",
         sm: "calc(var(--radius) - 4px)",
       },
+      fontFamily: {
+        inter: "var(--font-inter)",
+        manrope: "var(--font-manrope)",
+        system: "var(--font-system)",
+      },
     },
   },
   plugins: [require("tailwindcss-animate")],
-} satisfies Config
+} satisfies Config;

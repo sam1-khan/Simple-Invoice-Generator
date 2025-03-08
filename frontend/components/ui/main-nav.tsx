@@ -10,8 +10,8 @@ export function MainNav({ className, ...props }: React.HTMLAttributes<HTMLElemen
       <Link
         href="/"
         className={cn(
-          "text-sm font-medium transition-colors hover:text-primary",
-          pathname === "/" ? "text-primary font-semibold" : "text-muted-foreground"
+          "text-sm transition-colors hover:text-primary",
+          pathname === "/" ? "text-primary font-bold" : "text-muted-foreground"
         )}
       >
         Dashboard
@@ -19,8 +19,8 @@ export function MainNav({ className, ...props }: React.HTMLAttributes<HTMLElemen
       <Link
         href="/transactions"
         className={cn(
-          "text-sm font-medium transition-colors hover:text-primary",
-          pathname.startsWith("/transactions") ? "text-primary font-semibold" : "text-muted-foreground"
+          "text-sm transition-colors hover:text-primary",
+          pathname.startsWith("/transactions") ? "text-primary font-bold" : "text-muted-foreground"
         )}
       >
         Transactions
@@ -28,8 +28,8 @@ export function MainNav({ className, ...props }: React.HTMLAttributes<HTMLElemen
       <Link
         href="/clients"
         className={cn(
-          "text-sm font-medium transition-colors hover:text-primary",
-          pathname.startsWith("/clients") ? "text-primary font-semibold" : "text-muted-foreground"
+          "text-sm transition-colors hover:text-primary",
+          pathname.startsWith("/clients") ? "text-primary font-bold" : "text-muted-foreground"
         )}
       >
         Clients
@@ -37,8 +37,8 @@ export function MainNav({ className, ...props }: React.HTMLAttributes<HTMLElemen
       <Link
         href="/settings"
         className={cn(
-          "text-sm font-medium transition-colors hover:text-primary",
-          pathname.startsWith("/settings") ? "text-primary font-semibold" : "text-muted-foreground"
+          "text-sm transition-colors hover:text-primary",
+          pathname.startsWith("/settings") ? "text-primary font-bold" : "text-muted-foreground"
         )}
       >
         Settings

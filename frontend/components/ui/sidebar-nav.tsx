@@ -25,7 +25,6 @@ export function SidebarNav({ className, items, ...props }: SidebarNavProps) {
       {...props}
     >
       {items.map((item) => {
-        // Check if pathname matches exactly or starts with href (for subpages)
         const isActive =
           pathname === item.href || (pathname.startsWith(item.href) && item.href !== "/settings");
 
@@ -35,7 +34,7 @@ export function SidebarNav({ className, items, ...props }: SidebarNavProps) {
             href={item.href}
             className={cn(
               buttonVariants({ variant: "ghost" }),
-              isActive ? "bg-muted text-primary font-semibold" : "hover:underline",
+              isActive ? "font-bold" : "hover:underline font-normal",
               "justify-start"
             )}
           >

@@ -160,14 +160,14 @@ export default function OnboardingPage() {
         return;
       }
 
-      router.push("/");
     } catch (err) {
       if (err instanceof Error) {
         setError([err.message || "An error occurred."]);
       } else {
         setError(["An unknown error occurred."]);
       }
-    }
+    } 
+    router.push("/");
   };
 
   return (

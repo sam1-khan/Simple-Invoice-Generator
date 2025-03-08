@@ -11,7 +11,7 @@ from django.conf import settings
 from django.shortcuts import get_object_or_404
 from django.template.loader import render_to_string
 from django.utils.html import strip_tags
-from typing import List
+from typing import List, Optional
 from ninja.security import django_auth
 from ninja.pagination import paginate
 from ninja.responses import Response
@@ -175,15 +175,38 @@ def partial_update_invoice_owner(request, payload: InvoiceOwnerUpdate, id: int):
 
     user.save()
     return 200, user
-
-@api.post("/invoice-owners/{id}/upload-files/", response={200: InvoiceOwnerOut, 400: ErrorSchema, 403: ErrorSchema, 404: ErrorSchema, 422: ErrorSchema, 500: ErrorSchema}, auth=django_auth)
-def upload_files(request, id: int, logo: UploadedFile = File(...), signature: UploadedFile = File(...)):
+@ratelimit(key="ip", rate="100/m", block=True)
+@api.post(
+    "/invoice-owners/{id}/upload-files/",
+    response={
+        200: InvoiceOwnerOut,
+        400: ErrorSchema,
+        403: ErrorSchema,
+        404: ErrorSchema,
+        422: ErrorSchema,
+        500: ErrorSchema,
+    },
+    auth=django_auth,
+)
+def upload_files(
+    request,
+    id: int,
+    logo: Optional[UploadedFile] = File(None),
+    signature: Optional[UploadedFile] = File(None),
+):
     if not request.user.is_staff and id != request.user.id:
         return 403, {"detail": "You do not have permission to update this user."}
 
     user = get_object_or_404(InvoiceOwner, id=id)
-    user.logo = logo
-    user.signature = signature
+
+    if not user.is_onboarded:
+        if not logo or not signature:
+            return 400, {"detail": "Both logo and signature are required for onboarding."}
+
+    if logo:
+        user.logo = logo
+    if signature:
+        user.signature = signature
 
     try:
         user.full_clean()
