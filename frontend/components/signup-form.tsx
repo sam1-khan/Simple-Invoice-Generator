@@ -18,8 +18,8 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { useState } from "react";
+import { toast } from "sonner";
 import { useRouter } from "next/navigation";
-import { useAuth } from "@/app/context/AuthContext";
 
 const SignupSchema = z
   .object({
@@ -62,7 +62,6 @@ export function SignupForm({
   const [error, setError] = useState<string | string[] | null>(null);
   const [loading, setLoading] = useState(false);
   const router = useRouter();
-  const { refreshUser } = useAuth();
 
   const customSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -108,8 +107,15 @@ export function SignupForm({
         }
         return;
       }
-      await refreshUser();
-      router.push("/login");
+
+      toast.success("Account created successfully!", {
+        description: "You can now log in to your account.",
+      });
+
+      setTimeout(() => {
+        router.push("/login")
+      }, 1000);
+
     } catch (err: any) {
       setError(err.message || "An error occurred.");
     } finally {

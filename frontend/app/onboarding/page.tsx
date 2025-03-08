@@ -3,7 +3,7 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/app/context/AuthContext";
 import { cn } from "@/lib/utils";
@@ -37,7 +37,7 @@ const OnboardingSchema = z.object({
 type OnboardingFormValues = z.infer<typeof OnboardingSchema>;
 
 export default function OnboardingPage() {
-  const { user, loading } = useAuth();
+  const { user } = useAuth();
   const router = useRouter();
 
   const {
@@ -51,41 +51,7 @@ export default function OnboardingPage() {
 
   const [error, setError] = useState<string | string[] | null>(null);
 
-  useEffect(() => {
-    if (!loading && user?.is_onboarded) {
-      router.replace("/");
-    }
-  }, [user, loading, router]);
-
-  if (loading || user?.is_onboarded) {
-    return (
-      <div className="flex items-center justify-center min-h-screen bg-zinc-100 dark:bg-zinc-800 p-6">
-        <p className="text-xl">{user?.is_onboarded ? 'Redirecting...' : 'Loading...'}</p>
-      </div>
-    );
-  }
-
-  if (!user) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-zinc-100 dark:bg-zinc-800 p-6">
-        <Card className="w-full max-w-md shadow-lg">
-          <CardHeader className="text-center">
-            <CardTitle className="text-xl font-bold my-1">Not Logged In</CardTitle>
-            <CardDescription>
-              Please log in to complete onboarding.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="text-center">
-            <Button onClick={() => router.push("/login")} className="mt-2">
-              Log In
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
-
-  const userId = user.id;
+  const userId = user?.id;
 
   const onSubmit = async (data: OnboardingFormValues) => {
     setError(null);
@@ -115,7 +81,7 @@ export default function OnboardingPage() {
             account_title: data.account_title,
             iban: data.iban,
             phone_2: data.phone_2,
-            is_onboarded: true
+            is_onboarded: true,
           }),
         }
       );
@@ -160,14 +126,14 @@ export default function OnboardingPage() {
         return;
       }
 
+      router.push("/");
     } catch (err) {
       if (err instanceof Error) {
         setError([err.message || "An error occurred."]);
       } else {
         setError(["An unknown error occurred."]);
       }
-    } 
-    router.push("/");
+    }
   };
 
   return (

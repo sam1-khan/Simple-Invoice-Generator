@@ -1,6 +1,5 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
@@ -9,11 +8,8 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { CalendarDateRangePicker } from "@/components/ui/date-range-picker";
 import { Overview } from "@/components/ui/overview";
 import { RecentSales } from "@/components/ui/recent-sales";
-import { useAuth } from "@/app/context/AuthContext";
-import { useRouter } from "next/navigation";
 import { useEffect, useState, useCallback, useMemo } from "react";
 import { z } from "zod";
 import {
@@ -27,9 +23,6 @@ import {
 } from "@/lib/utils";
 
 export default function Dashboard() {
-  const { user, loading } = useAuth();
-  const router = useRouter();
-
   const [stats, setStats] = useState({
     revenue_change: "0%",
     invoices_change: "0%",
@@ -125,11 +118,8 @@ export default function Dashboard() {
   }, [computeDashboardStats]);
 
   useEffect(() => {
-    if (!loading) {
-      if (!user) router.replace("/login");
-      else fetchDashboardData();
-    }
-  }, [user, loading, router, fetchDashboardData]);
+    fetchDashboardData();
+  }, [fetchDashboardData]);
 
   const formattedRevenue = useMemo(() => formatCurrency(stats.revenue, currency), [stats.revenue, currency]);
   const formattedRecentInvoices = useMemo(() => 
@@ -137,7 +127,6 @@ export default function Dashboard() {
     [stats.recentInvoices, currency]
   );
 
-  if (loading || !user) return null;
   return (
     <div className="flex-1 space-y-4 p-8 pt-6">
       <div className="flex items-center justify-between space-y-2 flex-wrap">

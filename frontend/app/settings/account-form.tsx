@@ -1,14 +1,14 @@
-"use client"
+"use client";
 
-import { useEffect, useState, useCallback } from "react"
-import { zodResolver } from "@hookform/resolvers/zod"
-import { useForm } from "react-hook-form"
-import { z } from "zod"
-import Cookies from "js-cookie"
-import { toast } from "sonner"
+import { useEffect, useState, useCallback } from "react";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
+import Cookies from "js-cookie";
+import { toast } from "sonner";
 
-import { useAuth } from "@/app/context/AuthContext"
-import { Button } from "@/components/ui/button"
+import { useAuth } from "@/app/context/AuthContext";
+import { Button } from "@/components/ui/button";
 import {
   Form,
   FormControl,
@@ -17,10 +17,10 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from "@/components/ui/form"
-import { Input } from "@/components/ui/input"
-import { invoiceOwnerSchema } from "@/app/transactions/data/schema"
-import { absoluteUrl } from "@/lib/utils"
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { invoiceOwnerSchema } from "@/app/transactions/data/schema";
+import { absoluteUrl } from "@/lib/utils";
 
 const accountFormSchema = invoiceOwnerSchema.pick({
   name: true,
@@ -32,25 +32,25 @@ const accountFormSchema = invoiceOwnerSchema.pick({
   bank: true,
   account_title: true,
   iban: true,
-})
+});
 
-type AccountFormValues = z.infer<typeof accountFormSchema>
+type AccountFormValues = z.infer<typeof accountFormSchema>;
 
 export function AccountForm() {
-  const { user } = useAuth()
+  const { user } = useAuth();
   const form = useForm<AccountFormValues>({
     resolver: zodResolver(accountFormSchema),
     defaultValues: {},
-  })
-  const [loading, setLoading] = useState(false)
-  const [errorMessage, setErrorMessage] = useState<string | null>(null)
+  });
+  const [loading, setLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [initialValues, setInitialValues] = useState<AccountFormValues | null>(
     null
-  )
+  );
 
   const fetchInvoiceOwner = useCallback(async () => {
-    if (!user) return
-    setLoading(true)
+    if (!user) return;
+    setLoading(true);
     try {
       const response = await fetch(
         absoluteUrl(`/api/v1/invoice-owners/${user.id}/`),
@@ -61,45 +61,45 @@ export function AccountForm() {
           },
           credentials: "include",
         }
-      )
-      if (!response.ok) throw new Error("Failed to fetch invoice owner data")
-      const data = await response.json()
-      form.reset(data)
-      setInitialValues(data) // Store initial values
+      );
+      if (!response.ok) throw new Error("Failed to fetch invoice owner data");
+      const data = await response.json();
+      form.reset(data);
+      setInitialValues(data); // Store initial values
     } catch (error) {
-      console.error("Error fetching invoice owner:", error)
+      console.error("Error fetching invoice owner:", error);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }, [user, form])
+  }, [user, form]);
 
   useEffect(() => {
-    fetchInvoiceOwner()
-  }, [fetchInvoiceOwner])
+    fetchInvoiceOwner();
+  }, [fetchInvoiceOwner]);
 
   const onSubmit = useCallback(
     async (data: AccountFormValues) => {
-      if (!user || !initialValues) return
+      if (!user || !initialValues) return;
 
       // Check if any field has changed
       const hasChanged = Object.keys(data).some(
         (key) => data[key as keyof AccountFormValues] !== initialValues[key as keyof AccountFormValues]
-      )
+      );
 
       if (!hasChanged) {
-        toast.info("No changes detected.")
-        return
+        toast.info("No changes detected.");
+        return;
       }
 
-      setLoading(true)
-      setErrorMessage(null)
+      setLoading(true);
+      setErrorMessage(null);
       try {
-        const csrfToken = Cookies.get("csrftoken")
+        const csrfToken = Cookies.get("csrftoken");
         if (!csrfToken) {
           setErrorMessage(
             "CSRF token not found. Please refresh the page and try again."
-          )
-          return
+          );
+          return;
         }
         const response = await fetch(
           absoluteUrl(`/api/v1/invoice-owners/${user.id}/`),
@@ -112,31 +112,31 @@ export function AccountForm() {
             credentials: "include",
             body: JSON.stringify(data),
           }
-        )
-        const responseData = await response.json()
+        );
+        const responseData = await response.json();
         if (!response.ok) {
           setErrorMessage(
             typeof responseData.detail === "string"
               ? responseData.detail
               : responseData.detail.join(", ")
-          )
-          return
+          );
+          return;
         }
 
         // Update initial values after successful submission
-        setInitialValues(data)
+        setInitialValues(data);
         toast.success("Account updated successfully!", {
           description: "Your account information has been saved.",
-        })
+        });
       } catch (error) {
-        console.error("Error updating account:", error)
-        setErrorMessage("Failed to update account")
+        console.error("Error updating account:", error);
+        setErrorMessage("Failed to update account");
       } finally {
-        setLoading(false)
+        setLoading(false);
       }
     },
     [user, initialValues]
-  )
+  );
 
   const fields = [
     {
@@ -198,7 +198,7 @@ export function AccountForm() {
       placeholder: "Your IBAN",
       description: "Your International Bank Account Number.",
     },
-  ]
+  ];
 
   return (
     <Form {...form}>

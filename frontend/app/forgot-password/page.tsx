@@ -13,9 +13,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
-import { useAuth } from "@/app/context/AuthContext";
-import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useState } from "react";
+import { toast } from "sonner";
 
 const ForgotPasswordSchema = z.object({
   email: z.string().email("Invalid email"),
@@ -31,18 +30,11 @@ export default function ForgotPasswordPage() {
   } = useForm<ForgotPasswordFormValues>({
     resolver: zodResolver(ForgotPasswordSchema),
   });
-  const { user } = useAuth();
-  const router = useRouter();
+
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [rateLimited, setRateLimited] = useState(false);
   const [responseMessage, setResponseMessage] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (user) {
-      router.replace("/");
-    }
-  }, [user, router]);
 
   const onSubmit = async (data: ForgotPasswordFormValues) => {
     setIsSubmitting(true);
@@ -79,6 +71,7 @@ export default function ForgotPasswordPage() {
 
       setTimeout(() => {
         setResponseMessage("Password reset email sent successfully.");
+        toast.success("Password reset email sent successfully.");
         setIsSubmitting(false);
       }, 2000);
     } catch (err: any) {

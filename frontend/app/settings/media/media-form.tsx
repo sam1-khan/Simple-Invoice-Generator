@@ -14,9 +14,8 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { useAuth } from "@/app/context/AuthContext";
-import { useRouter } from "next/navigation";
 import { toast, Toaster } from "sonner";
 
 const mediaFormSchema = z.object({
@@ -41,10 +40,8 @@ type MediaFormValues = z.infer<typeof mediaFormSchema>;
 
 export function MediaForm() {
   const { user } = useAuth();
-  const router = useRouter();
   const [error, setError] = useState<string | string[] | null>(null);
 
-  // Refs for file inputs
   const logoInputRef = useRef<HTMLInputElement>(null);
   const signatureInputRef = useRef<HTMLInputElement>(null);
 
@@ -57,21 +54,14 @@ export function MediaForm() {
     },
   });
 
-  useEffect(() => {
-    if (!user) {
-      router.replace("/");
-    }
-  }, [user, router]);
-
   const userId = user?.id;
 
   const onSubmit = async (data: MediaFormValues) => {
     setError(null);
 
-    // Check if both fields are empty
     if (!data.logo?.length && !data.signature?.length) {
       toast.info("No changes detected. Please upload a logo or signature.");
-      return; // Exit early if no files are provided
+      return;
     }
 
     try {
@@ -135,6 +125,7 @@ export function MediaForm() {
 
   return (
     <>
+      <Toaster position="top-center" />
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} encType="multipart/form-data">
           <div className="grid gap-6">
@@ -155,7 +146,7 @@ export function MediaForm() {
                   <FormMessage>
                     {typeof form.formState.errors.logo?.message === "string"
                       ? form.formState.errors.logo?.message
-                      : form.formState.errors.logo?.message?.msg}
+                      : (form.formState.errors.logo?.message as { msg?: string })?.msg}
                   </FormMessage>
                 </FormItem>
               )}
@@ -178,7 +169,7 @@ export function MediaForm() {
                   <FormMessage>
                     {typeof form.formState.errors.signature?.message === "string"
                       ? form.formState.errors.signature?.message
-                      : form.formState.errors.signature?.message?.msg}
+                      : (form.formState.errors.signature?.message as { msg?: string })?.msg}
                   </FormMessage>
                 </FormItem>
               )}

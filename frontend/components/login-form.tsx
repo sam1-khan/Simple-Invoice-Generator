@@ -1,7 +1,4 @@
-"use client";
-
-import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import {
@@ -17,27 +14,18 @@ import { FcGoogle } from "react-icons/fc";
 import { AiFillGithub } from "react-icons/ai";
 import Link from "next/link";
 import { useAuth } from "@/app/context/AuthContext";
+import { useRouter } from "next/navigation";
 
 export function LoginForm({
   className,
   ...props
 }: React.ComponentPropsWithoutRef<"div">) {
-  const router = useRouter();
-  const { refreshUser } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [isOnboarded, setIsOnboarded] = useState<boolean | null>(null);
-
-  useEffect(() => {
-    if (isOnboarded !== null) {
-      setTimeout(() => {
-        console.log("Redirecting to:", isOnboarded ? "/" : "/onboarding");
-        router.replace(isOnboarded ? "/" : "/onboarding");
-      }, 100);
-    }
-  }, [isOnboarded, router]);
+  const { refreshUser } = useAuth();
+  const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -61,11 +49,10 @@ export function LoginForm({
       if (!response.ok) {
         throw new Error(data.error || "Login failed");
       }
-      console.log("API response:", data);
-      
-      setIsOnboarded(data.is_onboarded);
 
       await refreshUser();
+      router.push("/");
+
     } catch (err: any) {
       setError(err.message);
     } finally {
