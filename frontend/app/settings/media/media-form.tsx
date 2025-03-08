@@ -16,7 +16,7 @@ import {
 } from "@/components/ui/form";
 import { useRef, useState } from "react";
 import { useAuth } from "@/app/context/AuthContext";
-import { toast, Toaster } from "sonner";
+import { toast } from "sonner";
 
 const mediaFormSchema = z.object({
   logo: z
@@ -125,7 +125,6 @@ export function MediaForm() {
 
   return (
     <>
-      <Toaster position="top-center" />
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} encType="multipart/form-data">
           <div className="grid gap-6">
@@ -185,8 +184,8 @@ export function MediaForm() {
               error && <p className="text-red-500 text-sm">{error}</p>
             )}
 
-            <Button type="submit">Update media</Button>
           </div>
+            <Button type="submit" className="mt-4">Update media</Button>
         </form>
       </Form>
     </>

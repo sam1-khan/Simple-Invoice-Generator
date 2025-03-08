@@ -1,12 +1,12 @@
-"use client"
+"use client";
 
-import { zodResolver } from "@hookform/resolvers/zod"
-import { useForm } from "react-hook-form"
-import { z } from "zod"
-import { toast } from "sonner"
-import { cn } from "@/lib/utils"
-import { useFont, type Font } from "@/components/font-provider"
-import { Button } from "@/components/ui/button"
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
+import { toast } from "sonner";
+import { cn } from "@/lib/utils";
+import { useFont, type Font } from "@/components/font-provider";
+import { Button } from "@/components/ui/button";
 import {
   Form,
   FormControl,
@@ -15,52 +15,61 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from "@/components/ui/form"
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
-import { useTheme } from "next-themes"
-import { useEffect } from "react"
+} from "@/components/ui/form";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { useTheme } from "next-themes";
+import { useEffect } from "react";
+import {
+  Select,
+  SelectContent,
+  SelectTrigger,
+  SelectGroup,
+  SelectLabel,
+  SelectItem,
+  SelectValue,
+} from "@/components/ui/select";
 
 const appearanceFormSchema = z.object({
   theme: z.enum(["light", "dark"], {
     required_error: "Please select a theme.",
   }),
-  font: z.enum(["inter", "manrope", "system"], {
+  font: z.enum(["system", "inter", "manrope", "geist", "geist-mono"], {
     invalid_type_error: "Select a font",
     required_error: "Please select a font.",
   }),
-})
+});
 
-type AppearanceFormValues = z.infer<typeof appearanceFormSchema>
+type AppearanceFormValues = z.infer<typeof appearanceFormSchema>;
 
 const defaultValues: AppearanceFormValues = {
   theme: "light",
   font: "system",
-}
+};
 
-const fonts = ["system", "inter", "manrope"]
+const fonts = ["system", "inter", "manrope", "geist", "geist-mono"];
 
 export function AppearanceForm() {
-  const { setTheme, theme } = useTheme()
-  const { font, setFont } = useFont()
+  const { setTheme, theme } = useTheme();
+  const { font, setFont } = useFont();
   const form = useForm<AppearanceFormValues>({
     resolver: zodResolver(appearanceFormSchema),
     defaultValues,
-  })
+  });
 
   useEffect(() => {
-    form.setValue("font", font)
-  }, [font, form])
+    form.setValue("font", font);
+  }, [font, form]);
 
   useEffect(() => {
     if (theme === "light" || theme === "dark") {
-      form.setValue("theme", theme)
+      form.setValue("theme", theme);
     }
-  }, [theme, form])
+  }, [theme, form]);
 
   function onSubmit(data: AppearanceFormValues) {
-    setTheme(data.theme)
-    setFont(data.font)
-    toast.success("Preferences updated successfully!")
+    setTheme(data.theme);
+    setFont(data.font);
+    toast.success("Preferences updated successfully!");
   }
 
   return (
@@ -74,20 +83,24 @@ export function AppearanceForm() {
               <FormLabel>Font</FormLabel>
               <div className="relative w-max">
                 <FormControl>
-                  <select
-                    className={cn(
-                      "w-[200px] appearance-none font-normal border border-input rounded-md px-3 py-2",
-                      "bg-background text-foreground"
-                    )}
+                  <Select
                     value={field.value}
-                    onChange={field.onChange}
+                    onValueChange={field.onChange}
                   >
-                    {fonts.map((f) => (
-                      <option key={f} value={f}>
-                        {f}
-                      </option>
-                    ))}
-                  </select>
+                    <SelectTrigger className="w-[180px]">
+                      <SelectValue placeholder="Select a font">{field.value}</SelectValue>
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectGroup>
+                        <SelectLabel>Fonts</SelectLabel>
+                        {fonts.map((f) => (
+                          <SelectItem key={f} value={f}>
+                            {f}
+                          </SelectItem>
+                        ))}
+                      </SelectGroup>
+                    </SelectContent>
+                  </Select>
                 </FormControl>
               </div>
               <FormDescription>
@@ -183,5 +196,5 @@ export function AppearanceForm() {
         <Button type="submit">Update preferences</Button>
       </form>
     </Form>
-  )
+  );
 }
