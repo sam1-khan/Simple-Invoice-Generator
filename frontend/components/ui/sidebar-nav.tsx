@@ -33,7 +33,7 @@ export function SidebarNav({ className, items, ...props }: SidebarNavProps) {
             key={item.href}
             href={item.href}
             className={cn(
-              buttonVariants({ variant: "ghost" }),
+              buttonVariants(isActive ? { variant: "secondary" } : {variant: "ghost"}),
               isActive ? "font-bold" : "hover:underline font-normal",
               "justify-start"
             )}

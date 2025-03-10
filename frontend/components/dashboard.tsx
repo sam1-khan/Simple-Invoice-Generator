@@ -21,6 +21,9 @@ import {
   getCurrencyFromCountry,
   formatCurrency,
 } from "@/lib/utils";
+import { InteractiveAreaChartComponent } from "@/components/area-chart";
+import { PieChartComponent } from "@/components/pie-chart";
+import { LineChartComponent } from "@/components/line-chart";
 
 export default function Dashboard() {
   const [stats, setStats] = useState({
@@ -41,6 +44,9 @@ export default function Dashboard() {
   });
 
   const [currency, setCurrency] = useState<string>("PKR");
+  const [revenueData, setRevenueData] = useState<{ name: string; value: number }[]>([]);
+  const [invoiceData, setInvoiceData] = useState<{ name: string; value: number }[]>([]);
+  const [clientGrowthData, setClientGrowthData] = useState<{ name: string; value: number }[]>([]);
 
   useEffect(() => {
     (async () => {
@@ -51,8 +57,9 @@ export default function Dashboard() {
 
   const computeDashboardStats = useCallback((invoices: any[], clients: any[]) => {
     const now = Date.now();
-    const thirtyDaysAgo = now - 30 * 24 * 60 * 60 * 1000;
-    const sixtyDaysAgo = now - 60 * 24 * 60 * 60 * 1000;
+    const oneWeekAgo = now - 7 * 24 * 60 * 60 * 1000;
+    const twoWeeksAgo = now - 14 * 24 * 60 * 60 * 1000;
+    const oneMonthAgo = now - 30 * 24 * 60 * 60 * 1000;
 
     let totalRevenue = 0, prevRevenue = 0;
     let totalInvoices = 0, prevInvoices = 0;
@@ -63,8 +70,12 @@ export default function Dashboard() {
       const createdAt = new Date(invoice.date || invoice.created_at).getTime();
       const amount = invoice.tax ? invoice.grand_total : invoice.total_price;
 
-      if (createdAt >= thirtyDaysAgo) {
+      if (createdAt >= oneWeekAgo) {
         invoice.is_quotation ? totalQuotations++ : (totalInvoices++, totalRevenue += amount);
+      } else if (createdAt >= twoWeeksAgo) {
+        invoice.is_quotation ? prevQuotations++ : (prevInvoices++, prevRevenue += amount);
+      } 
+      if (createdAt >= oneMonthAgo) {
         if (!invoice.is_quotation && recentInvoices.length < 6) {
           recentInvoices.push({
             name: invoice.client.name,
@@ -73,8 +84,6 @@ export default function Dashboard() {
             purchase: amount,
           });
         }
-      } else if (createdAt >= sixtyDaysAgo) {
-        invoice.is_quotation ? prevQuotations++ : (prevInvoices++, prevRevenue += amount);
       }
     });
 
@@ -89,7 +98,7 @@ export default function Dashboard() {
       invoices: totalInvoices,
       quotations: totalQuotations,
       clients: clients.length,
-      recentInvoices: recentInvoices.reverse(),
+      recentInvoices: recentInvoices,
       revenue_change: percentageChange(totalRevenue, prevRevenue),
       invoices_change: percentageChange(totalInvoices, prevInvoices),
       quotations_change: percentageChange(totalQuotations, prevQuotations),
@@ -112,6 +121,51 @@ export default function Dashboard() {
       const clients = z.array(clientSchema).parse(clientsData);
 
       setStats(computeDashboardStats(invoices, clients));
+
+      // Dynamic date calculations
+      const now = new Date();
+      const oneMonthAgo = new Date(now.getFullYear(), now.getMonth() - 1, now.getDate());
+
+      // Revenue Trends: Group by week for the last 4 weeks
+      const revenueTrends = invoices
+        .filter((invoice) => !invoice.is_quotation)
+        .reduce((acc, invoice) => {
+          const invoiceDate = new Date(invoice.date || invoice.created_at);
+          if (invoiceDate >= oneMonthAgo) {
+            const weekNumber = Math.floor((now.getTime() - invoiceDate.getTime()) / (7 * 24 * 60 * 60 * 1000));
+            const weekLabel = `Week ${4 - weekNumber}`;
+            acc[weekLabel] = (acc[weekLabel] || 0) + (invoice.tax ? invoice.grand_total : invoice.total_price);
+          }
+          return acc;
+        }, {} as Record<string, number>);
+
+      setRevenueData(
+        Object.entries(revenueTrends).map(([name, value]) => ({ name, value }))
+      );
+
+      // Invoice Status: Paid, Unpaid
+      const invoiceStatus = {
+        Paid: invoices.filter((invoice) => invoice.is_paid === true).length,
+        Unpaid: invoices.filter((invoice) => invoice.is_paid === false).length,
+      };
+
+      setInvoiceData(
+        Object.entries(invoiceStatus).map(([name, value]) => ({ name, value }))
+      );
+
+      // Client Growth: Group by month for the last 5 months
+      const clientGrowth = clients.reduce((acc, client) => {
+        const clientDate = new Date(client.created_at);
+        if (clientDate >= new Date(now.getFullYear(), now.getMonth() - 5, now.getDate())) {
+          const month = clientDate.toLocaleString("default", { month: "short" });
+          acc[month] = (acc[month] || 0) + 1;
+        }
+        return acc;
+      }, {} as Record<string, number>);
+
+      setClientGrowthData(
+        Object.entries(clientGrowth).map(([name, value]) => ({ name, value }))
+      );
     } catch (error) {
       console.error("Error fetching dashboard data:", error);
     }
@@ -135,14 +189,9 @@ export default function Dashboard() {
       <Tabs defaultValue="overview" className="space-y-4">
         <TabsList>
           <TabsTrigger value="overview">Overview</TabsTrigger>
-          <TabsTrigger value="analytics" disabled>
-            Analytics
-          </TabsTrigger>
+          <TabsTrigger value="analytics">Analytics</TabsTrigger>
           <TabsTrigger value="reports" disabled>
             Reports
-          </TabsTrigger>
-          <TabsTrigger value="notifications" disabled>
-            Notifications
           </TabsTrigger>
         </TabsList>
         <TabsContent value="overview" className="space-y-4">
@@ -168,7 +217,7 @@ export default function Dashboard() {
               <CardContent>
                 <div className="text-2xl font-bold">{formattedRevenue}</div>
                 <p className="text-xs text-muted-foreground">
-                  {stats.revenue_change} from last month
+                  {stats.revenue_change} from last week
                 </p>
               </CardContent>
             </Card>
@@ -196,7 +245,7 @@ export default function Dashboard() {
                   +{stats.invoices.toLocaleString()}
                 </div>
                 <p className="text-xs text-muted-foreground">
-                {stats.invoices_change} from last month
+                {stats.invoices_change} from last week
                 </p>
               </CardContent>
             </Card>
@@ -224,7 +273,7 @@ export default function Dashboard() {
                   +{stats.quotations.toLocaleString()}
                 </div>
                 <p className="text-xs text-muted-foreground">
-                {stats.quotations_change} from last month
+                {stats.quotations_change} from last week
                 </p>
               </CardContent>
             </Card>
@@ -251,7 +300,7 @@ export default function Dashboard() {
                   +{stats.clients.toLocaleString()}
                 </div>
                 <p className="text-xs text-muted-foreground">
-                {stats.clients_change} from last month
+                {stats.clients_change} from last week
                 </p>
               </CardContent>
             </Card>
@@ -265,6 +314,57 @@ export default function Dashboard() {
               </CardHeader>
               <CardContent>
                 <RecentSales data={formattedRecentInvoices} />
+              </CardContent>
+            </Card>
+          </div>
+        </TabsContent>
+        <TabsContent value="analytics" className="space-y-4">
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+            <Card>
+              <CardHeader>
+                <CardTitle>Revenue Trends</CardTitle>
+                <CardDescription>Last 4 weeks</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <LineChartComponent data={revenueData} xAxisKey="name" yAxisKey="value" />
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader>
+                <CardTitle>Invoice Status</CardTitle>
+                <CardDescription>Current month</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <PieChartComponent data={invoiceData} activeIndex={0} />
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader>
+                <CardTitle>Client Growth</CardTitle>
+                <CardDescription>Last 5 months</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <InteractiveAreaChartComponent data={clientGrowthData} xAxisKey="name" yAxisKey="value" />
+              </CardContent>
+            </Card>
+          </div>
+          <div className="grid gap-4 md:grid-cols-2">
+            <Card>
+              <CardHeader>
+                <CardTitle>Top Clients</CardTitle>
+                <CardDescription>By revenue</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <RecentSales data={formattedRecentInvoices} />
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader>
+                <CardTitle>Quotation Trends</CardTitle>
+                <CardDescription>Last 4 weeks</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <LineChartComponent data={revenueData} xAxisKey="name" yAxisKey="value" />
               </CardContent>
             </Card>
           </div>

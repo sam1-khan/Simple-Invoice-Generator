@@ -4,8 +4,8 @@ import { SidebarNav } from "./ui/sidebar-nav";
 
 const sidebarNavItems = [
   { title: "Account", href: "/settings" },
-  { title: "Media", href: "/settings/media" },
   { title: "Appearance", href: "/settings/appearance" },
+  { title: "Media", href: "/settings/media" },
 ];
 
 export function SidebarNavWrapper() {

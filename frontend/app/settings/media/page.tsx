@@ -7,7 +7,7 @@ export default function SettingsDisplayPage() {
       <div>
         <h3 className="text-lg font-medium">Media</h3>
         <p className="text-sm text-muted-foreground">
-          Turn items on or off to control what&apos;s displayed in the app.
+          Change the media that will be displayed in your transactions pdf.
         </p>
       </div>
       <Separator />

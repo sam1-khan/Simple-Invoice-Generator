@@ -143,9 +143,7 @@ export function MediaForm() {
                     />
                   </FormControl>
                   <FormMessage>
-                    {typeof form.formState.errors.logo?.message === "string"
-                      ? form.formState.errors.logo?.message
-                      : (form.formState.errors.logo?.message as { msg?: string })?.msg}
+                    {form.formState.errors.logo?.message}
                   </FormMessage>
                 </FormItem>
               )}
@@ -166,9 +164,7 @@ export function MediaForm() {
                     />
                   </FormControl>
                   <FormMessage>
-                    {typeof form.formState.errors.signature?.message === "string"
-                      ? form.formState.errors.signature?.message
-                      : (form.formState.errors.signature?.message as { msg?: string })?.msg}
+                    {form.formState.errors.signature?.message}
                   </FormMessage>
                 </FormItem>
               )}
