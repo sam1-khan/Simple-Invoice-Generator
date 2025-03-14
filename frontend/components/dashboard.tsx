@@ -31,6 +31,10 @@ export default function Dashboard() {
     invoices_change: "0%",
     quotations_change: "0%",
     clients_change: "0%",
+    overallRevenue: 0,
+    overallInvoices: 0,
+    overallQuotations: 0,
+    overallClients: 0,
     revenue: 0,
     invoices: 0,
     quotations: 0,
@@ -44,9 +48,15 @@ export default function Dashboard() {
   });
 
   const [currency, setCurrency] = useState<string>("PKR");
-  const [revenueData, setRevenueData] = useState<{ name: string; value: number }[]>([]);
-  const [invoiceData, setInvoiceData] = useState<{ name: string; value: number }[]>([]);
-  const [clientGrowthData, setClientGrowthData] = useState<{ name: string; value: number }[]>([]);
+  const [revenueData, setRevenueData] = useState<
+    { name: string; value: number }[]
+  >([]);
+  const [invoiceData, setInvoiceData] = useState<
+    { name: string; value: number }[]
+  >([]);
+  const [clientGrowthData, setClientGrowthData] = useState<
+    { name: string; value: number }[]
+  >([]);
 
   useEffect(() => {
     (async () => {
@@ -55,28 +65,65 @@ export default function Dashboard() {
     })();
   }, []);
 
-  const computeDashboardStats = useCallback((invoices: any[], clients: any[]) => {
-    const now = Date.now();
-    const oneWeekAgo = now - 7 * 24 * 60 * 60 * 1000;
-    const twoWeeksAgo = now - 14 * 24 * 60 * 60 * 1000;
-    const oneMonthAgo = now - 30 * 24 * 60 * 60 * 1000;
+  const computeDashboardStats = useCallback(
+    (invoices: any[], clients: any[]) => {
+      const now = Date.now();
+      const oneWeekAgo = now - 7 * 24 * 60 * 60 * 1000;
+      const twoWeeksAgo = now - 14 * 24 * 60 * 60 * 1000;
+      const oneMonthAgo = now - 30 * 24 * 60 * 60 * 1000;
 
-    let totalRevenue = 0, prevRevenue = 0;
-    let totalInvoices = 0, prevInvoices = 0;
-    let totalQuotations = 0, prevQuotations = 0;
-    let recentInvoices: { name: string; phone: string; ntn_number: string; purchase: string }[] = [];
+      let totalRevenue = 0,
+        prevRevenue = 0;
+      let totalInvoices = 0,
+        prevInvoices = 0;
+      let totalQuotations = 0,
+        prevQuotations = 0;
+      let totalClients = 0,
+        prevClients = 0;
+      let recentInvoices: {
+        name: string;
+        phone: string;
+        ntn_number: string;
+        purchase: string;
+      }[] = [];
 
-    invoices.forEach((invoice) => {
-      const createdAt = new Date(invoice.date || invoice.created_at).getTime();
-      const amount = invoice.tax ? invoice.grand_total : invoice.total_price;
+      // Calculate overall totals
+      let overallRevenue = 0;
+      let overallInvoices = 0;
+      let overallQuotations = 0;
+      let overallClients = clients.length;
 
-      if (createdAt >= oneWeekAgo) {
-        invoice.is_quotation ? totalQuotations++ : (totalInvoices++, totalRevenue += amount);
-      } else if (createdAt >= twoWeeksAgo) {
-        invoice.is_quotation ? prevQuotations++ : (prevInvoices++, prevRevenue += amount);
-      } 
-      if (createdAt >= oneMonthAgo) {
-        if (!invoice.is_quotation && recentInvoices.length < 6) {
+      invoices.forEach((invoice) => {
+        const createdAt = new Date(
+          invoice.date || invoice.created_at
+        ).getTime();
+        const amount = invoice.tax ? invoice.grand_total : invoice.total_price;
+
+        // Overall totals
+        if (!invoice.is_quotation) {
+          overallRevenue += amount;
+          overallInvoices++;
+        } else {
+          overallQuotations++;
+        }
+
+        // Growth calculations (last week vs. the week before)
+        if (createdAt >= oneWeekAgo) {
+          invoice.is_quotation
+            ? totalQuotations++
+            : (totalInvoices++, (totalRevenue += amount));
+        } else if (createdAt >= twoWeeksAgo) {
+          invoice.is_quotation
+            ? prevQuotations++
+            : (prevInvoices++, (prevRevenue += amount));
+        }
+
+        // Recent invoices (last 30 days)
+        if (
+          createdAt >= oneMonthAgo &&
+          !invoice.is_quotation &&
+          recentInvoices.length < 6
+        ) {
           recentInvoices.push({
             name: invoice.client.name,
             phone: invoice.client.phone ?? "",
@@ -84,38 +131,69 @@ export default function Dashboard() {
             purchase: amount,
           });
         }
-      }
-    });
+      });
 
-    const percentageChange = (current: number, previous: number) => {
-      if (previous === 0) return current > 0 ? "+100%" : "0%";
-      const change = ((current - previous) / previous) * 100;
-      return `${change > 0 ? "+" : ""}${change.toFixed(1)}%`;
-    };
+      // Calculate client growth
+      clients.forEach((client) => {
+        const createdAt = new Date(client.created_at).getTime();
+        if (createdAt >= oneWeekAgo) {
+          totalClients++;
+        } else if (createdAt >= twoWeeksAgo) {
+          prevClients++;
+        }
+      });
 
-    return {
-      revenue: totalRevenue,
-      invoices: totalInvoices,
-      quotations: totalQuotations,
-      clients: clients.length,
-      recentInvoices: recentInvoices,
-      revenue_change: percentageChange(totalRevenue, prevRevenue),
-      invoices_change: percentageChange(totalInvoices, prevInvoices),
-      quotations_change: percentageChange(totalQuotations, prevQuotations),
-      clients_change: percentageChange(clients.length, clients.length - prevInvoices - prevQuotations),
-    };
-  }, []);
+      const percentageChange = (current: number, previous: number) => {
+        if (previous === 0) return current > 0 ? "+100%" : "0%";
+        const change = ((current - previous) / previous) * 100;
+        return `${change > 0 ? "+" : ""}${change.toFixed(1)}%`;
+      };
+
+      const actualChange = (current: number, previous: number) => {
+        return current - previous;
+      };
+
+      return {
+        overallRevenue: overallRevenue,
+        overallQuotations: overallQuotations,
+        overallInvoices: overallInvoices,
+        overallClients: overallClients,
+        revenue: totalRevenue,
+        invoices: totalInvoices,
+        quotations: totalQuotations,
+        clients: totalClients,
+        recentInvoices: recentInvoices,
+        revenue_change: percentageChange(totalRevenue, prevRevenue),
+        invoices_change: percentageChange(totalInvoices, prevInvoices),
+        quotations_change: percentageChange(totalQuotations, prevQuotations),
+        clients_change: percentageChange(totalClients, prevClients),
+        revenue_increase: actualChange(totalRevenue, prevRevenue),
+        invoices_increase: actualChange(totalInvoices, prevInvoices),
+        quotations_increase: actualChange(totalQuotations, prevQuotations),
+        clients_increase: actualChange(totalClients, prevClients),
+      };
+    },
+    []
+  );
 
   const fetchDashboardData = useCallback(async () => {
     try {
       const [invoicesRes, clientsRes] = await Promise.all([
-        fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/invoices/`, { credentials: "include" }),
-        fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/clients/`, { credentials: "include" }),
+        fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/invoices/`, {
+          credentials: "include",
+        }),
+        fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/clients/`, {
+          credentials: "include",
+        }),
       ]);
 
-      if (!invoicesRes.ok || !clientsRes.ok) throw new Error("Failed to fetch data");
+      if (!invoicesRes.ok || !clientsRes.ok)
+        throw new Error("Failed to fetch data");
 
-      const [invoicesData, clientsData] = await Promise.all([invoicesRes.json(), clientsRes.json()]);
+      const [invoicesData, clientsData] = await Promise.all([
+        invoicesRes.json(),
+        clientsRes.json(),
+      ]);
 
       const invoices = z.array(transactionSchema).parse(invoicesData);
       const clients = z.array(clientSchema).parse(clientsData);
@@ -124,7 +202,11 @@ export default function Dashboard() {
 
       // Dynamic date calculations
       const now = new Date();
-      const oneMonthAgo = new Date(now.getFullYear(), now.getMonth() - 1, now.getDate());
+      const oneMonthAgo = new Date(
+        now.getFullYear(),
+        now.getMonth() - 1,
+        now.getDate()
+      );
 
       // Revenue Trends: Group by week for the last 4 weeks
       const revenueTrends = invoices
@@ -132,9 +214,14 @@ export default function Dashboard() {
         .reduce((acc, invoice) => {
           const invoiceDate = new Date(invoice.date || invoice.created_at);
           if (invoiceDate >= oneMonthAgo) {
-            const weekNumber = Math.floor((now.getTime() - invoiceDate.getTime()) / (7 * 24 * 60 * 60 * 1000));
+            const weekNumber = Math.floor(
+              (now.getTime() - invoiceDate.getTime()) /
+                (7 * 24 * 60 * 60 * 1000)
+            );
             const weekLabel = `Week ${4 - weekNumber}`;
-            acc[weekLabel] = (acc[weekLabel] || 0) + (invoice.tax ? invoice.grand_total : invoice.total_price);
+            acc[weekLabel] =
+              (acc[weekLabel] || 0) +
+              (invoice.tax ? invoice.grand_total : invoice.total_price);
           }
           return acc;
         }, {} as Record<string, number>);
@@ -156,8 +243,13 @@ export default function Dashboard() {
       // Client Growth: Group by month for the last 5 months
       const clientGrowth = clients.reduce((acc, client) => {
         const clientDate = new Date(client.created_at);
-        if (clientDate >= new Date(now.getFullYear(), now.getMonth() - 5, now.getDate())) {
-          const month = clientDate.toLocaleString("default", { month: "short" });
+        if (
+          clientDate >=
+          new Date(now.getFullYear(), now.getMonth() - 5, now.getDate())
+        ) {
+          const month = clientDate.toLocaleString("default", {
+            month: "short",
+          });
           acc[month] = (acc[month] || 0) + 1;
         }
         return acc;
@@ -175,9 +267,21 @@ export default function Dashboard() {
     fetchDashboardData();
   }, [fetchDashboardData]);
 
-  const formattedRevenue = useMemo(() => formatCurrency(stats.revenue, currency), [stats.revenue, currency]);
-  const formattedRecentInvoices = useMemo(() => 
-    stats.recentInvoices.map((inv) => ({ ...inv, purchase: formatCurrency(parseFloat(inv.purchase), currency) })), 
+  const formattedRevenue = useMemo(
+    () => formatCurrency(stats.revenue, currency),
+    [stats.revenue, currency]
+  );
+  const formattedOverallRevenue = useMemo(
+    () => formatCurrency(stats.overallRevenue, currency),
+    [stats.overallRevenue, currency]
+  );
+
+  const formattedRecentInvoices = useMemo(
+    () =>
+      stats.recentInvoices.map((inv) => ({
+        ...inv,
+        purchase: formatCurrency(parseFloat(inv.purchase), currency),
+      })),
     [stats.recentInvoices, currency]
   );
 
@@ -215,15 +319,17 @@ export default function Dashboard() {
                 </svg>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{formattedRevenue}</div>
+                <div className="text-2xl font-bold">
+                  {formattedOverallRevenue}
+                </div>
                 <p className="text-xs text-muted-foreground">
-                  {stats.revenue_change} from last week
+                  {stats.revenue_change} ({formattedRevenue}) from last week
                 </p>
               </CardContent>
             </Card>
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Invoices</CardTitle>
+                <CardTitle className="text-sm font-medium">Total Invoices</CardTitle>
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   viewBox="0 0 24 24"
@@ -242,17 +348,18 @@ export default function Dashboard() {
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">
-                  +{stats.invoices.toLocaleString()}
+                  {stats.overallInvoices.toLocaleString()}
                 </div>
                 <p className="text-xs text-muted-foreground">
-                {stats.invoices_change} from last week
+                  {stats.invoices_change} (+{stats.invoices.toLocaleString()})
+                  from last week
                 </p>
               </CardContent>
             </Card>
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">
-                  Quotations
+                  Total Quotations
                 </CardTitle>
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
@@ -270,16 +377,16 @@ export default function Dashboard() {
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">
-                  +{stats.quotations.toLocaleString()}
+                  {stats.overallQuotations.toLocaleString()}
                 </div>
                 <p className="text-xs text-muted-foreground">
-                {stats.quotations_change} from last week
+                  {stats.quotations_change} (+{stats.quotations}) from last week
                 </p>
               </CardContent>
             </Card>
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Clients</CardTitle>
+                <CardTitle className="text-sm font-medium">Total Clients</CardTitle>
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   viewBox="0 0 24 24"
@@ -297,10 +404,10 @@ export default function Dashboard() {
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">
-                  +{stats.clients.toLocaleString()}
+                  {stats.overallClients.toLocaleString()}
                 </div>
                 <p className="text-xs text-muted-foreground">
-                {stats.clients_change} from last week
+                  {stats.clients_change} (+{stats.clients.toLocaleString()}) from last week
                 </p>
               </CardContent>
             </Card>
@@ -326,7 +433,11 @@ export default function Dashboard() {
                 <CardDescription>Last 4 weeks</CardDescription>
               </CardHeader>
               <CardContent>
-                <LineChartComponent data={revenueData} xAxisKey="name" yAxisKey="value" />
+                <LineChartComponent
+                  data={revenueData}
+                  xAxisKey="name"
+                  yAxisKey="value"
+                />
               </CardContent>
             </Card>
             <Card>
@@ -344,7 +455,11 @@ export default function Dashboard() {
                 <CardDescription>Last 5 months</CardDescription>
               </CardHeader>
               <CardContent>
-                <InteractiveAreaChartComponent data={clientGrowthData} xAxisKey="name" yAxisKey="value" />
+                <InteractiveAreaChartComponent
+                  data={clientGrowthData}
+                  xAxisKey="name"
+                  yAxisKey="value"
+                />
               </CardContent>
             </Card>
           </div>
@@ -364,7 +479,11 @@ export default function Dashboard() {
                 <CardDescription>Last 4 weeks</CardDescription>
               </CardHeader>
               <CardContent>
-                <LineChartComponent data={revenueData} xAxisKey="name" yAxisKey="value" />
+                <LineChartComponent
+                  data={revenueData}
+                  xAxisKey="name"
+                  yAxisKey="value"
+                />
               </CardContent>
             </Card>
           </div>

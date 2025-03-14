@@ -38,7 +38,7 @@ class InvoiceForm(forms.ModelForm):
         })
     )
 
-    client = forms.ModelChoiceField(queryset=Client.objects.all(), empty_label="Select Client or Create New", required=True)
+    client = forms.ModelChoiceField(queryset=Client.objects.all(), empty_label="Select Client or Create New", required=True, widget=forms.Select(attrs={'autofocus': True}))
 
     def clean(self):
         cleaned_data = super().clean()

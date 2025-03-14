@@ -10,6 +10,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { PhoneInput } from "@/components/phone-input";
 import { Label } from "@/components/ui/label";
 import { FcGoogle } from "react-icons/fc";
 import { AiFillGithub } from "react-icons/ai";
@@ -20,12 +21,15 @@ import * as z from "zod";
 import { useState } from "react";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
+import { isValidPhoneNumber } from "react-phone-number-input";
 
 const SignupSchema = z
   .object({
     name: z.string().min(2, "Name is required"),
     email: z.string().email("Invalid email"),
-    phone: z.string().min(10, "Phone number is required"),
+    phone: z.string().refine((value) => isValidPhoneNumber(value), {
+      message: "Invalid phone number",
+    }),
     password: z
       .string()
       .min(8, "Password must be at least 8 characters")
@@ -53,6 +57,7 @@ export function SignupForm({
     register,
     handleSubmit,
     getValues,
+    setValue,
     formState: { errors, isValid },
   } = useForm<SignupFormValues>({
     resolver: zodResolver(SignupSchema),
@@ -193,11 +198,11 @@ export function SignupForm({
                 </div>
                 <div className="grid gap-2">
                   <Label htmlFor="phone">Phone</Label>
-                  <Input
+                  <PhoneInput
                     id="phone"
-                    type="text"
                     placeholder="Enter your phone number"
-                    {...register("phone")}
+                    value={getValues("phone")}
+                    onChange={(value) => setValue("phone", value)}
                   />
                   {errors.phone && (
                     <p className="text-red-500 text-sm">

@@ -6,7 +6,8 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import Cookies from "js-cookie";
 import { toast } from "sonner";
-
+import { PhoneInput } from "@/components/phone-input";
+import { isValidPhoneNumber } from "react-phone-number-input";
 import { useAuth } from "@/app/context/AuthContext";
 import { Button } from "@/components/ui/button";
 import {
@@ -22,7 +23,8 @@ import { Input } from "@/components/ui/input";
 import { invoiceOwnerSchema } from "@/app/transactions/data/schema";
 import { absoluteUrl } from "@/lib/utils";
 
-const accountFormSchema = invoiceOwnerSchema.pick({
+// Step 1: Use `pick` to select the fields you need
+const baseSchema = invoiceOwnerSchema.pick({
   name: true,
   email: true,
   phone: true,
@@ -32,6 +34,16 @@ const accountFormSchema = invoiceOwnerSchema.pick({
   bank: true,
   account_title: true,
   iban: true,
+});
+
+// Step 2: Extend the base schema to add custom validation for phone fields
+const accountFormSchema = baseSchema.extend({
+  phone: z.string().refine((value) => isValidPhoneNumber(value), {
+    message: "Invalid phone number",
+  }),
+  phone_2: z.string().refine((value) => !value || isValidPhoneNumber(value), {
+    message: "Invalid phone number",
+  }),
 });
 
 type AccountFormValues = z.infer<typeof accountFormSchema>;
@@ -64,8 +76,16 @@ export function AccountForm() {
       );
       if (!response.ok) throw new Error("Failed to fetch invoice owner data");
       const data = await response.json();
-      form.reset(data);
-      setInitialValues(data); // Store initial values
+
+      // Ensure phone numbers are in E.164 format
+      const formattedData = {
+        ...data,
+        phone: data.phone ? `+${data.phone.replace(/\D/g, "")}` : "",
+        phone_2: data.phone_2 ? `+${data.phone_2.replace(/\D/g, "")}` : "",
+      };
+
+      form.reset(formattedData);
+      setInitialValues(formattedData); // Store initial values
     } catch (error) {
       console.error("Error fetching invoice owner:", error);
     } finally {
@@ -83,7 +103,9 @@ export function AccountForm() {
 
       // Check if any field has changed
       const hasChanged = Object.keys(data).some(
-        (key) => data[key as keyof AccountFormValues] !== initialValues[key as keyof AccountFormValues]
+        (key) =>
+          data[key as keyof AccountFormValues] !==
+          initialValues[key as keyof AccountFormValues]
       );
 
       if (!hasChanged) {
@@ -159,12 +181,14 @@ export function AccountForm() {
       label: "Phone",
       placeholder: "Your phone number",
       description: "Your primary contact number.",
+      type: "phone",
     },
     {
       name: "phone_2",
       label: "Alternate Phone",
       placeholder: "Your alternate phone number",
       description: "A secondary phone number (optional).",
+      type: "phone",
     },
     {
       name: "address",
@@ -176,15 +200,13 @@ export function AccountForm() {
       name: "ntn_number",
       label: "NTN Number",
       placeholder: "Your NTN number",
-      description:
-        "Your National Tax Number for tax-related purposes.",
+      description: "Your National Tax Number for tax-related purposes.",
     },
     {
       name: "bank",
       label: "Bank",
       placeholder: "Your bank name",
-      description:
-        "The bank where your business account is registered.",
+      description: "The bank where your business account is registered.",
     },
     {
       name: "account_title",
@@ -213,12 +235,20 @@ export function AccountForm() {
               <FormItem>
                 <FormLabel>{label}</FormLabel>
                 <FormControl>
-                  <Input
-                    placeholder={placeholder}
-                    type={type || "text"}
-                    {...field}
-                    value={field.value || ""}
-                  />
+                  {type === "phone" ? (
+                    <PhoneInput
+                      placeholder={placeholder}
+                      value={field.value || ""}
+                      onChange={(value) => field.onChange(value)}
+                    />
+                  ) : (
+                    <Input
+                      placeholder={placeholder}
+                      type={type || "text"}
+                      {...field}
+                      value={field.value || ""}
+                    />
+                  )}
                 </FormControl>
                 <FormDescription>{description}</FormDescription>
                 <FormMessage />
@@ -231,5 +261,5 @@ export function AccountForm() {
         </Button>
       </form>
     </Form>
-  )
+  );
 }

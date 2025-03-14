@@ -1,8 +1,9 @@
 import { NextResponse, NextRequest } from "next/server";
 
 export async function middleware(request: NextRequest) {
-  const publicRoutes = ["/login", "/signup", "/forgot-password", "/onboarding"];
+  const publicRoutes = ["/login", "/signup", "/forgot-password"];
   const resetPasswordRegex = /^\/reset-password\/[^\/]+\/[^\/]+$/;
+  const onboardingRoute = "/onboarding"; // Add the onboarding route
 
   try {
     const response = await fetch(
@@ -40,6 +41,29 @@ export async function middleware(request: NextRequest) {
       return NextResponse.redirect(homeUrl);
     }
 
+    // Force non-onboarded users to the onboarding page
+    if (!user.is_onboarded && request.nextUrl.pathname !== onboardingRoute) {
+      const onboardingUrl = new URL(onboardingRoute, request.url);
+      return NextResponse.redirect(onboardingUrl);
+    }
+
+    // Prevent onboarded users from accessing the onboarding page
+    if (user.is_onboarded && request.nextUrl.pathname === onboardingRoute) {
+      // Get the referer (previous page) from the request headers
+      const referer = request.headers.get("referer");
+
+      // If there's a referer, redirect back to it
+      if (referer) {
+        const refererUrl = new URL(referer);
+        return NextResponse.redirect(refererUrl);
+      }
+
+      // If no referer, redirect to the home page as a fallback
+      const homeUrl = new URL("/", request.url);
+      return NextResponse.redirect(homeUrl);
+    }
+
+    // Allow access to other routes for authenticated and onboarded users
     return NextResponse.next();
   } catch (err) {
     console.error("Error fetching current user in middleware:", err);

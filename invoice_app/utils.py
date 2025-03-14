@@ -6,7 +6,7 @@ from django.conf import settings
 from django.utils.translation import get_language
 
 def validate_phone_number(phone_number):
-    """Validate phone number and return an error message with the expected format if invalid."""
+    """Validate phone number and return an error message with a valid example if invalid."""
     try:
         region = (
             get_language().split('-')[1] 
@@ -14,11 +14,20 @@ def validate_phone_number(phone_number):
             else getattr(settings, "DEFAULT_PHONE_REGION", "US")
         )
 
+        # Parse the phone number
         parsed_phone = phonenumbers.parse(phone_number, region)
 
         if not phonenumbers.is_valid_number(parsed_phone):
-            formatted_example = phonenumbers.format_number(parsed_phone, phonenumbers.PhoneNumberFormat.INTERNATIONAL)
-            raise ValidationError(f"Invalid phone number. Expected format: {formatted_example}")
+            # Provide a valid example for the region
+            valid_example = phonenumbers.format_number(
+                phonenumbers.example_number_for_type(region, phonenumbers.PhoneNumberType.MOBILE),
+                phonenumbers.PhoneNumberFormat.INTERNATIONAL
+            )
+            
+            # Raise a validation error with a valid example
+            raise ValidationError(
+                f"Invalid phone number. Example of a valid number for this region: {valid_example}"
+            )
 
     except phonenumbers.phonenumberutil.NumberParseException:
         raise ValidationError("Invalid phone number format. Ensure you include the correct country code.")

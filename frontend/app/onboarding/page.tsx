@@ -18,6 +18,14 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import Cookies from "js-cookie";
+import {
+  FileUploader,
+  FileUploaderContent,
+  FileUploaderItem,
+  FileInput,
+} from "@/components/file-upload";
+import { Paperclip } from "lucide-react";
+import { PhoneInput } from "@/components/phone-input";
 
 const OnboardingSchema = z.object({
   address: z.string().min(1, "Address is required"),
@@ -27,14 +35,49 @@ const OnboardingSchema = z.object({
   iban: z.string().optional(),
   phone_2: z.string().optional(),
   logo: z
-    .any()
-    .refine((files) => files && files.length > 0, "Logo is required"),
+    .custom<File>()
+    .refine(
+      (file) =>
+        file instanceof File && file.size > 0 && file.type === "image/png",
+      "Logo is required & must be a PNG file"
+    ),
   signature: z
-    .any()
-    .refine((files) => files && files.length > 0, "Signature is required"),
+    .custom<File>()
+    .refine(
+      (file) =>
+        file instanceof File && file.size > 0 && file.type === "image/png",
+      "Signature is required & must be a PNG file"
+    ),
 });
 
 type OnboardingFormValues = z.infer<typeof OnboardingSchema>;
+
+const FileSvgDraw = () => {
+  return (
+    <>
+      <svg
+        className="w-8 h-8 mb-3 text-gray-500 dark:text-gray-400"
+        aria-hidden="true"
+        xmlns="http://www.w3.org/2000/svg"
+        fill="none"
+        viewBox="0 0 20 16"
+      >
+        <path
+          stroke="currentColor"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth="2"
+          d="M13 13h3a3 3 0 0 0 0-6h-.025A5.56 5.56 0 0 0 16 6.5 5.5 5.5 0 0 0 5.207 5.021C5.137 5.017 5.071 5 5 5a4 4 0 0 0 0 8h2.167M10 15V6m0 0L8 8m2-2 2 2"
+        />
+      </svg>
+      <p className="mb-1 text-sm text-gray-500 dark:text-gray-400">
+        <span className="font-semibold">Click to upload</span>
+        &nbsp; or drag and drop
+      </p>
+      <p className="text-xs text-gray-500 dark:text-gray-400">PNG</p>
+    </>
+  );
+};
 
 export default function OnboardingPage() {
   const { user } = useAuth();
@@ -44,6 +87,8 @@ export default function OnboardingPage() {
     register,
     handleSubmit,
     formState: { errors },
+    setValue,
+    watch,
   } = useForm<OnboardingFormValues>({
     resolver: zodResolver(OnboardingSchema),
     mode: "onBlur",
@@ -97,11 +142,11 @@ export default function OnboardingPage() {
       }
 
       const fileFormData = new FormData();
-      if (data.logo && data.logo[0]) {
-        fileFormData.append("logo", data.logo[0]);
+      if (data.logo) {
+        fileFormData.append("logo", data.logo);
       }
-      if (data.signature && data.signature[0]) {
-        fileFormData.append("signature", data.signature[0]);
+      if (data.signature) {
+        fileFormData.append("signature", data.signature);
       }
 
       const fileUploadResponse = await fetch(
@@ -169,12 +214,32 @@ export default function OnboardingPage() {
               </div>
               <div className="grid gap-2">
                 <Label htmlFor="logo">Upload Logo (PNG)</Label>
-                <Input
-                  id="logo"
-                  type="file"
-                  accept="image/png"
-                  {...register("logo")}
-                />
+                <FileUploader
+                  value={watch("logo") ? [watch("logo")] : []}
+                  onValueChange={(files: any) =>
+                    setValue("logo", files ? files[0] : null)
+                  }
+                  dropzoneOptions={{
+                    accept: { "image/png": [".png"] },
+                    maxFiles: 1,
+                    multiple: false,
+                  }}
+                  className="relative bg-background rounded-lg p-2"
+                >
+                  <FileInput className="outline-dashed outline-1 outline-gray-300 dark:outline-gray-600">
+                    <div className="flex items-center justify-center flex-col pt-3 pb-4 w-full">
+                      <FileSvgDraw />
+                    </div>
+                  </FileInput>
+                  <FileUploaderContent>
+                    {watch("logo") && (
+                      <FileUploaderItem index={0}>
+                        <Paperclip className="h-4 w-4 stroke-current" />
+                        <span>{watch("logo")?.name}</span>
+                      </FileUploaderItem>
+                    )}
+                  </FileUploaderContent>
+                </FileUploader>
                 {errors.logo && (
                   <p className="text-red-500 text-sm">
                     {errors.logo.message?.toString()}
@@ -183,12 +248,32 @@ export default function OnboardingPage() {
               </div>
               <div className="grid gap-2">
                 <Label htmlFor="signature">Upload Signature (PNG)</Label>
-                <Input
-                  id="signature"
-                  type="file"
-                  accept="image/png"
-                  {...register("signature")}
-                />
+                <FileUploader
+                  value={watch("signature") ? [watch("signature")] : []}
+                  onValueChange={(files: any) =>
+                    setValue("signature", files ? files[0] : null)
+                  }
+                  dropzoneOptions={{
+                    accept: { "image/png": [".png"] },
+                    maxFiles: 1,
+                    multiple: false,
+                  }}
+                  className="relative bg-background rounded-lg p-2"
+                >
+                  <FileInput className="outline-dashed outline-1 outline-gray-300 dark:outline-gray-600">
+                    <div className="flex items-center justify-center flex-col pt-3 pb-4 w-full">
+                      <FileSvgDraw />
+                    </div>
+                  </FileInput>
+                  <FileUploaderContent>
+                    {watch("signature") && (
+                      <FileUploaderItem index={0}>
+                        <Paperclip className="h-4 w-4 stroke-current" />
+                        <span>{watch("signature")?.name}</span>
+                      </FileUploaderItem>
+                    )}
+                  </FileUploaderContent>
+                </FileUploader>
                 {errors.signature && (
                   <p className="text-red-500 text-sm">
                     {errors.signature.message?.toString()}
@@ -249,11 +334,13 @@ export default function OnboardingPage() {
               </div>
               <div className="grid gap-2">
                 <Label htmlFor="phone_2">Alternate Phone</Label>
-                <Input
+                <PhoneInput
                   id="phone_2"
-                  type="text"
                   placeholder="Enter alternate phone number"
-                  {...register("phone_2")}
+                  value={watch("phone_2") || ""}
+                  onChange={(value: string | undefined) =>
+                    setValue("phone_2", value)
+                  }
                 />
                 {errors.phone_2 && (
                   <p className="text-red-500 text-sm">
@@ -278,9 +365,7 @@ export default function OnboardingPage() {
         </CardContent>
       </Card>
       <div className="text-center text-xs text-zinc-500 dark:text-zinc-400">
-        <p>
-          Please ensure your details are accurate.{" "}
-        </p>
+        <p>Please ensure your details are accurate. Complete onboarding to proceed further.</p>
       </div>
     </div>
   );
