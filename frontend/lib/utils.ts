@@ -1,5 +1,6 @@
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
+import Cookies from "js-cookie";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -81,4 +82,24 @@ export const formatCurrency = (amount: number, currency: string) => {
     style: "currency",
     currency,
   }).format(amount);
+};
+
+export const logout = async (): Promise<Response | void> => {
+  try {
+    const csrfToken = Cookies.get("csrftoken");
+    const res: Response = await fetch(
+      `${process.env.NEXT_PUBLIC_API_URL}/api/v1/auth/logout/`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-CSRFToken": csrfToken || "",
+        },
+        credentials: "include",
+      }
+    );
+    return res;
+  } catch (error) {
+    console.error("Logout error:", error);
+  }
 };

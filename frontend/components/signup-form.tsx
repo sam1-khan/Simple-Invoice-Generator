@@ -22,6 +22,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { isValidPhoneNumber } from "react-phone-number-input";
+import { PasswordInput } from "./password-input";
 
 const SignupSchema = z
   .object({
@@ -117,10 +118,7 @@ export function SignupForm({
         description: "You can now log in to your account.",
       });
 
-      setTimeout(() => {
-        router.push("/login")
-      }, 1000);
-
+      router.push("/login");
     } catch (err: any) {
       setError(err.message || "An error occurred.");
     } finally {
@@ -212,9 +210,8 @@ export function SignupForm({
                 </div>
                 <div className="grid gap-2">
                   <Label htmlFor="password">Password</Label>
-                  <Input
+                  <PasswordInput
                     id="password"
-                    type="password"
                     placeholder="Enter your password"
                     {...register("password")}
                   />
@@ -226,9 +223,8 @@ export function SignupForm({
                 </div>
                 <div className="grid gap-2">
                   <Label htmlFor="confirmPassword">Confirm Password</Label>
-                  <Input
+                  <PasswordInput
                     id="confirmPassword"
-                    type="password"
                     placeholder="Re-enter your password"
                     {...register("confirmPassword")}
                   />

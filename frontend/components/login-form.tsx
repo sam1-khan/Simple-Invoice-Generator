@@ -15,6 +15,7 @@ import { AiFillGithub } from "react-icons/ai";
 import Link from "next/link";
 import { useAuth } from "@/app/context/AuthContext";
 import { useRouter } from "next/navigation";
+import { PasswordInput } from "./password-input";
 
 export function LoginForm({
   className,
@@ -52,7 +53,6 @@ export function LoginForm({
 
       await refreshUser();
       router.push("/");
-
     } catch (err: any) {
       setError(err.message);
     } finally {
@@ -121,13 +121,12 @@ export function LoginForm({
                       Forgot your password?
                     </Link>
                   </div>
-                  <Input
+                  <PasswordInput
                     id="password"
-                    type="password"
-                    placeholder="Enter your password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    required
+                    autoComplete="password"
+                    placeholder="Enter your password"
                   />
                 </div>
                 {error && <p className="text-red-500 text-sm">{error}</p>}

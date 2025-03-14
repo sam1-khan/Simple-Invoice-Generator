@@ -6,7 +6,7 @@ import * as z from "zod";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/app/context/AuthContext";
-import { cn } from "@/lib/utils";
+import { cn, logout } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -80,7 +80,7 @@ const FileSvgDraw = () => {
 };
 
 export default function OnboardingPage() {
-  const { user } = useAuth();
+  const { user, refreshUser } = useAuth();
   const router = useRouter();
 
   const {
@@ -178,6 +178,16 @@ export default function OnboardingPage() {
       } else {
         setError(["An unknown error occurred."]);
       }
+    }
+  };
+
+  const handleLogout = async () => {
+    const res = await logout();
+    if (res && res.ok) {
+      refreshUser();
+      router.push("/login");
+    } else {
+      console.error("Logout failed");
     }
   };
 
@@ -365,7 +375,11 @@ export default function OnboardingPage() {
         </CardContent>
       </Card>
       <div className="text-center text-xs text-zinc-500 dark:text-zinc-400">
-        <p>Please ensure your details are accurate. Complete onboarding to proceed further.</p>
+        <p>
+          Please ensure your details are accurate. Complete onboarding to
+          proceed further.
+        </p>
+        <Button variant={"link"} className="text-xs" style={{color: "#a1a1aa"}} onClick={handleLogout}>Logout</Button>
       </div>
     </div>
   );

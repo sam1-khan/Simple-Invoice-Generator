@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import Cookies from "js-cookie";
 import { useEffect } from "react";
+import { logout } from "@/lib/utils";
 
 const isInputField = (element: HTMLElement) => {
   return (
@@ -31,32 +32,17 @@ export function UserNav() {
   const router = useRouter();
 
   const handleLogout = async () => {
-    try {
-      const csrfToken = Cookies.get("csrftoken");
-      const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/v1/auth/logout/`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "X-CSRFToken": csrfToken || "",
-          },
-          credentials: "include",
-        }
-      );
-      if (res.ok) {
-        refreshUser();
-        router.push("/login");
-      } else {
-        console.error("Logout failed");
-      }
-    } catch (error) {
-      console.error("Logout error:", error);
+    const res = await logout();
+    if (res && res.ok) {
+      refreshUser();
+      router.push("/login");
+    } else {
+      console.error("Logout failed");
     }
   };
 
   useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {      
+    const handleKeyDown = (e: KeyboardEvent) => {
       const activeElement = document.activeElement as HTMLElement;
 
       if (isInputField(activeElement)) {
@@ -64,7 +50,6 @@ export function UserNav() {
       }
 
       if (!user) return;
-
 
       if (e.shiftKey) {
         // Appearance Shortcut: shift+s
@@ -81,7 +66,6 @@ export function UserNav() {
         }
       }
     };
-
 
     window.addEventListener("keydown", handleKeyDown);
 
@@ -117,21 +101,27 @@ export function UserNav() {
           <DropdownMenuItem onClick={() => router.push("/settings")}>
             Account
             <div className="ml-auto">
-            <Badge variant={"outline"} className="text-xs p-1">Shift+a</Badge>
-          </div>
+              <Badge variant={"outline"} className="text-xs p-1">
+                Shift+a
+              </Badge>
+            </div>
           </DropdownMenuItem>
           <DropdownMenuItem onClick={() => router.push("/settings/appearance")}>
             Appearance
             <div className="ml-auto">
-            <Badge variant={"outline"} className="text-xs p-1">Shift+d</Badge>
-          </div>
+              <Badge variant={"outline"} className="text-xs p-1">
+                Shift+d
+              </Badge>
+            </div>
           </DropdownMenuItem>
         </DropdownMenuGroup>
         <DropdownMenuSeparator />
         <DropdownMenuItem onClick={handleLogout}>
           Log out
           <div className="ml-auto">
-            <Badge variant={"outline"} className="text-xs p-1">Shift+q</Badge>
+            <Badge variant={"outline"} className="text-xs p-1">
+              Shift+q
+            </Badge>
           </div>
         </DropdownMenuItem>
       </DropdownMenuContent>
