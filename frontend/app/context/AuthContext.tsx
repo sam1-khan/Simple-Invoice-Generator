@@ -1,6 +1,7 @@
 "use client";
 
 import React, { createContext, useContext, useState, useEffect } from "react";
+import { useFont } from "@/components/font-provider"; // Import useFont
 
 type User = {
   id: number;
@@ -8,7 +9,6 @@ type User = {
   email: string;
   phone: string;
   is_onboarded: boolean;
-  // other fields as needed
 } | null;
 
 type AuthContextType = {
@@ -26,6 +26,7 @@ const AuthContext = createContext<AuthContextType>({
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User>(null);
   const [loading, setLoading] = useState(true);
+  const { setFont } = useFont(); // Use the setFont function from FontProvider
 
   const refreshUser = async () => {
     try {
@@ -50,6 +51,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     refreshUser();
   }, []);
+
+  useEffect(() => {
+    if (user) {
+      // Re-apply the font after authentication
+      const storedFont = localStorage.getItem("app-font") as Font | null;
+      if (storedFont) {
+        setFont(storedFont);
+      }
+    }
+  }, [user, setFont]);
 
   return (
     <AuthContext.Provider value={{ user, loading, refreshUser }}>

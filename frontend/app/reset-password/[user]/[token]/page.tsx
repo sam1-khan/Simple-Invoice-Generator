@@ -116,9 +116,7 @@ export default function ResetPasswordPage() {
                   <Label htmlFor="password">New Password</Label>
                   <PasswordInput
                     id="password"
-                    type="password"
                     placeholder="Enter new password"
-                    required
                     {...register("password")}
                   />
                   {errors.password && (
@@ -130,9 +128,7 @@ export default function ResetPasswordPage() {
                   <Label htmlFor="confirmPassword">Confirm Password</Label>
                   <PasswordInput
                     id="confirmPassword"
-                    type="password"
                     placeholder="Confirm new password"
-                    required
                     {...register("confirmPassword")}
                   />
                   {errors.confirmPassword && (

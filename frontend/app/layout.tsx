@@ -56,7 +56,7 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          <FontProvider defaultFont="inter" storageKey="app-font">
+          <FontProvider initialFont="inter" storageKey="app-font">
             <AuthProvider>
               <Navbar />
               <Suspense fallback={<Loading />}>
