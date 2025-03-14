@@ -3,13 +3,14 @@
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { useRouter } from "next/navigation";
 import { useParams } from "next/navigation";
+import { PasswordInput } from "@/components/password-input";
+import { toast } from "sonner";
 
 const ResetPasswordSchema = z.object({
   password: z
@@ -78,9 +79,8 @@ export default function ResetPasswordPage() {
 
       if (response.ok) {
         setResponseMessage("Password reset successful.");
-        setTimeout(() => {
-          router.push("/login");
-        }, 2000);
+        toast.success("Password has been reset successfully!")
+        router.push("/login");
       } else {
         setError(result?.detail || "Failed to reset password.");
       }
@@ -114,7 +114,7 @@ export default function ResetPasswordPage() {
               <div className="grid gap-6">
                 <div className="grid gap-2">
                   <Label htmlFor="password">New Password</Label>
-                  <Input
+                  <PasswordInput
                     id="password"
                     type="password"
                     placeholder="Enter new password"
@@ -128,7 +128,7 @@ export default function ResetPasswordPage() {
 
                 <div className="grid gap-2">
                   <Label htmlFor="confirmPassword">Confirm Password</Label>
-                  <Input
+                  <PasswordInput
                     id="confirmPassword"
                     type="password"
                     placeholder="Confirm new password"
