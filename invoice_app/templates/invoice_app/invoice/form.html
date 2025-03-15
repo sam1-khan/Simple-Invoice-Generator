@@ -1,5 +1,5 @@
 {% extends "base_bootstrap.html" %}
-{% load crispy_forms_tags %} 
+{% load crispy_forms_tags %}
 {% block title %}{{ form.instance.pk|yesno:"Edit,Create" }} Invoice{% endblock %}
 {% block navbar %}
 <p class="border-3 border-top border-info"></p>
@@ -46,7 +46,9 @@
     <div class="formset">
       {% for form in formset %}
       <div class="formset-row card mb-3">
-        <div class="card-body">{{ form|crispy }}</div>
+        <div class="card-body">
+          {{ form|crispy }}
+        </div>
       </div>
       {% endfor %}
     </div>
@@ -79,9 +81,6 @@
   const isTaxedCheckbox = document.querySelector("#id_is_taxed");
   const isTaxedDiv = document.querySelector("#div_id_is_taxed");
   const taxPercentageDiv = document.querySelector("#div_id_tax_percentage");
-  const ownerLabel = document
-    .querySelector("#div_id_invoice_owner")
-    .querySelector("label");
   const isQuotationCheckbox = document
     .querySelector("#div_id_is_quotation")
     .querySelector("input");
@@ -116,22 +115,6 @@
       taxPercentageDiv.style.display = "block"; // Show the input div
       isTaxedDiv.style.display = "block"; // Show the checkbox div
       isTaxedCheckbox.style.display = "block"; // Show the checkbox
-    }
-  }
-  
-  function changeLabel() {
-    if (ownerLabel.innerHTML && isQuotationCheckbox) {
-      if (isQuotationCheckbox.checked) {
-        ownerLabel.innerHTML = ownerLabel.innerHTML.replace(
-          "Invoice",
-          "Quotation"
-        );
-      } else {
-        ownerLabel.innerHTML = ownerLabel.innerHTML.replace(
-          "Quotation",
-          "Invoice"
-        );
-      }
     }
   }
 
@@ -213,6 +196,16 @@
       input.value = "";
     });
 
+    // Add a "Remove" button if it doesn't exist
+    let removeButton = newForm.querySelector('.remove-form');
+    if (!removeButton) {
+        removeButton = document.createElement('button');
+        removeButton.type = 'button';
+        removeButton.className = 'btn btn-danger btn-sm remove-form';
+        removeButton.textContent = 'Remove';
+        newForm.appendChild(removeButton);
+    }
+
     // Append the new form to the container
     formsetContainer.appendChild(newForm);
 
@@ -232,8 +225,6 @@
 
   document.addEventListener("DOMContentLoaded", () => {
     toggleFields();
-    changeLabel();
-    isQuotationCheckbox.addEventListener("change", changeLabel);
     isTaxedCheckbox.addEventListener("change", toggleFields);
     taxPercentageDiv
       .querySelector("input")
