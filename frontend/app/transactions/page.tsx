@@ -4,6 +4,9 @@ import { z } from "zod";
 
 import { transactionSchema } from "./data/schema";
 import { TransactionsTable } from "@/components/transactions-table";
+import { Button } from "@/components/ui/button";
+import InvoiceForm from "./transaction-form";
+import CreateTransactionButton from "./create-transaction-button";
 
 export const metadata: Metadata = {
   title: "Transactions",
@@ -32,7 +35,7 @@ async function getTransactions() {
 
   return transactions.map((transaction) => ({
     ...transaction,
-    is_taxed: transaction.tax != null && transaction.tax !== 0,
+    is_taxed: transaction.tax !== 0 ? true : transaction.is_taxed,
   }));
 }
 
@@ -49,6 +52,7 @@ export default async function TransactionPage() {
           </p>
         </div>
       </div>
+      <CreateTransactionButton />
       <TransactionsTable transactions={transactions} /> 
     </div>
   );
