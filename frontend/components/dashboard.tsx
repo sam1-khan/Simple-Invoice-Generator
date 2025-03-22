@@ -286,10 +286,8 @@ export default function Dashboard() {
   );
 
   return (
-    <div className="flex-1 space-y-4 p-8 pt-6">
-      <div className="flex items-center justify-between space-y-2 flex-wrap">
-        <h2 className="text-3xl font-bold tracking-tight">Dashboard</h2>
-      </div>
+    <div className="flex-1 bg-background space-y-4 p-8 pt-6">
+      <h2 className="text-3xl font-bold tracking-tight">Dashboard</h2>
       <Tabs defaultValue="overview" className="space-y-4">
         <TabsList>
           <TabsTrigger value="overview">Overview</TabsTrigger>
@@ -329,7 +327,9 @@ export default function Dashboard() {
             </Card>
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Total Invoices</CardTitle>
+                <CardTitle className="text-sm font-medium">
+                  Total Invoices
+                </CardTitle>
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   viewBox="0 0 24 24"
@@ -386,7 +386,9 @@ export default function Dashboard() {
             </Card>
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Total Clients</CardTitle>
+                <CardTitle className="text-sm font-medium">
+                  Total Clients
+                </CardTitle>
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   viewBox="0 0 24 24"
@@ -407,7 +409,8 @@ export default function Dashboard() {
                   {stats.overallClients.toLocaleString()}
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  {stats.clients_change} (+{stats.clients.toLocaleString()}) from last week
+                  {stats.clients_change} (+{stats.clients.toLocaleString()})
+                  from last week
                 </p>
               </CardContent>
             </Card>

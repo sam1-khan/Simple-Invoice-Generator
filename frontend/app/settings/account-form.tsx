@@ -238,7 +238,7 @@ export function AccountForm() {
                   {type === "phone" ? (
                     <PhoneInput
                       placeholder={placeholder}
-                      value={field.value || ""}
+                      value={field.value?.toString() || ""}
                       onChange={(value) => field.onChange(value)}
                     />
                   ) : (
@@ -246,7 +246,7 @@ export function AccountForm() {
                       placeholder={placeholder}
                       type={type || "text"}
                       {...field}
-                      value={field.value || ""}
+                      value={field.value?.toString() || ""}
                     />
                   )}
                 </FormControl>

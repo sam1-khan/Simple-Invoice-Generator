@@ -294,11 +294,22 @@ def list_invoices(request):
 
 @api.post("/invoices/", response={201: InvoiceOut, 400: ErrorSchema, 403: ErrorSchema, 500: ErrorSchema}, auth=django_auth)
 def create_invoice(request, payload: InvoiceCreate):
-    invoice = Invoice(client__invoice_owner=request.user, **payload.dict())
+    # Fetch the client object
+    try:
+        if request.user.is_staff:
+            client = Client.objects.get(id=payload.client_id)
+        else:
+            client = Client.objects.get(id=payload.client_id, invoice_owner=request.user)
+    except Client.DoesNotExist:
+        return 400, {"detail": "Client not found or you do not have permission to access this client."}
+
+    # Create the invoice
+    invoice = Invoice(client=client, **payload.dict(exclude={"client_id"}))
     try:
         invoice.full_clean()
     except ValidationError as e:
         return 400, {"detail": e.messages}
+
     invoice.save()
     return 201, serialize_invoice(invoice)
 
@@ -357,6 +368,7 @@ def create_invoice_item(request, invoice_id: int, payload: InvoiceItemCreate):
         invoice = get_object_or_404(Invoice, id=invoice_id, client__invoice_owner=request.user)
     item = InvoiceItem(invoice=invoice, **payload.dict())
     item.save()
+    invoice.save()
     return 201, item
 
 @api.get("/invoices/{invoice_id}/items/{id}/", response={200: InvoiceItemOut, 403: ErrorSchema, 404: ErrorSchema, 500: ErrorSchema}, auth=django_auth)
@@ -378,6 +390,7 @@ def update_invoice_item(request, invoice_id: int, id: int, payload: InvoiceItemU
     for attr, value in data.items():
         setattr(item, attr, value)
     item.save()
+    invoice.save()
     return item
 
 @api.delete("/invoices/{invoice_id}/items/{id}/", response={204: None, 403: ErrorSchema, 404: ErrorSchema, 500: ErrorSchema}, auth=django_auth)
@@ -388,6 +401,7 @@ def delete_invoice_item(request, invoice_id: int, id: int):
         invoice = get_object_or_404(Invoice, id=invoice_id, client__invoice_owner=request.user)
     item = get_object_or_404(InvoiceItem, id=id, invoice=invoice)
     item.delete()
+    invoice.save()
     return 204, None
 
 # -------------------------

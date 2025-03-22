@@ -4,8 +4,6 @@ import { z } from "zod";
 
 import { transactionSchema } from "./data/schema";
 import { TransactionsTable } from "@/components/transactions-table";
-import { Button } from "@/components/ui/button";
-import InvoiceForm from "./transaction-form";
 import CreateTransactionButton from "./create-transaction-button";
 
 export const metadata: Metadata = {

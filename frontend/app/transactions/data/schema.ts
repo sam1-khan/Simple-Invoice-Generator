@@ -5,7 +5,7 @@ export const invoiceOwnerSchema = z.object({
   email: z.string(),
   name: z.string(),
   address: z.string().nullable().optional(),
-  phone: z.string(),
+  phone: z.string().nullable().optional(),
   phone_2: z.string().nullable().optional(),
   ntn_number: z.string().nullable().optional(),
   bank: z.string().nullable().optional(),
@@ -47,6 +47,18 @@ export const transactionSchema = z.object({
   updated_at: z.string(),
 });
 
+export const invoiceItemSchema = z.object({
+  id: z.number(),
+  invoice: transactionSchema,
+  name: z.string(),
+  unit: z.string(),
+  description: z.string().optional(),
+  quantity: z.number(),
+  unit_price: z.number(),
+  total_price: z.number(),
+});
+
+export type InvoiceItem = z.infer<typeof invoiceItemSchema>;
 export type Transaction = z.infer<typeof transactionSchema>;
 export type Client = z.infer<typeof clientSchema>;
 export type InvoiceOwner = z.infer<typeof invoiceOwnerSchema>;

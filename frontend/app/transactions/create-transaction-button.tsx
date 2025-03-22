@@ -1,16 +1,13 @@
 "use client";
 
-import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import InvoiceForm from "./transaction-form";
+import { useRouter } from "next/navigation";
 
 export default function CreateTransactionButton() {
-  const [isFormOpen, setIsFormOpen] = useState(false);
-
+  const router = useRouter();
   return (
     <>
-      <Button onClick={() => setIsFormOpen(true)}>Create Transaction</Button>
-      {isFormOpen && <InvoiceForm onClose={() => setIsFormOpen(false)} />}
+      <Button onClick={() => router.push("/transactions/create")}>Create Transaction</Button>
     </>
   );
 }

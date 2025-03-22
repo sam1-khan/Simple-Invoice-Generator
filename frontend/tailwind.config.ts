@@ -51,6 +51,8 @@ export default {
       fontFamily: {
         inter: "var(--font-inter)",
         manrope: "var(--font-manrope)",
+        geist: "var(--font-geist)",
+        "geist-mono": "var(--font-geist-mono)",
         system: "var(--font-system)",
       },
     },

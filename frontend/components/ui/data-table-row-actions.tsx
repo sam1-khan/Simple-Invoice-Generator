@@ -13,13 +13,16 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { toast } from "sonner";
 import { useState } from "react";
-
+import { useRouter } from "next/navigation";
 interface DataTableRowActionsProps<TData> {
   row: Row<TData>;
 }
 
-export function DataTableRowActions<TData>({ row }: DataTableRowActionsProps<TData>) {
+export function DataTableRowActions<TData>({
+  row,
+}: DataTableRowActionsProps<TData>) {
   const [isPaid, setIsPaid] = useState<boolean>(row.getValue("is_paid"));
+  const router = useRouter();
 
   const togglePaymentStatus = async () => {
     if (row.getValue("is_quotation")) {
@@ -28,7 +31,7 @@ export function DataTableRowActions<TData>({ row }: DataTableRowActionsProps<TDa
       });
       return;
     }
-    
+
     const newStatus = !isPaid;
 
     try {
@@ -38,7 +41,9 @@ export function DataTableRowActions<TData>({ row }: DataTableRowActionsProps<TDa
       }
 
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/v1/invoices/${row.getValue("id")}/`,
+        `${process.env.NEXT_PUBLIC_API_URL}/api/v1/invoices/${row.getValue(
+          "id"
+        )}/`,
         {
           method: "PATCH",
           headers: {
@@ -88,7 +93,9 @@ export function DataTableRowActions<TData>({ row }: DataTableRowActionsProps<TDa
       }
 
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/v1/invoices/${row.getValue("id")}/`,
+        `${process.env.NEXT_PUBLIC_API_URL}/api/v1/invoices/${row.getValue(
+          "id"
+        )}/`,
         {
           method: "DELETE",
           headers: {
@@ -100,21 +107,25 @@ export function DataTableRowActions<TData>({ row }: DataTableRowActionsProps<TDa
       );
 
       if (!response.ok) {
-        throw new Error(`Failed to delete ${row.getValue('reference_number')}.`);
+        throw new Error(
+          `Failed to delete ${row.getValue("reference_number")}.`
+        );
       }
 
-      toast.success(
-        `${row.getValue("reference_number")} has been deleted.`,
-        {
-          description: "This action can't be undone.",
-        }
-      );
+      toast.success(`${row.getValue("reference_number")} has been deleted.`, {
+        description: "This action can't be undone.",
+      });
     } catch (error) {
       toast.error("Error", {
-        description: `Failed to delete ${row.getValue('reference_number')}.`,
+        description: `Failed to delete ${row.getValue("reference_number")}.`,
       });
     }
-  }
+  };
+
+  const handleEdit = async () => {
+    const invoice_id = row.getValue("id");
+    router.push(`/transactions/edit/${invoice_id}`);
+  };
 
   const downloadPdf = async () => {
     return;
@@ -123,13 +134,16 @@ export function DataTableRowActions<TData>({ row }: DataTableRowActionsProps<TDa
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" className="flex h-8 w-8 p-0 data-[state=open]:bg-muted">
+        <Button
+          variant="ghost"
+          className="flex h-8 w-8 p-0 data-[state=open]:bg-muted"
+        >
           <MoreHorizontal />
           <span className="sr-only">Open menu</span>
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-[160px]">
-        <DropdownMenuItem>Edit</DropdownMenuItem>
+        <DropdownMenuItem onClick={handleEdit}>Edit</DropdownMenuItem>
         <DropdownMenuItem onClick={togglePaymentStatus}>
           Mark as {isPaid ? "Unpaid" : "Paid"}
         </DropdownMenuItem>
