@@ -14,6 +14,8 @@ import {
 import { toast } from "sonner";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import useSWR, { useSWRConfig } from "swr";
+
 interface DataTableRowActionsProps<TData> {
   row: Row<TData>;
 }
@@ -23,6 +25,7 @@ export function DataTableRowActions<TData>({
 }: DataTableRowActionsProps<TData>) {
   const [isPaid, setIsPaid] = useState<boolean>(row.getValue("is_paid"));
   const router = useRouter();
+  const { mutate } = useSWRConfig(); // Use SWR's mutate function
 
   const togglePaymentStatus = async () => {
     if (row.getValue("is_quotation")) {
@@ -31,15 +34,15 @@ export function DataTableRowActions<TData>({
       });
       return;
     }
-
+  
     const newStatus = !isPaid;
-
+  
     try {
       const csrfToken = Cookies.get("csrftoken");
       if (!csrfToken) {
         throw new Error("CSRF token not found!");
       }
-
+  
       const response = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/api/v1/invoices/${row.getValue(
           "id"
@@ -56,29 +59,31 @@ export function DataTableRowActions<TData>({
           }),
         }
       );
-
+  
       if (!response.ok) {
         throw new Error("Failed to update invoice status");
       }
-
+  
       const data = await response.json();
       const updatedAt = new Date(data.updated_at).toLocaleString();
-
+  
+      // Update the local state
       setIsPaid(newStatus);
-
+  
+      // Show success toast
       toast.success(
         `${row.getValue("reference_number")} has been marked as ${
           newStatus ? "paid" : "unpaid"
         }`,
         {
           description: `Updated on: ${updatedAt}`,
-          action: {
-            label: "Undo",
-            onClick: togglePaymentStatus,
-          },
         }
       );
+  
+      // Revalidate the transactions list
+      mutate(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/invoices/`);
     } catch (error) {
+      console.error("Error toggling payment status:", error); // Debugging
       toast.error("Error", {
         description: "Failed to update invoice status.",
       });
@@ -93,9 +98,7 @@ export function DataTableRowActions<TData>({
       }
 
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/v1/invoices/${row.getValue(
-          "id"
-        )}/`,
+        `${process.env.NEXT_PUBLIC_API_URL}/api/v1/invoices/${row.getValue("id")}/`,
         {
           method: "DELETE",
           headers: {
@@ -107,14 +110,14 @@ export function DataTableRowActions<TData>({
       );
 
       if (!response.ok) {
-        throw new Error(
-          `Failed to delete ${row.getValue("reference_number")}.`
-        );
+        throw new Error(`Failed to delete ${row.getValue("reference_number")}.`);
       }
 
       toast.success(`${row.getValue("reference_number")} has been deleted.`, {
         description: "This action can't be undone.",
       });
+
+      mutate(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/invoices/`); // Revalidate the transactions list
     } catch (error) {
       toast.error("Error", {
         description: `Failed to delete ${row.getValue("reference_number")}.`,

@@ -1,41 +1,42 @@
-import { Metadata } from "next";
-import { cookies } from "next/headers";
-import { z } from "zod";
+"use client";
 
+import useSWR from "swr";
+import { z } from "zod";
 import { columns } from "@/components/ui/columns-clients";
 import { DataTable } from "@/components/ui/data-table-clients";
 import { clientSchema } from "../transactions/data/schema";
+import CreateClientButton from "./create-client-button";
 
-export const metadata: Metadata = {
-  title: "Clients",
-  description: "A client tracker built using Tanstack Table.",
-};
+const fetcher = (url: string) =>
+  fetch(url, { credentials: "include" }).then((res) => res.json());
 
-async function getClients() {
-  const cookieStore = await cookies();
-  const cookieHeader = cookieStore.toString();
+export default function ClientPage() {
+  const { data: clients, error, mutate } = useSWR(
+    `${process.env.NEXT_PUBLIC_API_URL}/api/v1/clients/`,
+    fetcher
+  );
 
-  const url = `${process.env.NEXT_PUBLIC_API_URL}/api/v1/clients/`;
-  const res = await fetch(url, {
-    headers: {
-      Cookie: cookieHeader,
-    },
-  });
-
-  if (!res.ok) {
-    const errorText = await res.text();
-    console.error("Error fetching clients:", res.status, errorText);
-    throw new Error("Failed to fetch clients");
+  if (error) {
+    return (
+      <div className="h-full flex-1 flex-col space-y-8 p-8 md:flex">
+        <div className="flex items-center justify-between space-y-2">
+          <div>
+            <h2 className="text-2xl font-bold tracking-tight">Welcome back!</h2>
+            <p className="text-muted-foreground">
+              Here's a list of all your clients!
+            </p>
+          </div>
+        </div>
+        <div className="text-red-500">
+          Failed to load clients. Please try again later.
+        </div>
+      </div>
+    );
   }
 
-  const data = await res.json();
-  const clients = z.array(clientSchema).parse(data);
+  if (!clients) return;
 
-  return clients;
-}
-
-export default async function TransactionPage() {
-  const clients = await getClients();
+  const parsedClients = z.array(clientSchema).parse(clients);
 
   return (
     <div className="h-full flex-1 flex-col space-y-8 p-8 md:flex">
@@ -47,7 +48,8 @@ export default async function TransactionPage() {
           </p>
         </div>
       </div>
-      <DataTable data={clients} columns={columns} />
+      <CreateClientButton onClientCreated={() => mutate()} />
+      <DataTable data={parsedClients} columns={columns} />
     </div>
   );
 }

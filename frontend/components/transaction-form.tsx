@@ -19,9 +19,8 @@ import {
 } from "@/components/ui/select";
 import { useEffect, useState } from "react";
 import { z } from "zod";
-import Cookies from "js-cookie";
 
-// Step 1: Use `pick` to select only the fields needed for the form
+// Define the schema and types
 const formSchema = transactionSchema.pick({
   client: true,
   is_taxed: true,
@@ -29,18 +28,18 @@ const formSchema = transactionSchema.pick({
   date: true,
   notes: true,
   transit_charges: true,
-  is_quotation: true, // Include is_quotation in the schema
+  is_quotation: true,
 });
 
-// Extend the schema to include dynamic items
 const extendedSchema = formSchema.extend({
   items: z.array(
     z.object({
+      id: z.number().optional(), // Include id for updates
       name: z.string().min(1, "Item name is required"),
-      quantity: z.number().min(1, "Quantity must be at least 1"),
-      unit_price: z.number().min(0, "Unit price must be a positive number"),
       unit: z.string().min(1, "Unit is required"),
       description: z.string().optional(),
+      quantity: z.number().min(1, "Quantity must be at least 1"),
+      unit_price: z.number().min(0, "Unit price must be a positive number"),
     })
   ),
 });
@@ -48,10 +47,18 @@ const extendedSchema = formSchema.extend({
 type TransactionFormValues = z.infer<typeof extendedSchema>;
 
 interface TransactionFormProps {
-  isQuotation?: boolean; // Prop to determine if this is a quotation
+  isQuotation?: boolean;
+  onSubmit: (data: TransactionFormValues) => Promise<void>;
+  defaultValues?: Partial<TransactionFormValues>;
+  isUpdate?: boolean;
 }
 
-export function TransactionForm({ isQuotation = false }: TransactionFormProps) {
+export function TransactionForm({
+  isQuotation = false,
+  onSubmit,
+  defaultValues,
+  isUpdate = false,
+}: TransactionFormProps) {
   const router = useRouter();
   const [clients, setClients] = useState<z.infer<typeof clientSchema>[]>([]);
   const [loading, setLoading] = useState(false);
@@ -61,15 +68,18 @@ export function TransactionForm({ isQuotation = false }: TransactionFormProps) {
     handleSubmit,
     control,
     setValue,
+    watch,
     formState: { errors },
+    reset,
   } = useForm<TransactionFormValues>({
     resolver: zodResolver(extendedSchema),
     defaultValues: {
       is_taxed: false,
       tax_percentage: 0,
       transit_charges: 0,
-      is_quotation: isQuotation, // Set default value for is_quotation
+      is_quotation: isQuotation,
       items: [],
+      ...defaultValues, // Override with provided default values
     },
   });
 
@@ -77,6 +87,16 @@ export function TransactionForm({ isQuotation = false }: TransactionFormProps) {
     control,
     name: "items",
   });
+
+  // Watch the values of `is_taxed` and `tax_percentage`
+  const isTaxed = watch("is_taxed");
+  const taxPercentage = watch("tax_percentage");
+
+  // Hide the input if the checkbox is checked
+  const showTaxPercentageInput = !isTaxed;
+
+  // Hide the checkbox if the input is changed (not empty or not 0)
+  const showTaxIncludedCheckbox = taxPercentage === 0 || taxPercentage === null;
 
   // Fetch clients on component mount
   useEffect(() => {
@@ -98,89 +118,32 @@ export function TransactionForm({ isQuotation = false }: TransactionFormProps) {
     fetchClients();
   }, []);
 
-  const onSubmit = async (data: TransactionFormValues) => {
+  // Set the client value when defaultValues change
+  useEffect(() => {
+    if (defaultValues?.client) {
+      setValue("client", defaultValues.client); // Set the client object
+    }
+  }, [defaultValues, setValue]);
+
+  const handleFormSubmit = async (data: TransactionFormValues) => {
     setLoading(true);
     try {
-      // Prepare the payload for the API
-      const payload = {
-        ...data,
-        client_id: data.client.id, // Use `client_id` instead of `client`
-        is_quotation: isQuotation, // Use the isQuotation prop
-        date: data.date || new Date().toISOString().split("T")[0], // Populate with current date if not provided
-      };
-  
-      const csrfToken = Cookies.get("csrftoken");
-      if (!csrfToken) {
-        throw new Error("CSRF token not found. Please refresh the page and try again.");
-      }
-  
-      // Step 1: Create the invoice
-      const invoiceResponse = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/v1/invoices/`,
-        {
-          method: "POST",
-          credentials: "include",
-          headers: {
-            "Content-Type": "application/json",
-            "X-CSRFToken": csrfToken,
-          },
-          body: JSON.stringify(payload),
-        }
-      );
-  
-      if (!invoiceResponse.ok) {
-        const errorData = await invoiceResponse.json();
-        throw new Error(
-          errorData.detail || "Failed to create invoice. Please try again."
-        );
-      }
-  
-      const invoiceResult = await invoiceResponse.json();
-      const invoiceId = invoiceResult.id;
-  
-      // Step 2: Create invoice items
-      if (data.items && data.items.length > 0) {
-        for (const item of data.items) {
-          const itemResponse = await fetch(
-            `${process.env.NEXT_PUBLIC_API_URL}/api/v1/invoices/${invoiceId}/items/`,
-            {
-              method: "POST",
-              credentials: "include",
-              headers: {
-                "Content-Type": "application/json",
-                "X-CSRFToken": csrfToken,
-              },
-              body: JSON.stringify(item),
-            }
-          );
-  
-          if (!itemResponse.ok) {
-            const errorData = await itemResponse.json();
-            throw new Error(
-              errorData.detail || "Failed to create invoice item. Please try again."
-            );
-          }
-        }
-      }
-  
-      // Success
-      toast.success("Invoice and items created successfully!");
-      router.push("/transactions"); // Redirect to the transactions page
+      await onSubmit(data); // Call the provided onSubmit function
     } catch (error) {
-      console.error("Error creating transaction:", error);
+      console.error("Error submitting form:", error);
       toast.error(
         error instanceof Error
           ? error.message
-          : "Failed to create transaction. Please try again."
+          : "Failed to submit form. Please try again."
       );
     } finally {
-      setLoading(false); // Reset loading state
+      setLoading(false);
     }
   };
 
   return (
     <form
-      onSubmit={handleSubmit(onSubmit)}
+      onSubmit={handleSubmit(handleFormSubmit)}
       className="space-y-4 w-auto mx-auto md:w-full"
     >
       {/* Client Select */}
@@ -189,15 +152,14 @@ export function TransactionForm({ isQuotation = false }: TransactionFormProps) {
         <div className="flex gap-2">
           <Select
             onValueChange={(value) => {
-              // Find the selected client object
               const selectedClient = clients.find(
                 (client) => client.id.toString() === value
               );
               if (selectedClient) {
-                // Set the client object in the form state
                 setValue("client", selectedClient, { shouldValidate: true });
               }
             }}
+            value={watch("client")?.id?.toString()} // Set the value to the client's ID
           >
             <SelectTrigger className="w-full truncate">
               <SelectValue placeholder="Select a client" />
@@ -223,28 +185,56 @@ export function TransactionForm({ isQuotation = false }: TransactionFormProps) {
         )}
       </div>
 
-      {/* Tax Percentage or Tax Included */}
-      <div className="grid grid-cols-1 gap-4">
-        <Label>Tax</Label>
-        <div className="flex items-center gap-2">
+      {/* Tax Included Checkbox with Bordered Container */}
+      {showTaxIncludedCheckbox && (
+        <div className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4 shadow">
           <Checkbox
+            id="is_taxed"
             {...register("is_taxed")}
+            checked={isTaxed} // Set the checked state based on the `is_taxed` value
             onCheckedChange={(checked) => {
               setValue("is_taxed", !!checked);
+              // Reset tax percentage if checkbox is checked
+              if (checked) {
+                setValue("tax_percentage", 0);
+              }
             }}
           />
-          <Label>Tax Included</Label>
+          <div className="space-y-1 leading-none">
+            <Label htmlFor="is_taxed">Tax Included</Label>
+            <p className="text-sm text-muted-foreground">
+              Enable this if tax is included in the transaction.
+            </p>
+          </div>
         </div>
-        <Input
-          type="number"
-          {...register("tax_percentage", { valueAsNumber: true })}
-          placeholder="Enter tax percentage"
-          className="w-full"
-        />
-        {errors.tax_percentage && (
-          <span className="text-red-500">{errors.tax_percentage.message}</span>
-        )}
-      </div>
+      )}
+
+      {/* Tax Percentage Input */}
+      {showTaxPercentageInput && (
+        <div className="grid grid-cols-1 gap-4">
+          <Label>Tax Percentage</Label>
+          <Input
+            type="number"
+            {...register("tax_percentage", { valueAsNumber: true })}
+            placeholder="Enter tax percentage"
+            className="w-full"
+            onChange={(e) => {
+              const value = e.target.value;
+              // Update the tax percentage value in the form state
+              setValue("tax_percentage", value === "" ? 0 : parseFloat(value), {
+                shouldValidate: true,
+              });
+              // Hide the checkbox if the input is changed (not empty or not 0)
+              if (value !== "" && value !== "0") {
+                setValue("is_taxed", false);
+              }
+            }}
+          />
+          {errors.tax_percentage && (
+            <span className="text-red-500">{errors.tax_percentage.message}</span>
+          )}
+        </div>
+      )}
 
       {/* Date */}
       <div className="grid grid-cols-1 gap-4">
@@ -390,6 +380,7 @@ export function TransactionForm({ isQuotation = false }: TransactionFormProps) {
               description: "",
             })
           }
+          variant="outline"
           className="w-full"
         >
           Add Item
@@ -398,7 +389,7 @@ export function TransactionForm({ isQuotation = false }: TransactionFormProps) {
 
       {/* Save Button */}
       <Button type="submit" className="w-full" disabled={loading}>
-        {loading ? "Saving..." : "Save"}
+        {loading ? (isUpdate ? "Updating..." : "Saving...") : isUpdate ? "Update Invoice" : "Save"}
       </Button>
     </form>
   );

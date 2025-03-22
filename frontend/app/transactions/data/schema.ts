@@ -49,7 +49,7 @@ export const transactionSchema = z.object({
 
 export const invoiceItemSchema = z.object({
   id: z.number(),
-  invoice: transactionSchema,
+  invoice_id: z.number(),
   name: z.string(),
   unit: z.string(),
   description: z.string().optional(),

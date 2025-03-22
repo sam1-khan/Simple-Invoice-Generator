@@ -12,12 +12,19 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { toast } from "sonner";
+import { useRouter } from "next/navigation";
+import useSWR, { useSWRConfig } from "swr";
 
 interface DataTableRowActionsProps<TData> {
   row: Row<TData>;
 }
 
-export function DataTableRowActions<TData>({ row }: DataTableRowActionsProps<TData>) {
+export function DataTableRowActions<TData>({
+  row,
+}: DataTableRowActionsProps<TData>) {
+  const router = useRouter();
+  const { mutate } = useSWRConfig(); // Use SWR's mutate function
+
   const handleDelete = async () => {
     try {
       const csrfToken = Cookies.get("csrftoken");
@@ -26,7 +33,9 @@ export function DataTableRowActions<TData>({ row }: DataTableRowActionsProps<TDa
       }
 
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/v1/clients/${row.getValue("id")}/`,
+        `${process.env.NEXT_PUBLIC_API_URL}/api/v1/clients/${row.getValue(
+          "id"
+        )}/`,
         {
           method: "DELETE",
           headers: {
@@ -38,32 +47,39 @@ export function DataTableRowActions<TData>({ row }: DataTableRowActionsProps<TDa
       );
 
       if (!response.ok) {
-        throw new Error(`Failed to delete ${row.getValue('name')}.`);
+        throw new Error(`Failed to delete ${row.getValue("name")}.`);
       }
 
-      toast.success(
-        `${row.getValue("name")} has been deleted.`,
-        {
-          description: "This action can't be undone.",
-        }
-      );
+      toast.success(`${row.getValue("name")} has been deleted.`, {
+        description: "This action can't be undone.",
+      });
+
+      mutate(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/clients/`); // Revalidate the clients list
     } catch (error) {
       toast.error("Error", {
-        description: `Failed to delete ${row.getValue('name')}.`,
+        description: `Failed to delete ${row.getValue("name")}.`,
       });
     }
-  }
+  };
+
+  const handleEdit = async () => {
+    const client_id = row.getValue("id");
+    router.push(`/clients/edit/${client_id}`);
+  };
 
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" className="flex h-8 w-8 p-0 data-[state=open]:bg-muted">
+        <Button
+          variant="ghost"
+          className="flex h-8 w-8 p-0 data-[state=open]:bg-muted"
+        >
           <MoreHorizontal />
           <span className="sr-only">Open menu</span>
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-[160px]">
-        <DropdownMenuItem>Edit</DropdownMenuItem>
+        <DropdownMenuItem onClick={handleEdit}>Edit</DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem onClick={handleDelete}>Delete</DropdownMenuItem>
       </DropdownMenuContent>
