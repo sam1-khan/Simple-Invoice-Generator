@@ -15,6 +15,8 @@ import { toast } from "sonner";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import useSWR, { useSWRConfig } from "swr";
+import { pdf, Document, PDFDownloadLink } from "@react-pdf/renderer";
+import TransactionPDF from "@/components/transaction-pdf"; // Adjust the import path as needed
 
 interface DataTableRowActionsProps<TData> {
   row: Row<TData>;
@@ -34,15 +36,15 @@ export function DataTableRowActions<TData>({
       });
       return;
     }
-  
+
     const newStatus = !isPaid;
-  
+
     try {
       const csrfToken = Cookies.get("csrftoken");
       if (!csrfToken) {
         throw new Error("CSRF token not found!");
       }
-  
+
       const response = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/api/v1/invoices/${row.getValue(
           "id"
@@ -59,17 +61,17 @@ export function DataTableRowActions<TData>({
           }),
         }
       );
-  
+
       if (!response.ok) {
         throw new Error("Failed to update invoice status");
       }
-  
+
       const data = await response.json();
       const updatedAt = new Date(data.updated_at).toLocaleString();
-  
+
       // Update the local state
       setIsPaid(newStatus);
-  
+
       // Show success toast
       toast.success(
         `${row.getValue("reference_number")} has been marked as ${
@@ -79,7 +81,7 @@ export function DataTableRowActions<TData>({
           description: `Updated on: ${updatedAt}`,
         }
       );
-  
+
       // Revalidate the transactions list
       mutate(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/invoices/`);
     } catch (error) {
@@ -98,7 +100,9 @@ export function DataTableRowActions<TData>({
       }
 
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/v1/invoices/${row.getValue("id")}/`,
+        `${process.env.NEXT_PUBLIC_API_URL}/api/v1/invoices/${row.getValue(
+          "id"
+        )}/`,
         {
           method: "DELETE",
           headers: {
@@ -110,7 +114,9 @@ export function DataTableRowActions<TData>({
       );
 
       if (!response.ok) {
-        throw new Error(`Failed to delete ${row.getValue("reference_number")}.`);
+        throw new Error(
+          `Failed to delete ${row.getValue("reference_number")}.`
+        );
       }
 
       toast.success(`${row.getValue("reference_number")} has been deleted.`, {
@@ -131,7 +137,43 @@ export function DataTableRowActions<TData>({
   };
 
   const downloadPdf = async () => {
-    return;
+    try {
+      const invoiceId = row.getValue("id");
+
+      // Fetch invoice and items data
+      const invoiceUrl = `${process.env.NEXT_PUBLIC_API_URL}/api/v1/invoices/${invoiceId}/`;
+      const itemsUrl = `${process.env.NEXT_PUBLIC_API_URL}/api/v1/invoices/${invoiceId}/items/`;
+
+      const [invoiceResponse, itemsResponse] = await Promise.all([
+        fetch(invoiceUrl, {credentials: "include"}).then((res) => res.json()),
+        fetch(itemsUrl, {credentials: "include"}).then((res) => res.json()),
+      ]);
+
+      const invoice = invoiceResponse;
+      const items = itemsResponse;
+
+      // Generate PDF blob
+      const blob = await pdf(
+        <TransactionPDF invoice={invoice} items={items} />
+      ).toBlob();
+
+      // Create a download link
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `${invoice.reference_number}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+
+      toast.success("PDF downloaded successfully!");
+    } catch (error) {
+      console.error("Error downloading PDF:", error);
+      toast.error("Error", {
+        description: "Failed to download PDF.",
+      });
+    }
   };
 
   return (
@@ -150,7 +192,7 @@ export function DataTableRowActions<TData>({
         <DropdownMenuItem onClick={togglePaymentStatus}>
           Mark as {isPaid ? "Unpaid" : "Paid"}
         </DropdownMenuItem>
-        <DropdownMenuItem onClick={downloadPdf}>Download pdf</DropdownMenuItem>
+        <DropdownMenuItem onClick={downloadPdf}>Download PDF</DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem onClick={handleDelete}>Delete</DropdownMenuItem>
       </DropdownMenuContent>
