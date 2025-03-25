@@ -14,8 +14,8 @@ import {
 import { toast } from "sonner";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import useSWR, { useSWRConfig } from "swr";
-import { pdf, Document, PDFDownloadLink } from "@react-pdf/renderer";
+import { useSWRConfig } from "swr";
+import { pdf } from "@react-pdf/renderer";
 import TransactionPDF from "@/components/transaction-pdf"; // Adjust the import path as needed
 
 interface DataTableRowActionsProps<TData> {
