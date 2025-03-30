@@ -49,6 +49,7 @@ class InvoiceOwnerOut(Schema):
     logo: Optional[str] = None
     signature: Optional[str] = None
     is_onboarded: bool
+    is_staff: bool
     created_at: datetime
     updated_at: datetime
 

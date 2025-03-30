@@ -1,6 +1,6 @@
 "use client";
 
-import { ClientForm } from "@/components/client-form";
+import { ClientForm, ClientFormValues } from "@/components/client-form";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import Cookies from "js-cookie";
@@ -8,13 +8,14 @@ import Cookies from "js-cookie";
 export default function CreateClientPage() {
   const router = useRouter();
 
-  const handleSubmit = async (data: any) => {
-    try {
-      const csrfToken = Cookies.get("csrftoken");
-      if (!csrfToken) {
-        throw new Error("CSRF token not found. Please refresh the page and try again.");
-      }
+  const handleSubmit = async (data: ClientFormValues) => {
+    const csrfToken = Cookies.get("csrftoken");
+    if (!csrfToken) {
+      toast.error("CSRF token not found");
+      return;
+    }
 
+    try {
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/clients/`, {
         method: "POST",
         credentials: "include",
@@ -25,16 +26,17 @@ export default function CreateClientPage() {
         body: JSON.stringify(data),
       });
 
+      const responseData = await response.json();
+
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.detail || "Failed to create client.");
+        toast.error(responseData.detail || responseData.message || "Failed to create client");
+        return;
       }
 
-      toast.success("Client created successfully!");
+      toast.success("Client created successfully");
       router.push("/clients");
     } catch (error) {
-      console.error("Error creating client:", error);
-      toast.error(error instanceof Error ? error.message : "Failed to create client.");
+      toast.error(`An unexpected error occurred: ${error}`);
     }
   };
 

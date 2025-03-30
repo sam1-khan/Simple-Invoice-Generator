@@ -26,7 +26,7 @@ def validate_phone_number(phone_number):
             
             # Raise a validation error with a valid example
             raise ValidationError(
-                f"Invalid phone number. Example of a valid number for this region: {valid_example}"
+                f"Invalid phone number. Example of a valid number for your region: {valid_example}"
             )
 
     except phonenumbers.phonenumberutil.NumberParseException:

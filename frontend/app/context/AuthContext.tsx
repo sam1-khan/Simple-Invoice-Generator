@@ -9,6 +9,7 @@ type User = {
   email: string;
   phone: string;
   is_onboarded: boolean;
+  is_staff: boolean;
 } | null;
 
 type AuthContextType = {

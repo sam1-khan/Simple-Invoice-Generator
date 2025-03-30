@@ -59,7 +59,7 @@ export function SignupForm({
     handleSubmit,
     getValues,
     setValue,
-    formState: { errors, isValid },
+    formState: { errors },
   } = useForm<SignupFormValues>({
     resolver: zodResolver(SignupSchema),
     mode: "onBlur",
@@ -73,11 +73,11 @@ export function SignupForm({
     e.preventDefault();
     const values = getValues();
     if (
-      !values.name.trim() ||
-      !values.email.trim() ||
-      !values.phone.trim() ||
-      !values.password.trim() ||
-      !values.confirmPassword.trim()
+      !values.name?.trim() ||
+      !values.email?.trim() ||
+      !values.phone?.trim() ||
+      !values.password?.trim() ||
+      !values.confirmPassword?.trim()
     ) {
       setError("All fields are required.");
       return;

@@ -59,6 +59,7 @@ def serialize_invoice_owner(owner):
         "is_onboarded": owner.is_onboarded,
         "created_at": owner.created_at.isoformat(),
         "updated_at": owner.updated_at.isoformat(),
+        "is_staff": owner.is_staff,
     }
 
 def serialize_client(client):
