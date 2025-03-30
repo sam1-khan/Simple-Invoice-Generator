@@ -6,11 +6,8 @@ from .models import Invoice, InvoiceOwner, InvoiceItem, Client
 class InvoiceForm(forms.ModelForm):
     class Meta:
         model = Invoice
-        fields = ['invoice_owner', 'client', 'is_quotation', 'is_taxed', 'tax_percentage', 'transit_charges', 'date', 'notes',]
+        fields = ['client', 'is_paid', 'is_quotation', 'is_taxed', 'tax_percentage', 'transit_charges', 'date', 'notes']
         widgets = {
-            'invoice_owner': forms.Select(attrs={
-                'autofocus': 'autofocus', 
-            }),
             'transit_charges': NoTrailingZeroNumberInput(attrs={
                 'min': '0',
                 'step': '0.001',  # Use 0.01 for decimal precision
@@ -18,22 +15,21 @@ class InvoiceForm(forms.ModelForm):
             }),
             'date': forms.DateInput(
                 format=('%Y-%m-%d'),
-                attrs={
-                    'placeholder': 'Select a date',
-                    'type': 'date'
-            }),
+                attrs={'placeholder': 'Select a date', 'type': 'date'}
+            ),
             'notes': forms.Textarea(attrs={
                 'rows': 3,
                 'placeholder': 'Enter additional notes',
             }),
         }
+    is_paid = forms.BooleanField(label='Payment', required=False)
     is_taxed = forms.BooleanField(label='Tax Included', required=False)
     is_quotation = forms.BooleanField(label='Quotation', required=False)
     tax_percentage = forms.DecimalField(
         required=False,
         initial=0,
         max_digits=5,
-        decimal_places=2,
+        decimal_places=3,
         widget=NoTrailingZeroNumberInput(attrs={
             'min': '0',
             'max': '99999',
@@ -41,31 +37,52 @@ class InvoiceForm(forms.ModelForm):
             'placeholder': 'Enter tax percentage (without "%")',
         })
     )
-    client = forms.ModelChoiceField(queryset=Client.objects.all(), empty_label="Select Client or Create New", required=True)
 
+    client = forms.ModelChoiceField(queryset=Client.objects.all(), empty_label="Select Client or Create New", required=True, widget=forms.Select(attrs={'autofocus': True}))
+
+    def clean(self):
+        cleaned_data = super().clean()
+
+        client = cleaned_data.get('client')
+        if client:
+            cleaned_data['invoice_owner'] = client.invoice_owner
+
+        return cleaned_data
 
 class InvoiceOwnerCreationForm(UserCreationForm):
     class Meta:
         model = InvoiceOwner
-        fields = ["email", "ntn_number", "name", 'phone', 'address', 'bank', 'iban', 'account_title',]
+        fields = ["email", "ntn_number", "name", 'phone', 'phone_2', 'address', 'bank', 'iban', 'account_title', 'logo', 'signature',]
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields['name'].required = True
         self.fields['ntn_number'].required = True
         self.fields['phone'].required = True
+        self.fields['bank'].required = True
+        self.fields['address'].required = True
+        self.fields['iban'].required = True
+        self.fields['account_title'].required = True
+        self.fields['logo'].required = True
+        self.fields['signature'].required = True
   
 
 class InvoiceOwnerChangeForm(UserChangeForm):
     class Meta:
         model = InvoiceOwner
-        fields = ["email", "ntn_number", "name", 'phone', 'address',]
+        fields = ["email", "ntn_number", "name", 'phone', 'phone_2', 'address', 'bank', 'iban', 'account_title', 'logo', 'signature',]
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields['name'].required = True
         self.fields['ntn_number'].required = True
         self.fields['phone'].required = True
+        self.fields['bank'].required = True
+        self.fields['address'].required = True
+        self.fields['iban'].required = True
+        self.fields['account_title'].required = True
+        self.fields['logo'].required = True
+        self.fields['signature'].required = True
 
 
 class InvoiceItemForm(forms.ModelForm):
@@ -93,7 +110,7 @@ class InvoiceItemForm(forms.ModelForm):
                 'placeholder': 'Enter item description',
                 'rows': 3,
             }),
-                'unit': forms.TextInput(attrs={
+            'unit': forms.TextInput(attrs={
                 'placeholder': 'Enter quantity unit i.e pc(s), box(es), unit(s)',
             })
         }

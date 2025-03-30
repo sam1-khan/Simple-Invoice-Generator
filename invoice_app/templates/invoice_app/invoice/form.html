@@ -1,266 +1,283 @@
 {% extends "base_bootstrap.html" %}
 {% load crispy_forms_tags %}
 {% block title %}{{ form.instance.pk|yesno:"Edit,Create" }} Invoice{% endblock %}
-{% block navbar %}<p class="border-3 border-top border-info"></p>{% endblock %}
+{% block navbar %}
+<p class="border-3 border-top border-info"></p>
+{% endblock %}
 {% block content %}
 <style>
-    div[id$="-DELETE"] {
-        display: none;
-    }
+  div[id$="-DELETE"] {
+    display: none;
+  }
 
-    div[id="div_id_client"] {
-        display: flex;
-        flex-wrap: wrap;
-    }
+  div[id="div_id_client"] {
+    display: flex;
+    flex-wrap: wrap;
+  }
 
-    div[id="div_id_client"] label {
-        flex-basis: 100%;
-    }
-    
-    div[id="div_id_client"] select {
-        flex-basis: 92%;
-        margin-right: auto;
-    }
+  div[id="div_id_client"] label {
+    flex-basis: 100%;
+  }
 
-    div[id="div_id_client"] button {
-        flex-basis: 7%;
-    }
+  div[id="div_id_client"] select {
+    flex-basis: 92%;
+    margin-right: auto;
+  }
+
+  div[id="div_id_client"] button {
+    flex-basis: 7%;
+  }
 </style>
 <div class="container">
-    <h1 class='pb-1 text-center fw-bold'>{{ form.instance.pk|yesno:"Edit,Create" }}
-        {{ invoice.is_quotation|yesno:"Quotation,Invoice" }}
-    </h1>
-    <form method="post">
-        {% csrf_token %}
-        
-        <h4>{{ invoice.is_quotation|yesno:"Quotation,Invoice" }}</h4>
-        <div class="card mb-4">
-            <div class="card-body">
-                {{ form|crispy }}
-            </div>
-        </div>
+  <h1 class="pb-1 text-center fw-bold">
+    {{ form.instance.pk|yesno:"Edit,Create" }} {{invoice.is_quotation|yesno:"Quotation,Invoice" }}
+  </h1>
+  <form method="post">
+    {% csrf_token %}
 
-        {% if formset %}
-        <h4>{{ invoice.is_quotation|yesno:"Quotation,Invoice" }} Items</h4>
-        {{ formset.management_form }}
-        <div class="formset">
-            {% for form in formset %}
-                <div class="formset-row card mb-3">
-                    <div class="card-body">
-                        {{ form|crispy }}
-                    </div>
-                </div>
-            {% endfor %}
+    <h4>{{ invoice.is_quotation|yesno:"Quotation,Invoice" }}</h4>
+    <div class="card mb-4">
+      <div class="card-body">{{ form|crispy }}</div>
+    </div>
+
+    {% if formset %}
+    <h4>{{ invoice.is_quotation|yesno:"Quotation,Invoice" }} Items</h4>
+    {{ formset.management_form }}
+    <div class="formset">
+      {% for form in formset %}
+      <div class="formset-row card mb-3">
+        <div class="card-body">
+          {{ form|crispy }}
         </div>
-        <div class="d-grid gap-2">
-            <button type="button" class="btn btn-outline-success mb-3" id="add-form">
-                Add An Item <i class="fa fa-plus"></i>
-            </button>
-        </div>
-        {% endif %}
-        <div class="mt-2">
-            <button type="submit" class="btn btn-outline-primary btn-sm">
-                Save <i class="fa fa-save"></i>
-            </button>
-            <button type="submit" class="btn btn-outline-secondary btn-sm" value="Cancel" onclick="window.location.href='{% url 'invoice_app:invoice-list' %}';return false;">Cancel <i class="fa fa-times"></i></button>
-            </button>
-        </div>
-    </form>
+      </div>
+      {% endfor %}
+    </div>
+    <div class="d-grid gap-2">
+      <button type="button" class="btn btn-outline-success mb-3" id="add-form">
+        Add An Item <i class="fa fa-plus"></i>
+      </button>
+    </div>
+    {% endif %}
+    <div class="mt-2">
+      <button type="submit" class="btn btn-outline-primary btn-sm">
+        Save <i class="fa fa-save"></i>
+      </button>
+      <button
+        type="submit"
+        class="btn btn-outline-secondary btn-sm"
+        value="Cancel"
+        onclick="window.location.href='{% url 'invoice_app:invoice-list' %}';return false;"
+      >
+        Cancel <i class="fa fa-times"></i>
+      </button>
+    </div>
+  </form>
 </div>
 <script type="text/javascript">
-function openWindow() {
-        const url = "{% url 'invoice_app:client-create' %}"; 
+  const formsetContainer = document.querySelector(".formset");
+  const addFormButton = document.querySelector("#add-form");
+  const totalFormsInput = document.querySelector("#id_items-TOTAL_FORMS");
+  const clientDropdownDiv = document.querySelector("#div_id_client");
+  const isTaxedCheckbox = document.querySelector("#id_is_taxed");
+  const isTaxedDiv = document.querySelector("#div_id_is_taxed");
+  const taxPercentageDiv = document.querySelector("#div_id_tax_percentage");
+  const isQuotationCheckbox = document
+    .querySelector("#div_id_is_quotation")
+    .querySelector("input");
+  function openWindow() {
+    const url = "{% url 'invoice_app:client-create' %}";
 
-        const width = 600;
-        const height = 520;
-        const left = (window.innerWidth / 2) - (width / 2);
-        const top = (window.innerHeight / 2) - (height / 2);
+    const width = 600;
+    const height = 520;
+    const left = window.innerWidth / 2 - width / 2;
+    const top = window.innerHeight / 2 - height / 2;
 
-        const windowOptions = `width=${width}, height=${height}, left=${left}, top=${top}`;
+    const windowOptions = `width=${width}, height=${height}, left=${left}, top=${top}`;
 
-        // Open the new window with the specified URL and options
-        window.open(url, 'Create New Client', windowOptions);
+    // Open the new window with the specified URL and options
+    window.open(url, "Create New Client", windowOptions);
+  }
+
+  function toggleFields() {
+    const inputValue = taxPercentageDiv.querySelector("input").value;
+    
+    if (inputValue && inputValue != 0) {
+      isTaxedCheckbox.style.display = "none"; // Hide the checkbox
+      isTaxedDiv.style.display = "none"; // Hide the checkbox div
+      taxPercentageDiv.style.display = "block"; // Show the input div
+    } 
+    else if (isTaxedCheckbox.checked) {
+      taxPercentageDiv.style.display = "none"; // Hide the input div
+      isTaxedDiv.style.display = "block"; // Show the checkbox div
+      isTaxedCheckbox.style.display = "block"; // Ensure checkbox is shown
+    } 
+    else {
+      taxPercentageDiv.style.display = "block"; // Show the input div
+      isTaxedDiv.style.display = "block"; // Show the checkbox div
+      isTaxedCheckbox.style.display = "block"; // Show the checkbox
     }
+  }
 
-document.addEventListener('DOMContentLoaded', () => {
-    const formsetContainer = document.querySelector('.formset');
-    const addFormButton = document.querySelector('#add-form');
-    const totalFormsInput = document.querySelector('#id_items-TOTAL_FORMS');
-    const clientDropdownDiv = document.querySelector('#div_id_client');
-    const isTaxedCheckbox = document.querySelector('#id_is_taxed');
-    const isTaxedDiv = document.querySelector('#div_id_is_taxed');
-    const taxPercentageDiv = document.querySelector('#div_id_tax_percentage');
-    const ownerLabel = document.querySelector('#div_id_invoice_owner').querySelector('label');
-    const isQuotationCheckbox = document.querySelector('#div_id_is_quotation').querySelector('input')
+  // Function to update the TOTAL_FORMS value
+  function updateTotalForms() {
+    const formCount = formsetContainer.querySelectorAll(".formset-row").length;
+    totalFormsInput.value = formCount;
+  }
 
-    function changeLabel() {
-        if (ownerLabel.innerHTML && isQuotationCheckbox) {
-            if (isQuotationCheckbox.checked) {
-                ownerLabel.innerHTML = ownerLabel.innerHTML.replace('Invoice', 'Quotation');
-            } else {
-                ownerLabel.innerHTML = ownerLabel.innerHTML.replace('Quotation', 'Invoice');
-            }
+  // Function to update the visibility of the remove buttons based on total forms
+  function updateRemoveButtonVisibility() {
+    const formRows = document.querySelectorAll(".formset-row");
+
+    // Count the number of non-deleted forms
+    const nonDeletedForms = Array.from(formRows).filter((formRow) => {
+      const deleteCheckbox = formRow.querySelector('[name$="-DELETE"]');
+      return !deleteCheckbox || !deleteCheckbox.checked;
+    });
+
+    // If there is only one non-deleted form, hide the remove button for all forms
+    if (nonDeletedForms.length === 1) {
+      formRows.forEach((formRow) => {
+        const removeButton = formRow.querySelector(".remove-form");
+        if (removeButton) {
+          removeButton.style.display = "none";
         }
-    }
+      });
+    } else {
+      formRows.forEach((formRow) => {
+        const removeButton = formRow.querySelector(".remove-form");
+        const deleteCheckbox = formRow.querySelector('[name$="-DELETE"]');
 
-    function toggleFields() {
-        if (isTaxedCheckbox.checked) {
-            taxPercentageDiv.style.display = 'none';
+        // Show the remove button if the form is not marked for deletion
+        if (deleteCheckbox && deleteCheckbox.checked) {
+          if (removeButton) {
+            removeButton.style.display = "none";
+          }
         } else {
-            taxPercentageDiv.style.display = 'block';
+          if (removeButton) {
+            removeButton.style.display = "inline-block";
+          }
         }
+      });
+    }
+  }
 
-        if (taxPercentageDiv.querySelector('input').value > 0) {
-            isTaxedDiv.style.display = 'none';
-        } else {
-            isTaxedDiv.style.display = 'block';
-        }
+  // Function to add a new form
+  function addForm() {
+    const formCount = parseInt(totalFormsInput.value, 10); // Current number of forms
+
+    let formToClone = null;
+
+    const formRows = formsetContainer.querySelectorAll(".formset-row");
+    // Try to find the first valid form that is not marked for deletion
+    for (let formRow of formRows) {
+      const deleteCheckbox = formRow.querySelector('[name$="-DELETE"]');
+      if (!deleteCheckbox || !deleteCheckbox.checked) {
+        formToClone = formRow;
+        break; // Exit the loop once a valid form is found
+      }
     }
 
+    if (!formToClone) {
+      console.error("No valid form to clone!");
+      return;
+    }
+
+    // Clone the form
+    const newForm = formToClone.cloneNode(true);
+
+    // Update IDs and names in the cloned form
+    newForm.innerHTML = newForm.innerHTML.replace(
+      /items-(\d+)-/g,
+      `items-${formCount}-`
+    );
+
+    // Clear values in the new form
+    newForm.querySelectorAll("input, select, textarea").forEach((input) => {
+      input.value = "";
+    });
+
+    // Add a "Remove" button if it doesn't exist
+    let removeButton = newForm.querySelector('.remove-form');
+    if (!removeButton) {
+        removeButton = document.createElement('button');
+        removeButton.type = 'button';
+        removeButton.className = 'btn btn-danger btn-sm remove-form';
+        removeButton.textContent = 'Remove';
+        newForm.appendChild(removeButton);
+    }
+
+    // Append the new form to the container
+    formsetContainer.appendChild(newForm);
+
+    // Update the TOTAL_FORMS value
+    updateTotalForms();
+
+    // Update visibility of remove buttons after adding a new form
+    updateRemoveButtonVisibility();
+
+    const newNameField = newForm.querySelector(
+      'input[name^="items"][name$="-name"]'
+    );
+    if (newNameField) {
+      newNameField.focus();
+    }
+  }
+
+  document.addEventListener("DOMContentLoaded", () => {
     toggleFields();
-    changeLabel();
-    isQuotationCheckbox.addEventListener('change', changeLabel);
-    isTaxedCheckbox.addEventListener('change', toggleFields);
-    taxPercentageDiv.querySelector('input').addEventListener('input', toggleFields);
+    isTaxedCheckbox.addEventListener("change", toggleFields);
+    taxPercentageDiv
+      .querySelector("input")
+      .addEventListener("input", toggleFields);
 
+    if (clientDropdownDiv) {
+      addClientButton = document.createElement("button");
+      addClientButton.type = "button";
+      addClientButton.className =
+        "btn btn-outline-success rounded btn-sm add-client-button";
+      addClientButton.innerHTML = '<i class="fa fa-plus"></i>';
+      addClientButton.setAttribute("title", "Add New Client");
+      addClientButton.onclick = openWindow;
 
-    if (clientDropdownDiv){
-        addClientButton = document.createElement('button');
-        addClientButton.type = 'button';
-        addClientButton.className = 'btn btn-outline-success rounded btn-sm add-client-button';
-        addClientButton.innerHTML = '<i class="fa fa-plus"></i>';
-        addClientButton.setAttribute('title', 'Add New Client');
-        addClientButton.onclick = openWindow
-
-        clientDropdownDiv.appendChild(addClientButton);
+      clientDropdownDiv.appendChild(addClientButton);
     }
 
     if (!formsetContainer || !addFormButton || !totalFormsInput) {
-        console.error("Required formset elements are missing!");
-        return;
-    }
-
-    // Function to update the TOTAL_FORMS value
-    function updateTotalForms() {
-        const formCount = formsetContainer.querySelectorAll('.formset-row').length;
-        totalFormsInput.value = formCount;
-    }
-
-    // Function to update the visibility of the remove buttons based on total forms
-    function updateRemoveButtonVisibility() {
-        const formRows = document.querySelectorAll('.formset-row');
-        
-        // Count the number of non-deleted forms
-        const nonDeletedForms = Array.from(formRows).filter(formRow => {
-            const deleteCheckbox = formRow.querySelector('[name$="-DELETE"]');
-            return !deleteCheckbox || !deleteCheckbox.checked;
-        });
-
-        // If there is only one non-deleted form, hide the remove button for all forms
-        if (nonDeletedForms.length === 1) {
-            formRows.forEach(formRow => {
-                const removeButton = formRow.querySelector('.remove-form');
-                if (removeButton) {
-                    removeButton.style.display = 'none';
-                }
-            });
-        } else {
-            formRows.forEach(formRow => {
-                const removeButton = formRow.querySelector('.remove-form');
-                const deleteCheckbox = formRow.querySelector('[name$="-DELETE"]');
-                
-                // Show the remove button if the form is not marked for deletion
-                if (deleteCheckbox && deleteCheckbox.checked) {
-                    if (removeButton) {
-                        removeButton.style.display = 'none';
-                    }
-                } else {
-                    if (removeButton) {
-                        removeButton.style.display = 'inline-block';
-                    }
-                }
-            });
-        }
+      console.error("Required formset elements are missing!");
+      return;
     }
 
     // Event listener for the "Add Form" button
-    addFormButton.addEventListener('click', addForm);
-
-    // Function to add a new form
-    function addForm() {
-        const formCount = parseInt(totalFormsInput.value, 10); // Current number of forms
-
-        let formToClone = null;
-        
-        const formRows = formsetContainer.querySelectorAll('.formset-row');
-        // Try to find the first valid form that is not marked for deletion
-        for (let formRow of formRows) {
-            const deleteCheckbox = formRow.querySelector('[name$="-DELETE"]');
-            if (!deleteCheckbox || !deleteCheckbox.checked) {
-                formToClone = formRow;
-                break;  // Exit the loop once a valid form is found
-            }
-        }
-
-        if (!formToClone) {
-            console.error("No valid form to clone!");
-            return;
-        }
-
-        // Clone the form
-        const newForm = formToClone.cloneNode(true);
-
-        // Update IDs and names in the cloned form
-        newForm.innerHTML = newForm.innerHTML.replace(/items-(\d+)-/g, `items-${formCount}-`);
-        
-        // Clear values in the new form
-        newForm.querySelectorAll('input, select, textarea').forEach(input => {
-            input.value = '';
-        });
-
-        // Append the new form to the container
-        formsetContainer.appendChild(newForm)
-        
-        // Update the TOTAL_FORMS value
-        updateTotalForms();
-
-        // Update visibility of remove buttons after adding a new form
-        updateRemoveButtonVisibility();
-
-        const newNameField = newForm.querySelector('input[name^="items"][name$="-name"]');
-        if (newNameField) {
-            newNameField.focus();
-        }
-    }
+    addFormButton.addEventListener("click", addForm);
 
     // Delegated event listener for "Remove" buttons
-    formsetContainer.addEventListener('click', function(event) {
-        if (event.target.classList.contains('remove-form')) {
-            const formRow = event.target.closest('.formset-row');
-            formRow.querySelector('[name$="-DELETE"]').checked = true;
-            formRow.style.display = 'none';
-            updateTotalForms();
-            updateRemoveButtonVisibility(); // Re-check the visibility of remove buttons
-        }
+    formsetContainer.addEventListener("click", function (event) {
+      if (event.target.classList.contains("remove-form")) {
+        const formRow = event.target.closest(".formset-row");
+        formRow.querySelector('[name$="-DELETE"]').checked = true;
+        formRow.style.display = "none";
+        updateTotalForms();
+        updateRemoveButtonVisibility(); // Re-check the visibility of remove buttons
+      }
     });
 
     // Initialize remove buttons for all existing forms and hide/remove accordingly
-    const formRows = formsetContainer.querySelectorAll('.formset-row');
-    formRows.forEach(formRow => {
-        let removeButton = formRow.querySelector('.remove-form');
-        if (!removeButton) {
-            removeButton = document.createElement('button');
-            removeButton.type = 'button';
-            removeButton.className = 'btn btn-outline-danger p-2 rounded-top-0 btn-sm remove-form';
-            removeButton.textContent = 'Remove';
-            formRow.appendChild(removeButton);
-        }
+    const formRows = formsetContainer.querySelectorAll(".formset-row");
+    formRows.forEach((formRow) => {
+      let removeButton = formRow.querySelector(".remove-form");
+      if (!removeButton) {
+        removeButton = document.createElement("button");
+        removeButton.type = "button";
+        removeButton.className =
+          "btn btn-outline-danger p-2 rounded-top-0 btn-sm remove-form";
+        removeButton.textContent = "Remove";
+        formRow.appendChild(removeButton);
+      }
     });
 
     // Update the visibility of the remove buttons initially
     updateRemoveButtonVisibility();
-});
-
+  });
 </script>
 
 {% endblock %}
