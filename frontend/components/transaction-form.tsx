@@ -44,7 +44,7 @@ const extendedSchema = formSchema.extend({
   ),
 });
 
-type TransactionFormValues = z.infer<typeof extendedSchema>;
+export type TransactionFormValues = z.infer<typeof extendedSchema>;
 
 interface TransactionFormProps {
   isQuotation?: boolean;
@@ -70,7 +70,6 @@ export function TransactionForm({
     setValue,
     watch,
     formState: { errors },
-    reset,
   } = useForm<TransactionFormValues>({
     resolver: zodResolver(extendedSchema),
     defaultValues: {

@@ -14,7 +14,7 @@ import {
 import { toast } from "sonner";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { useSWRConfig } from "swr";
+import { mutate } from "swr";
 import { pdf } from "@react-pdf/renderer";
 import TransactionPDF from "@/components/transaction-pdf"; // Adjust the import path as needed
 
@@ -22,12 +22,82 @@ interface DataTableRowActionsProps<TData> {
   row: Row<TData>;
 }
 
+export const handleDelete = async (id: number, reference_number: string) => {
+  try {
+    const csrfToken = Cookies.get("csrftoken");
+    if (!csrfToken) {
+      throw new Error("CSRF token not found!");
+    }
+
+    const response = await fetch(
+      `${process.env.NEXT_PUBLIC_API_URL}/api/v1/invoices/${id}/`,
+      {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+          "X-CSRFToken": csrfToken,
+        },
+        credentials: "include",
+      }
+    );
+
+    if (!response.ok) {
+      throw new Error(`Failed to delete ${reference_number}.`);
+    }
+    mutate(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/invoices/`)
+    toast.success(`${reference_number} has been deleted.`, {
+      description: "This action can't be undone.",
+    });
+  } catch (error) {
+    toast.error("Error", {
+      description: `Failed to delete ${reference_number}:\n ${error}`,
+    });
+  }
+};
+
+export const downloadPdf = async (invoiceId: number) => {
+  try {
+    // Fetch invoice and items data
+    const invoiceUrl = `${process.env.NEXT_PUBLIC_API_URL}/api/v1/invoices/${invoiceId}/`;
+    const itemsUrl = `${process.env.NEXT_PUBLIC_API_URL}/api/v1/invoices/${invoiceId}/items/`;
+
+    const [invoiceResponse, itemsResponse] = await Promise.all([
+      fetch(invoiceUrl, { credentials: "include" }).then((res) => res.json()),
+      fetch(itemsUrl, { credentials: "include" }).then((res) => res.json()),
+    ]);
+
+    const invoice = invoiceResponse;
+    const items = itemsResponse;
+
+    // Generate PDF blob
+    const blob = await pdf(
+      <TransactionPDF invoice={invoice} items={items} />
+    ).toBlob();
+
+    // Create a download link
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `${invoice.reference_number}.pdf`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+
+    toast.success("PDF downloaded successfully!");
+  } catch (error) {
+    console.error("Error downloading PDF:", error);
+    toast.error("Error", {
+      description: "Failed to download PDF.",
+    });
+  }
+};
+
 export function DataTableRowActions<TData>({
   row,
 }: DataTableRowActionsProps<TData>) {
   const [isPaid, setIsPaid] = useState<boolean>(row.getValue("is_paid"));
   const router = useRouter();
-  const { mutate } = useSWRConfig(); // Use SWR's mutate function
 
   const togglePaymentStatus = async () => {
     if (row.getValue("is_quotation")) {
@@ -92,88 +162,9 @@ export function DataTableRowActions<TData>({
     }
   };
 
-  const handleDelete = async () => {
-    try {
-      const csrfToken = Cookies.get("csrftoken");
-      if (!csrfToken) {
-        throw new Error("CSRF token not found!");
-      }
-
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/v1/invoices/${row.getValue(
-          "id"
-        )}/`,
-        {
-          method: "DELETE",
-          headers: {
-            "Content-Type": "application/json",
-            "X-CSRFToken": csrfToken,
-          },
-          credentials: "include",
-        }
-      );
-
-      if (!response.ok) {
-        throw new Error(
-          `Failed to delete ${row.getValue("reference_number")}.`
-        );
-      }
-
-      toast.success(`${row.getValue("reference_number")} has been deleted.`, {
-        description: "This action can't be undone.",
-      });
-
-      mutate(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/invoices/`); // Revalidate the transactions list
-    } catch (error) {
-      toast.error("Error", {
-        description: `Failed to delete ${row.getValue("reference_number")}.`,
-      });
-    }
-  };
-
   const handleEdit = async () => {
     const invoice_id = row.getValue("id");
     router.push(`/transactions/edit/${invoice_id}`);
-  };
-
-  const downloadPdf = async () => {
-    try {
-      const invoiceId = row.getValue("id");
-
-      // Fetch invoice and items data
-      const invoiceUrl = `${process.env.NEXT_PUBLIC_API_URL}/api/v1/invoices/${invoiceId}/`;
-      const itemsUrl = `${process.env.NEXT_PUBLIC_API_URL}/api/v1/invoices/${invoiceId}/items/`;
-
-      const [invoiceResponse, itemsResponse] = await Promise.all([
-        fetch(invoiceUrl, {credentials: "include"}).then((res) => res.json()),
-        fetch(itemsUrl, {credentials: "include"}).then((res) => res.json()),
-      ]);
-
-      const invoice = invoiceResponse;
-      const items = itemsResponse;
-
-      // Generate PDF blob
-      const blob = await pdf(
-        <TransactionPDF invoice={invoice} items={items} />
-      ).toBlob();
-
-      // Create a download link
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = `${invoice.reference_number}.pdf`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      URL.revokeObjectURL(url);
-
-      toast.success("PDF downloaded successfully!");
-    } catch (error) {
-      console.error("Error downloading PDF:", error);
-      toast.error("Error", {
-        description: "Failed to download PDF.",
-      });
-    }
   };
 
   return (
@@ -192,10 +183,24 @@ export function DataTableRowActions<TData>({
         <DropdownMenuItem onClick={togglePaymentStatus}>
           Mark as {isPaid ? "Unpaid" : "Paid"}
         </DropdownMenuItem>
-        <DropdownMenuItem onClick={downloadPdf}>Download PDF</DropdownMenuItem>
+        <DropdownMenuItem
+          onClick={() => {
+            downloadPdf(row.getValue("id"));
+          }}
+        >
+          Download PDF
+        </DropdownMenuItem>
         <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={handleDelete}>Delete</DropdownMenuItem>
+        <DropdownMenuItem
+          onClick={() => {
+            handleDelete(row.getValue("id"), row.getValue("reference_number"))
+          }}
+        >
+          Delete
+        </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
   );
 }
+
+export default downloadPdf;

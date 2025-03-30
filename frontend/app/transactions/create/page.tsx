@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { TransactionForm } from "@/components/transaction-form";
+import { TransactionForm, TransactionFormValues } from "@/components/transaction-form";
 import { TransactionTypeSelector } from "@/components/transaction-type-selector";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
@@ -11,7 +11,7 @@ export default function CreateTransactionPage() {
   const [isQuotation, setIsQuotation] = useState<boolean | null>(null);
   const router = useRouter();
 
-  const handleSubmit = async (data: any) => {
+  const handleSubmit = async (data: TransactionFormValues) => {
     try {
       const csrfToken = Cookies.get("csrftoken");
       if (!csrfToken) {

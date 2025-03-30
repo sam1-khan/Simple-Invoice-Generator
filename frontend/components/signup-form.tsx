@@ -73,11 +73,10 @@ export function SignupForm({
     e.preventDefault();
     const values = getValues();
     if (
-      !values.name.trim() ||
-      !values.email.trim() ||
-      !values.phone.trim() ||
-      !values.password.trim() ||
-      !values.confirmPassword.trim()
+      !values?.name.trim() ||
+      !values?.email.trim() ||
+      !values?.password.trim() ||
+      !values?.confirmPassword.trim()
     ) {
       setError("All fields are required.");
       return;

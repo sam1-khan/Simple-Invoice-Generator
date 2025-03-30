@@ -10,7 +10,7 @@ const fetcher = (url: string) =>
   fetch(url, { credentials: "include" }).then((res) => res.json());
 
 export default function TransactionPage() {
-  const { data: transactions, error, mutate } = useSWR(
+  const { data: transactions } = useSWR(
     `${process.env.NEXT_PUBLIC_API_URL}/api/v1/invoices/`,
     fetcher
   );
@@ -25,11 +25,11 @@ export default function TransactionPage() {
         <div>
           <h2 className="text-2xl font-bold tracking-tight">Welcome back!</h2>
           <p className="text-muted-foreground">
-            Here's a list of all your transactions!
+            Here&apos;s a list of all your transactions!
           </p>
         </div>
       </div>
-      <CreateTransactionButton onTransactionCreated={() => mutate()} />
+      <CreateTransactionButton/>
       <TransactionsTable transactions={parsedTransactions} />
     </div>
   );

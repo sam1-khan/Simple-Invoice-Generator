@@ -323,32 +323,27 @@ const TransactionPDF = ({ invoice, items }) => {
         </View>
 
         {/* Invoice Summary */}
-        <View style={tw("border border-gray-300 p-3")}>
-          {" "}
-          {/* Added padding here */}
-          {/* Transit Charges Row */}
-          {invoice.transit_charges && (
-            <View
-              style={[tw(
-                "flex-row justify-between border-b border-gray-300 py-2"
-              ), {fontSize: 12}]}
-            >
-              <Text style={tw("w-[50%] font-[600] pl-2")}>Transit Charges</Text>
-              <Text style={[tw("w-[50%] text-right font-[600] pr-2"), {fontSize: 12}]}>
-                {formatCurrency(invoice.transit_charges , currency)}
+        <View style={tw("border border-gray-300")}>
+          {/* Transit Charges Row - only shown if charges exist */}
+          {invoice.transit_charges ? (
+            <View style={tw("flex-row justify-between py-2 px-3 border-b border-gray-300")}>
+              <Text style={tw("font-[600]")}>Transit Charges</Text>
+              <Text style={tw("font-[600]")}>
+                {formatCurrency(invoice.transit_charges, currency)}
               </Text>
             </View>
-          )}
+          ) : null}
+
           {/* Total Row */}
-          <View style={[tw("flex-row justify-between"),  {fontSize: 12}]}>
-            <Text style={tw("w-[50%] font-[600] pl-2")}>
-              Total
+          <View style={[tw("flex-row justify-between py-2 px-3"), { fontSize: 12 }]}>
+            <View style={tw("flex-row items-center")}>
+              <Text style={[tw("font-[600]"), { fontSize: 10 }]}>Total</Text>
               {(invoice.tax_percentage || invoice.is_taxed) && (
-                <Text style={[tw("text-muted pl-1"),  {fontSize: 8}]}> incl. tax</Text>
+                <Text style={[tw("text-muted pl-1"), { fontSize: 8 }]}>incl. tax</Text>
               )}
-            </Text>
-            <Text style={tw("w-[50%] text-right font-[600] pr-2")}>
-              {formatCurrency(invoice.grand_total, currency) || formatCurrency(invoice.total_price, currency)}
+            </View>
+            <Text style={tw("font-[600]")}>
+              {formatCurrency(invoice.grand_total || invoice.total_price, currency)}
             </Text>
           </View>
         </View>
