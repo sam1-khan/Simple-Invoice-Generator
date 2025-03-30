@@ -6,6 +6,7 @@ import { Suspense } from "react";
 import Loading from "@/app/loading";
 import { Toaster } from "@/components/ui/sonner";
 import { ThemeProvider } from "@/components/theme-provider";
+import AdminLabel from "@/components/admin-label";
 
 export const metadata = {
   title: "Create Next App",
@@ -60,6 +61,7 @@ export default function RootLayout({
             <AuthProvider>
               <Navbar />
               <Suspense fallback={<Loading />}>
+                <AdminLabel/>
                 <main>{children}</main>
                 <Toaster />
               </Suspense>

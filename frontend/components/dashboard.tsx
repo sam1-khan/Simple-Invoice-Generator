@@ -80,7 +80,7 @@ export default function Dashboard() {
         prevQuotations = 0;
       let totalClients = 0,
         prevClients = 0;
-      let recentInvoices: {
+      const recentInvoices: {
         name: string;
         phone: string;
         ntn_number: string;
@@ -91,7 +91,7 @@ export default function Dashboard() {
       let overallRevenue = 0;
       let overallInvoices = 0;
       let overallQuotations = 0;
-      let overallClients = clients.length;
+      const overallClients = clients.length;
 
       invoices.forEach((invoice) => {
         const createdAt = new Date(
@@ -109,10 +109,12 @@ export default function Dashboard() {
 
         // Growth calculations (last week vs. the week before)
         if (createdAt >= oneWeekAgo) {
+          // eslint-disable-next-line @typescript-eslint/no-unused-expressions
           invoice.is_quotation
             ? totalQuotations++
             : (totalInvoices++, (totalRevenue += amount));
         } else if (createdAt >= twoWeeksAgo) {
+          // eslint-disable-next-line @typescript-eslint/no-unused-expressions
           invoice.is_quotation
             ? prevQuotations++
             : (prevInvoices++, (prevRevenue += amount));

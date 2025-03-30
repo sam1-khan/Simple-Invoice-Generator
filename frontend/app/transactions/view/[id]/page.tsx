@@ -1,6 +1,7 @@
 "use client";
 
 import { useParams, useRouter } from "next/navigation";
+import { format } from "date-fns";
 import { useEffect, useState } from "react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -68,7 +69,7 @@ export default function TransactionViewPage() {
 
         setTransaction(validatedTransaction);
         setItems(validatedItems);
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
       } catch (error) {
         toast.error("Failed to fetch transaction data");
       } finally {
@@ -82,8 +83,8 @@ export default function TransactionViewPage() {
   if (loading) {
     return (
       <div className="flex h-[36rem] items-center justify-center">
-      <Loader2 className="h-10 w-10 animate-spin text-muted-foreground" />
-    </div>
+        <Loader2 className="h-10 w-10 animate-spin text-muted-foreground" />
+      </div>
     );
   }
 
@@ -105,12 +106,12 @@ export default function TransactionViewPage() {
   return (
     <div className="container mx-auto py-8 space-y-6">
       <div className="flex justify-between items-center">
-      <Link href="/transactions">
-        <Button variant="ghost">
-          <ChevronLeft className="mr-2 h-4 w-4" />
-          Back to Transactions
-        </Button>
-      </Link>
+        <Link href="/transactions">
+          <Button variant="ghost">
+            <ChevronLeft className="mr-2 h-4 w-4" />
+            Back to Transactions
+          </Button>
+        </Link>
         <div className="flex gap-2">
           <Button variant="outline" asChild>
             <Link href={`/transactions/edit/${id}`}>
@@ -126,7 +127,7 @@ export default function TransactionViewPage() {
             variant="destructive"
             onClick={() => {
               handleDelete(parseInt(id), transaction.reference_number);
-              router.back()
+              router.back();
             }}
           >
             <Trash2Icon className="mr-2 h-4 w-4" />
@@ -139,17 +140,25 @@ export default function TransactionViewPage() {
         {/* Main Invoice Card */}
         <Card className="md:col-span-2">
           <CardHeader className="pb-2">
-          <h1 className="text-3xl font-bold tracking-tight pb-4">
-          {transaction.is_quotation ? "Quotation" : "Invoice"} #
-          {transaction.reference_number}
-        </h1>
+            <div className="flex justify-between">
+              <h1 className="text-3xl font-bold tracking-tight pb-4">
+                {transaction.is_quotation ? "Quotation" : "Invoice"} #
+                {transaction.reference_number}
+              </h1>
+              <h3 className="text-sm font-light tracking-tight pb-4">
+                Created by:{" "}
+                <span className="text-xl tracking-tight font-semibold">
+                  {transaction.client.invoice_owner.name}
+                </span>
+              </h3>
+            </div>
             <CardTitle>Details</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <p className="text-sm text-muted-foreground">
-                  {transaction.date}
+                  {transaction.date ?? format(new Date(transaction.created_at), 'yyyy-M-d')}
                 </p>
                 <div className="flex flex-col items-end">
                   <Badge
@@ -247,67 +256,91 @@ export default function TransactionViewPage() {
         </Card>
 
         {/* Summary Card */}
-        <Card>
+        <Card className="h-full flex flex-col">
           <CardHeader>
             <CardTitle>Summary</CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {transaction.tax_percentage != null &&
-                Number.isFinite(transaction.tax_percentage) &&
-                transaction.tax_percentage > 0 && (
+          <CardContent className="flex-1">
+            <div className="flex flex-col h-full">
+              <div className="space-y-4">
+                {transaction.tax_percentage != null &&
+                  Number.isFinite(transaction.tax_percentage) &&
+                  transaction.tax_percentage > 0 && (
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">
+                        Tax Percentage
+                      </span>
+                      <span>{transaction.tax_percentage}%</span>
+                    </div>
+                  )}
+
+                {transaction.tax > 0 && (
                   <div className="flex justify-between">
-                    <span className="text-muted-foreground">
-                      Tax Percentage
-                    </span>
-                    <span>{transaction.tax_percentage}%</span>
+                    <span className="text-muted-foreground">Tax</span>
+                    <span>{formatCurrency(transaction.tax, currency)}</span>
                   </div>
                 )}
 
-              {transaction.tax > 0 && (
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Tax</span>
-                  <span>{formatCurrency(transaction.tax, currency)}</span>
-                </div>
-              )}
+                {transaction.transit_charges != null &&
+                  Number.isFinite(transaction.transit_charges) &&
+                  transaction.transit_charges > 0 && (
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">
+                        Transit Charges
+                      </span>
+                      <span>
+                        {formatCurrency(transaction.transit_charges, currency)}
+                      </span>
+                    </div>
+                  )}
 
-              {transaction.transit_charges != null &&
-                Number.isFinite(transaction.transit_charges) &&
-                transaction.transit_charges > 0 && (
+                {transaction.tax > 0 && (
                   <div className="flex justify-between">
-                    <span className="text-muted-foreground">
-                      Transit Charges
-                    </span>
+                    <span className="text-muted-foreground">Subtotal</span>
                     <span>
-                      {formatCurrency(transaction.transit_charges, currency)}
+                      {formatCurrency(transaction.total_price, currency)}
                     </span>
                   </div>
                 )}
 
-              {transaction.tax > 0 && (
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Subtotal</span>
+                <Separator />
+
+                <div className="flex justify-between font-bold text-lg">
                   <span>
-                    {formatCurrency(transaction.total_price, currency)}
+                    Total
+                    {(transaction.is_taxed ||
+                      (transaction.tax != null &&
+                        Number.isFinite(transaction.tax) &&
+                        transaction.tax > 0)) && (
+                      <span className="text-sm font-light text-muted-foreground ml-1 inline-block">
+                        incl. tax
+                      </span>
+                    )}
+                  </span>
+                  <span>
+                    {formatCurrency(transaction.grand_total, currency)}
                   </span>
                 </div>
-              )}
-
-              <Separator />
-
-              <div className="flex justify-between font-bold text-lg">
-                <span>
-                  Total
-                  {(transaction.is_taxed ||
-                    (transaction.tax != null &&
-                      Number.isFinite(transaction.tax) &&
-                      transaction.tax > 0)) && (
-                    <span className="text-sm font-light text-muted-foreground ml-1 inline-block">
-                      incl. tax
-                    </span>
-                  )}
-                </span>
-                <span>{formatCurrency(transaction.grand_total, currency)}</span>
+              </div>
+              <div className="mt-auto">
+                <h2 className="pt-4 text-sm font-light tracking-tight">
+                  Created at:{" "}
+                  <span className="font-medium">
+                    {format(
+                      new Date(transaction.created_at),
+                      "MMM dd, yyyy hh:mm a"
+                    )}
+                  </span>
+                </h2>
+                <h2 className="text-sm font-light tracking-tight">
+                  Updated at:{" "}
+                  <span className="font-medium">
+                    {format(
+                      new Date(transaction.updated_at),
+                      "MMM dd, yyyy hh:mm a"
+                    )}
+                  </span>
+                </h2>
               </div>
             </div>
           </CardContent>
