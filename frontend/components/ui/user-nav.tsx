@@ -70,7 +70,7 @@ export function UserNav() {
     return () => {
       window.removeEventListener("keydown", handleKeyDown);
     };
-  }, [user, router, handleLogout]);
+  }, [user, router]);
 
   return (
     <DropdownMenu>
