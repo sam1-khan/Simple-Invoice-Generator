@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import {
@@ -21,11 +21,18 @@ export function LoginForm({
   className,
   ...props
 }: React.ComponentPropsWithoutRef<"div">) {
+
+  useEffect(() => {
+    if (user) {
+      router.push('/')
+    }
+  },)
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const { refreshUser } = useAuth();
+  const { refreshUser, user } = useAuth();
   const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -48,11 +55,12 @@ export function LoginForm({
       );
       const data = await response.json();
       if (!response.ok) {
-        throw new Error(data.error || "Login failed");
+        throw new Error(data.detail || "Login failed");
       }
 
       await refreshUser();
       router.push("/");
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
       setError(err.message);
     } finally {

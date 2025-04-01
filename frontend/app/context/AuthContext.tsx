@@ -1,7 +1,7 @@
 "use client";
 
 import React, { createContext, useContext, useState, useEffect } from "react";
-import { useFont } from "@/components/font-provider"; // Import useFont
+import { Font, useFont } from "@/components/font-provider"; // Import useFont
 
 type User = {
   id: number;
@@ -9,6 +9,7 @@ type User = {
   email: string;
   phone: string;
   is_onboarded: boolean;
+  is_staff: boolean;
 } | null;
 
 type AuthContextType = {

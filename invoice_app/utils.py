@@ -26,7 +26,7 @@ def validate_phone_number(phone_number):
             
             # Raise a validation error with a valid example
             raise ValidationError(
-                f"Invalid phone number. Example of a valid number for this region: {valid_example}"
+                f"Invalid phone number. Example of a valid number for your region: {valid_example}"
             )
 
     except phonenumbers.phonenumberutil.NumberParseException:
@@ -41,9 +41,9 @@ def dump_queries() :
 def upload_logo(instance, filename):
     ext = filename.split('.')[-1]
     account_folder = str(instance.pk) if instance.pk else "temp"
-    return os.path.join('invoice_app', 'static', 'media', account_folder, f'logo.{ext}')
+    return os.path.join(account_folder, f'logo.{ext}')
 
 def upload_sign(instance, filename):
     ext = filename.split('.')[-1]
     account_folder = str(instance.pk) if instance.pk else "temp"
-    return os.path.join('invoice_app', 'static', 'media', account_folder, f'sign.{ext}')
+    return os.path.join(account_folder, f'sign.{ext}')

@@ -148,15 +148,15 @@ class Invoice(models.Model):
         is_quotation_changed = False
         
         if self.pk:
-            old_invoice = Invoice.objects.get(pk=self.pk)
+            old_invoice = Invoice.objects.get(pk=self.pk, client__invoice_owner=self.client.invoice_owner.pk)
             is_quotation_changed = old_invoice.is_quotation != self.is_quotation
 
         if not self.reference_number or is_quotation_changed:
             if self.is_quotation:
-                last_quotation = Invoice.objects.filter(is_quotation=True).order_by('-id').first()
+                last_quotation = Invoice.objects.filter(is_quotation=True, client__invoice_owner=self.client.invoice_owner.pk).order_by('-id').first()
                 self.reference_number = Invoice.get_next_reference_number(last_quotation, is_quotation=True)
             else:
-                last_invoice = Invoice.objects.filter(is_quotation=False).order_by('-id').first()
+                last_invoice = Invoice.objects.filter(is_quotation=False, client__invoice_owner=self.client.invoice_owner.pk).order_by('-id').first()
                 self.reference_number = Invoice.get_next_reference_number(last_invoice, is_quotation=False)
         
         super().save(*args, **kwargs)

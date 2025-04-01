@@ -12,10 +12,8 @@ import {
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
-  DropdownMenuShortcut,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import Cookies from "js-cookie";
 import { useEffect } from "react";
 import { logout } from "@/lib/utils";
 
@@ -72,7 +70,8 @@ export function UserNav() {
     return () => {
       window.removeEventListener("keydown", handleKeyDown);
     };
-  }, [user, router]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
     <DropdownMenu>

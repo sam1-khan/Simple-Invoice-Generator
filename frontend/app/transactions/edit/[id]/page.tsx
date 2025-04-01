@@ -5,11 +5,12 @@ import { useRouter, useParams } from "next/navigation";
 import { toast } from "sonner";
 import Cookies from "js-cookie";
 import { useEffect, useState } from "react";
-import useSWR, { useSWRConfig } from "swr";
+import { useSWRConfig } from "swr";
 
 export default function EditTransactionPage() {
   const router = useRouter();
   const { id } = useParams<{ id: string }>();
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [initialData, setInitialData] = useState<any>(null);
   const { mutate } = useSWRConfig(); // Use SWR's mutate function
 
@@ -56,6 +57,7 @@ export default function EditTransactionPage() {
     fetchData();
   }, [id]);
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const handleSubmit = async (data: any) => {
     try {
       const csrfToken = Cookies.get("csrftoken");
@@ -93,7 +95,9 @@ export default function EditTransactionPage() {
       // Step 2: Handle invoice items
       const updatedItems = data.items || [];
       const removedItems = initialData.items.filter(
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         (initialItem: any) =>
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           !updatedItems.some((item: any) => item.id === initialItem.id)
       );
 

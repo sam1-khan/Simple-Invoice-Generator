@@ -15,7 +15,6 @@ import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { useState } from "react";
 import { toast } from "sonner";
-import { Loader2 } from "lucide-react";
 
 const ForgotPasswordSchema = z.object({
   email: z.string().email("Invalid email"),
@@ -75,7 +74,8 @@ export default function ForgotPasswordPage() {
         toast.success("Password reset email sent successfully.");
         setIsSubmitting(false);
       }, 2000);
-    } catch (err: any) {
+
+    } catch (err: unknown) {
       setError(err.message || "An error occurred");
       setIsSubmitting(false);
     }
