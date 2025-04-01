@@ -42,7 +42,7 @@ export async function middleware(request: NextRequest) {
     }
 
     // Force non-onboarded users to the onboarding page
-    if (!user.is_onboarded && request.nextUrl.pathname !== onboardingRoute) {
+    if (!user.is_onboarded && request.nextUrl.pathname !== onboardingRoute && !user.is_staff) {
       const onboardingUrl = new URL(onboardingRoute, request.url);
       return NextResponse.redirect(onboardingUrl);
     }

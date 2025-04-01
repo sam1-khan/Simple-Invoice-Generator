@@ -16,14 +16,7 @@ import { toast } from "sonner";
 import { z } from "zod";
 import Link from "next/link";
 import { handleDelete } from "@/components/ui/data-table-row-actions-clients";
-
-export const clientSchema = z.object({
-  id: z.number(),
-  name: z.string(),
-  address: z.string().nullable().optional(),
-  ntn_number: z.string().nullable().optional(),
-  phone: z.string().nullable().optional(),
-});
+import { clientSchema } from "@/app/transactions/data/schema";
 
 export default function ClientView() {
   const router = useRouter();
@@ -82,12 +75,12 @@ export default function ClientView() {
     <div className="container mx-auto py-8 space-y-6">
       {/* Header with back button */}
       <div className="flex items-center justify-between">
-      <Link href="/clients">
-        <Button variant="ghost">
-          <ChevronLeft className="mr-2 h-4 w-4" />
-          Back to Clients
-        </Button>
-      </Link>
+        <Link href="/clients">
+          <Button variant="ghost">
+            <ChevronLeft className="mr-2 h-4 w-4" />
+            Back to Clients
+          </Button>
+        </Link>
         <div className="flex gap-2">
           <Button variant="outline" asChild>
             <Link href={`/clients/edit/${id}`}>
@@ -95,10 +88,13 @@ export default function ClientView() {
               Edit
             </Link>
           </Button>
-          <Button variant="destructive" onClick={() => {
-              handleDelete(client.id, client.name)
-              router.back()
-             }}>
+          <Button
+            variant="destructive"
+            onClick={() => {
+              handleDelete(client.id, client.name);
+              router.back();
+            }}
+          >
             <Trash2Icon className="mr-2 h-4 w-4" />
             Delete
           </Button>
@@ -108,8 +104,20 @@ export default function ClientView() {
       {/* Main Client Card */}
       <Card className="overflow-hidden">
         <CardHeader>
-          <CardTitle className="text-3xl">{client.name}</CardTitle>
-          <p className="text-muted-foreground mt-1">Client ID: {client.id}</p>
+          <div className="flex justify-between">
+            <div>
+              <CardTitle className="text-3xl">{client.name}</CardTitle>
+              <p className="text-muted-foreground mt-1">
+                Client ID: {client.id}
+              </p>
+            </div>
+            <h3 className="text-sm font-light tracking-tight pb-4">
+              Created by:{" "}
+              <span className="text-xl tracking-tight font-semibold">
+                {client.invoice_owner.name}
+              </span>
+            </h3>
+          </div>
         </CardHeader>
         <CardContent className="p-6 pt-0">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -151,22 +159,22 @@ export default function ClientView() {
         <CardContent>
           <div className="flex flex-wrap gap-4">
             <Link href={"/transactions"}>
-            <Button variant="outline">
-              <ArrowRight className="mr-2 h-4 w-4" />
-              View Transactions
-            </Button>
+              <Button variant="outline">
+                <ArrowRight className="mr-2 h-4 w-4" />
+                View Transactions
+              </Button>
             </Link>
             <Link href={"/transactions/create"}>
-            <Button variant="outline">
-              <ArrowRight className="mr-2 h-4 w-4" />
-              Create Transaction
-            </Button>
+              <Button variant="outline">
+                <ArrowRight className="mr-2 h-4 w-4" />
+                Create Transaction
+              </Button>
             </Link>
             <Link href={"/clients/create"}>
-            <Button variant="outline">
-              <ArrowRight className="mr-2 h-4 w-4" />
-              Create Client
-            </Button>
+              <Button variant="outline">
+                <ArrowRight className="mr-2 h-4 w-4" />
+                Create Client
+              </Button>
             </Link>
           </div>
         </CardContent>

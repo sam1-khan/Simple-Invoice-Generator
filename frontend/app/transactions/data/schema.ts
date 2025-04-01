@@ -14,6 +14,7 @@ export const invoiceOwnerSchema = z.object({
   logo: z.string().nullable().optional(),
   signature: z.string().nullable().optional(),
   is_onboarded: z.boolean(),
+  is_staff: z.boolean(),
   created_at: z.string(),
   updated_at: z.string(),
 });
