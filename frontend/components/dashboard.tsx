@@ -48,12 +48,14 @@ export default function Dashboard() {
   });
 
   const [currency, setCurrency] = useState<string>("PKR");
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [revenueData, setRevenueData] = useState<
     { name: string; value: number }[]
   >([]);
   const [invoiceData, setInvoiceData] = useState<
     { name: string; value: number }[]
   >([]);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [clientGrowthData, setClientGrowthData] = useState<
     { name: string; value: number }[]
   >([]);
