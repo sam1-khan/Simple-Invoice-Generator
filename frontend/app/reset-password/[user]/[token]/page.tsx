@@ -84,7 +84,8 @@ export default function ResetPasswordPage() {
       } else {
         setError(result?.detail || "Failed to reset password.");
       }
-    } catch (err: unknown) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (err: any) {
       setError(err?.message || "An error occurred.");
     } finally {
       setIsSubmitting(false);
