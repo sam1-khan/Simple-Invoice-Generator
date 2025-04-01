@@ -53,6 +53,7 @@ export function LoginForm({
 
       await refreshUser();
       router.push("/");
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
       setError(err.message);
     } finally {

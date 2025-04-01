@@ -80,7 +80,13 @@ export function Overview() {
         }
 
         const data = monthYearMap.get(key)!;
-        invoice.is_quotation ? data.quotation++ : data.invoice++;
+
+        if (invoice.is_quotation) {
+          data.quotation++;
+        } else {
+          data.invoice++;
+        }
+
         monthYearMap.set(key, data);
       });
 
