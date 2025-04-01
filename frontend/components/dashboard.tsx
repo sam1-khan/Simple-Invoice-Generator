@@ -440,9 +440,9 @@ export default function Dashboard() {
               </CardHeader>
               <CardContent>
                 <LineChartComponent
-                  data={revenueData}
-                  xAxisKey="name"
-                  yAxisKey="value"
+                  // data={revenueData}
+                  // xAxisKey="name"
+                  // yAxisKey="value"
                 />
               </CardContent>
             </Card>
@@ -452,7 +452,9 @@ export default function Dashboard() {
                 <CardDescription>Current month</CardDescription>
               </CardHeader>
               <CardContent>
-                <PieChartComponent data={invoiceData} activeIndex={0} />
+                <PieChartComponent data={invoiceData}
+                //  activeIndex={0}
+                  />
               </CardContent>
             </Card>
             <Card>
@@ -462,9 +464,9 @@ export default function Dashboard() {
               </CardHeader>
               <CardContent>
                 <InteractiveAreaChartComponent
-                  data={clientGrowthData}
-                  xAxisKey="name"
-                  yAxisKey="value"
+                  // data={clientGrowthData}
+                  // xAxisKey="name"
+                  // yAxisKey="value"
                 />
               </CardContent>
             </Card>
@@ -486,9 +488,9 @@ export default function Dashboard() {
               </CardHeader>
               <CardContent>
                 <LineChartComponent
-                  data={revenueData}
-                  xAxisKey="name"
-                  yAxisKey="value"
+                  // data={revenueData}
+                  // xAxisKey="name"
+                  // yAxisKey="value"
                 />
               </CardContent>
             </Card>
