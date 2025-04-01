@@ -142,8 +142,8 @@ const TransactionPDF: React.FC<TransactionPDFProps> = ({ invoice, items }) => {
       <Page size="A4" style={styles.page}>
         {/* Header Section */}
         <View style={styles.header} fixed>
+          {/* eslint-disable-next-line jsx-a11y/alt-text */}
           <Image
-            alt="Logo"
             src={`${baseUrl}/${invoice.client.invoice_owner?.logo}`}
           />
           <Text style={styles.title}>
@@ -375,15 +375,9 @@ const TransactionPDF: React.FC<TransactionPDFProps> = ({ invoice, items }) => {
                 style={{ textAlign: "center", marginTop: -46, marginRight: 10 }}
               >
                 {invoice.client.invoice_owner?.signature ? (
+                  // eslint-disable-next-line jsx-a11y/alt-text
                   <Image
                     src={`${baseUrl}/${invoice.client.invoice_owner.signature}`}
-                    alt="Signature"
-                    style={{
-                      width: 200,
-                      objectFit: "contain",
-                      marginRight: "-60",
-                      marginBottom: -70,
-                    }}
                   />
                 ) : (
                   <View
