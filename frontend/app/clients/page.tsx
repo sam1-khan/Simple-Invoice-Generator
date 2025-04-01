@@ -23,7 +23,7 @@ export default function ClientPage() {
           <div>
             <h2 className="text-2xl font-bold tracking-tight">Welcome back!</h2>
             <p className="text-muted-foreground">
-              Here's a list of all your clients!
+              Here&apos;s a list of all your clients!
             </p>
           </div>
         </div>
@@ -44,7 +44,7 @@ export default function ClientPage() {
         <div>
           <h2 className="text-2xl font-bold tracking-tight">Welcome back!</h2>
           <p className="text-muted-foreground">
-            Here's a list of all your clients!
+            Here&apos;s a list of all your clients!
           </p>
         </div>
       </div>

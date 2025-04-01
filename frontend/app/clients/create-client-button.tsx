@@ -3,9 +3,7 @@
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
 
-export default function CreateClientButton({
-  onClientCreated,
-}: {
+export default function CreateClientButton({}: {
   onClientCreated: () => void;
 }) {
   const router = useRouter();

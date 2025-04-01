@@ -66,6 +66,7 @@ export default function Dashboard() {
   }, []);
 
   const computeDashboardStats = useCallback(
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (invoices: any[], clients: any[]) => {
       const now = Date.now();
       const oneWeekAgo = now - 7 * 24 * 60 * 60 * 1000;

@@ -143,6 +143,7 @@ const TransactionPDF = ({ invoice, items }) => {
         {/* Header Section */}
         <View style={styles.header} fixed>
           <Image
+            alt="Logo"
             src={`${baseUrl}/${invoice.client.invoice_owner?.logo}`}
             style={styles.logo}
           />
@@ -257,6 +258,7 @@ const TransactionPDF = ({ invoice, items }) => {
 
           {/* Table Rows */}
           {items.length > 0 ? (
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             items.map((item: any, index: number) => (
               <View
                 key={index}
@@ -384,6 +386,7 @@ const TransactionPDF = ({ invoice, items }) => {
                 {invoice.client.invoice_owner?.signature ? (
                   <Image
                     src={`${baseUrl}/${invoice.client.invoice_owner.signature}`}
+                    alt="Signature"
                     style={{
                       width: 200,
                       objectFit: "contain",

@@ -84,7 +84,7 @@ export default function ResetPasswordPage() {
       } else {
         setError(result?.detail || "Failed to reset password.");
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       setError(err?.message || "An error occurred.");
     } finally {
       setIsSubmitting(false);

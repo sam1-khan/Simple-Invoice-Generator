@@ -119,6 +119,7 @@ export function SignupForm({
       });
 
       router.push("/login");
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
       setError(err.message || "An error occurred.");
     } finally {

@@ -226,6 +226,7 @@ export default function OnboardingPage() {
                 <Label htmlFor="logo">Upload Logo (PNG)</Label>
                 <FileUploader
                   value={watch("logo") ? [watch("logo")] : []}
+                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
                   onValueChange={(files: any) =>
                     setValue("logo", files ? files[0] : null)
                   }
@@ -260,6 +261,7 @@ export default function OnboardingPage() {
                 <Label htmlFor="signature">Upload Signature (PNG)</Label>
                 <FileUploader
                   value={watch("signature") ? [watch("signature")] : []}
+                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
                   onValueChange={(files: any) =>
                     setValue("signature", files ? files[0] : null)
                   }

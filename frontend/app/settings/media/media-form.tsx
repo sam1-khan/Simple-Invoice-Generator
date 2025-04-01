@@ -13,7 +13,7 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { useRef, useState } from "react";
+import { useState } from "react";
 import { useAuth } from "@/app/context/AuthContext";
 import { toast } from "sonner";
 import {
@@ -143,6 +143,7 @@ export function MediaForm() {
                   <FormControl>
                     <FileUploader
                       value={field.value ? [field.value] : []}
+                      // eslint-disable-next-line @typescript-eslint/no-explicit-any
                       onValueChange={(files: any) =>
                         field.onChange(files ? files[0] : null)
                       }
@@ -207,6 +208,7 @@ export function MediaForm() {
                   <FormControl>
                     <FileUploader
                       value={field.value ? [field.value] : []}
+                      // eslint-disable-next-line @typescript-eslint/no-explicit-any
                       onValueChange={(files: any) =>
                         field.onChange(files ? files[0] : null)
                       }
