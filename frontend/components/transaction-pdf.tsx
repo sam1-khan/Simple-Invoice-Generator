@@ -145,7 +145,6 @@ const TransactionPDF: React.FC<TransactionPDFProps> = ({ invoice, items }) => {
           <Image
             alt="Logo"
             src={`${baseUrl}/${invoice.client.invoice_owner?.logo}`}
-            style={styles.logo} // Ensure logo style is correct
           />
           <Text style={styles.title}>
             {invoice.client.invoice_owner?.name || ""}
