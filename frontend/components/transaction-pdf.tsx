@@ -1,5 +1,3 @@
-"use client";
-
 import React, { useEffect, useState } from "react";
 import {
   Document,
@@ -10,15 +8,10 @@ import {
   StyleSheet,
 } from "@react-pdf/renderer";
 import { createTw } from "react-pdf-tailwind";
-import {
-  formatCurrency,
-  getCountryFromIP,
-  getCurrencyFromCountry,
-} from "@/lib/utils";
+import { formatCurrency, getCountryFromIP, getCurrencyFromCountry } from "@/lib/utils";
 
 const formatNumber = (value: string | number) => {
   const num = typeof value === 'string' ? parseFloat(value) : value;
-  
   return num.toLocaleString('en-US', {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2
@@ -54,8 +47,7 @@ const styles = StyleSheet.create({
     padding: 10,
   },
   headerDetails: {
-    // New style for header details
-    fontSize: 12, // Increased from default 10
+    fontSize: 12,
     marginBottom: 5,
   },
   logo: {
@@ -97,7 +89,7 @@ const styles = StyleSheet.create({
   },
   footer: {
     marginTop: 20,
-    fontSize: 9, // Reduced from 8 to maintain hierarchy
+    fontSize: 9,
     color: "#6c757d",
   },
   signature: {
@@ -124,8 +116,14 @@ const styles = StyleSheet.create({
     marginBottom: 1,
   },
 });
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const TransactionPDF = ({ invoice, items }: any) => {
+
+// Typing props explicitly
+interface TransactionPDFProps {
+  invoice: any;
+  items: any[];
+}
+
+const TransactionPDF: React.FC<TransactionPDFProps> = ({ invoice, items }) => {
   const [currency, setCurrency] = useState<string>("PKR");
 
   useEffect(() => {
@@ -145,31 +143,23 @@ const TransactionPDF = ({ invoice, items }: any) => {
           <Image
             alt="Logo"
             src={`${baseUrl}/${invoice.client.invoice_owner?.logo}`}
-            style={styles.logo}
+            style={styles.logo} // Ensure logo style is correct
           />
           <Text style={styles.title}>
             {invoice.client.invoice_owner?.name || ""}
           </Text>
           <Text style={styles.headerDetails}>
-            {" "}
-            {/* Using new headerDetails style */}
             {invoice.client.invoice_owner?.address || ""}
           </Text>
           <Text style={styles.headerDetails}>
-            {" "}
-            {/* Using new headerDetails style */}
             {invoice.client.invoice_owner?.phone || ""}
             {invoice.client.invoice_owner?.phone_2 &&
               `, ${invoice.client.invoice_owner.phone_2}`}
           </Text>
           <Text style={styles.headerDetails}>
-            {" "}
-            {/* Using new headerDetails style */}
             {invoice.client.invoice_owner?.email || ""}
           </Text>
           <Text style={styles.headerDetails}>
-            {" "}
-            {/* Using new headerDetails style */}
             <Text style={{ fontWeight: "600" }}>
               NTN No: {invoice.client.invoice_owner?.ntn_number || ""}
             </Text>
