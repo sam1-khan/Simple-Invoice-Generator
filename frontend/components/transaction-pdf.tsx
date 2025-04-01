@@ -119,7 +119,9 @@ const styles = StyleSheet.create({
 
 // Typing props explicitly
 interface TransactionPDFProps {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   invoice: any;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   items: any[];
 }
 
