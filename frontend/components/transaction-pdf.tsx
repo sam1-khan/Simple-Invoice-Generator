@@ -124,7 +124,8 @@ const styles = StyleSheet.create({
     marginBottom: 1,
   },
 });
-const TransactionPDF = ({ invoice, items }) => {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const TransactionPDF = ({ invoice, items }: any) => {
   const [currency, setCurrency] = useState<string>("PKR");
 
   useEffect(() => {
