@@ -1,26 +1,46 @@
 import os
-import environ
+from pathlib import Path
+from dotenv import load_dotenv
+from datetime import timedelta
 
-# Initialize environment variables
-env = environ.Env()
-environ.Env.read_env()
+# Build paths
+BASE_DIR = Path(__file__).resolve().parent.parent
 
-# Build paths inside the project like this: os.path.join(BASE_DIR, ...)
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+# Load environment
+load_dotenv(os.path.join(BASE_DIR, '.env'))
 
-# Application name
-APP_NAME = 'Simple Invoice Generator'
+# Security
+SECRET_KEY = os.getenv("SECRET_KEY")
+DEBUG = os.getenv("DEBUG", "False").lower() == "true"  # Set DEBUG=True in .env for development
 
-# SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = env('SECRET_KEY')
+# Domain settings
+ALLOWED_HOSTS = [
+    'simpleinvoice.pythonanywhere.com',          # Production
+    'simpleinvoicegenerator.vercel.app',         # Frontend
+    'localhost', '127.0.0.1',                    # Development
+]
 
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+# HTTPS Settings (disabled in development)
+SESSION_COOKIE_SECURE = not DEBUG
+CSRF_COOKIE_SECURE = not DEBUG
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+SECURE_SSL_REDIRECT = not DEBUG
 
-ALLOWED_HOSTS = ['*']
+# CORS
+CORS_ALLOWED_ORIGINS = [
+    "https://simpleinvoicegenerator.vercel.app",  # Production frontend
+    "http://localhost:3000",                      # Development frontend
+    "http://127.0.0.1:3000",
+]
+CORS_ALLOW_CREDENTIALS = True
 
-# Use our custom user model
-AUTH_USER_MODEL = "invoice_app.InvoiceOwner"
+# CSRF
+CSRF_TRUSTED_ORIGINS = [
+    "https://simpleinvoice.pythonanywhere.com",
+    "https://simpleinvoicegenerator.vercel.app",
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
+]
 
 # Application definition
 INSTALLED_APPS = [
@@ -30,149 +50,76 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'django.contrib.humanize',
-
-    # Third-party apps
-    'django_extensions',
-    'crispy_forms',
-    'crispy_bootstrap5',
     'corsheaders',
-    'imagekit',
-
-    # Your apps
-    'invoice_app.apps.InvoiceAppConfig',
-    
-    # If ninja_jwt requires adding an app, include it here (check its documentation)
     'ninja_jwt',
-
-    # Django cleanup should be in last  
-    'django_cleanup.apps.CleanupConfig',
+    'invoice_app',
 ]
-
-# Crispy forms configuration
-CRISPY_ALLOWED_TEMPLATE_PACKS = "bootstrap5"
-CRISPY_TEMPLATE_PACK = "bootstrap5"
-
-# Optional: if you're using taggit or similar packages
-TAGGIT_CASE_INSENSITIVE = True
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
-    'django.contrib.sessions.middleware.SessionMiddleware',
-
-    # corsheaders should be placed as high as possible
     'corsheaders.middleware.CorsMiddleware',
-
+    'django.contrib.sessions.middleware.SessionMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
-    'django.middleware.locale.LocaleMiddleware',
-    'django.middleware.clickjacking.XFrameOptionsMiddleware',
-]
-CORS_ALLOW_CREDENTIALS = True
-# CORS configuration (allow requests from your frontend, e.g., Next.js)
-CORS_ALLOWED_ORIGINS = [
-    "http://localhost:3000",
 ]
 
-CSRF_TRUSTED_ORIGINS = [
-    "http://localhost:3000",
-]
-ROOT_URLCONF = 'invoice_project.urls'
-
-TEMPLATES = [
-    {
-        'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],  # Add template directories here if needed.
-        'APP_DIRS': True,
-        'OPTIONS': {
-            'context_processors': [
-                'django.template.context_processors.debug',
-                'django.template.context_processors.request',
-                'django.template.context_processors.media',
-                'django.contrib.auth.context_processors.auth',
-                'django.contrib.messages.context_processors.messages',
-                'invoice_app.context_processors.settings',  # Your custom context processor, if any.
-            ],
-        },
-    },
-]
-
-WSGI_APPLICATION = 'invoice_project.wsgi.application'
-
-# Database configuration (using SQLite for development)
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+# Database
+if DEBUG:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
     }
-}
+else:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.mysql',
+            'NAME': 'simpleinvoice$generator',
+            'USER': 'simpleinvoice',
+            'PASSWORD': os.getenv('MYSQL_PASSWORD'),
+            'HOST': 'simpleinvoice.mysql.pythonanywhere-services.com',
+            'OPTIONS': {'sql_mode': 'STRICT_TRANS_TABLES'},
+        }
+    }
 
-# Password validation
-AUTH_PASSWORD_VALIDATORS = [
-    {
-        'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
-    },
-]
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
-# Internationalization settings
-LANGUAGE_CODE = 'en-us'
-DEFAULT_PHONE_REGION = 'PK'
-TIME_ZONE = 'Asia/Karachi'
-USE_I18N = True
-USE_L10N = True
-USE_THOUSAND_SEPARATOR = True
-USE_TZ = True
-
-# Static and media files
+# Static files
 STATIC_URL = '/static/'
+STATIC_ROOT = os.path.join(BASE_DIR, 'static')
 MEDIA_URL = '/media/'
-STATIC_ROOT = os.path.join(BASE_DIR, "static")
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
-# Authentication backends
-AUTHENTICATION_BACKENDS = (
-    'django.contrib.auth.backends.ModelBackend',
-)
-
-# Redirect URLs after login/logout
-LOGOUT_REDIRECT_URL = '/'
-LOGIN_REDIRECT_URL = '/'
-
-# Default primary key field type for Django 3.2+
-DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'
-
-# -----------------------------------------------------------------------------
-# Caching Configuration
-# -----------------------------------------------------------------------------
-# Using Django’s local memory cache for development.
-# For production, consider a more robust backend (e.g. memcached, redis)
-CACHES = {
-    "default": {
-        "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
-        "LOCATION": "unique-snowflake",
-    }
+# Django Ninja JWT
+NINJA_JWT = {
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=60),
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=7),
+    'ALGORITHM': 'HS256',
+    'AUTH_HEADER_TYPES': ('Bearer',),
 }
 
-# -----------------------------------------------------------------------------
-# Email Configuration (Replace with your SMTP settings)
-# -----------------------------------------------------------------------------
-EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
-EMAIL_HOST = "smtp.gmail.com"
-EMAIL_PORT = 587
-EMAIL_USE_TLS = True
-EMAIL_HOST_USER = env('EMAIL')
-EMAIL_HOST_PASSWORD = env('PASSWORD')
+# Email (development uses console backend)
+if DEBUG:
+    EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+else:
+    EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+    EMAIL_HOST = 'smtp.gmail.com'
+    EMAIL_PORT = 587
+    EMAIL_USE_TLS = True
+    EMAIL_HOST_USER = os.getenv("EMAIL")
+    EMAIL_HOST_PASSWORD = os.getenv('PASSWORD')
 
-PASSWORD_RESET_TIMEOUT = 300  # 300 seconds = 5 minutes
-# Frontend URL for Reset Link
-FRONTEND_URL = "http://localhost:3000"
+# Development-specific settings
+if DEBUG:
+    # Allow all hosts in development
+    ALLOWED_HOSTS = ['*']
+    
+    # Disable SSL redirect for local testing
+    SECURE_SSL_REDIRECT = False
+    
+    # Print emails to console
+    EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'

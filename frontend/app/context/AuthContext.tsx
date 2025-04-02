@@ -1,7 +1,7 @@
 "use client";
 
 import React, { createContext, useContext, useState, useEffect } from "react";
-import { Font, useFont } from "@/components/font-provider"; // Import useFont
+import { Font, useFont } from "@/components/font-provider";
 
 type User = {
   id: number;
@@ -15,34 +15,45 @@ type User = {
 type AuthContextType = {
   user: User;
   loading: boolean;
-  refreshUser: () => void;
+  refreshUser: () => Promise<void>;
 };
 
 const AuthContext = createContext<AuthContextType>({
   user: null,
   loading: true,
-  refreshUser: () => {},
+  refreshUser: async () => {},
 });
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User>(null);
   const [loading, setLoading] = useState(true);
-  const { setFont } = useFont(); // Use the setFont function from FontProvider
+  const { setFont } = useFont();
 
   const refreshUser = async () => {
+    setLoading(true);
     try {
       const res = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/api/v1/auth/current-user/`,
-        { credentials: "include" }
+        { 
+          credentials: "include",
+          headers: {
+            "Cache-Control": "no-cache",
+          },
+        }
       );
+      
       if (res.ok) {
         const data = await res.json();
         setUser(data);
       } else {
         setUser(null);
+        // If on a protected route, redirect client-side
+        if (!window.location.pathname.startsWith("/login")) {
+          window.location.href = `/login?from=${encodeURIComponent(window.location.pathname)}`;
+        }
       }
     } catch (err) {
-      console.error("Error fetching current user:", err);
+      console.error("Auth fetch error:", err);
       setUser(null);
     } finally {
       setLoading(false);
@@ -51,14 +62,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     refreshUser();
+    
+    // Set up periodic refresh (every 5 minutes)
+    const interval = setInterval(refreshUser, 300000);
+    return () => clearInterval(interval);
   }, []);
 
   useEffect(() => {
     if (user) {
-      // Re-apply the font after authentication
       const storedFont = localStorage.getItem("app-font") as Font | null;
-      if (storedFont) {
-        setFont(storedFont);
+      if (storedFont) setFont(storedFont);
+      
+      // Client-side protection for onboarded users
+      if (user.is_onboarded && window.location.pathname === "/onboarding") {
+        window.location.href = "/";
       }
     }
   }, [user, setFont]);

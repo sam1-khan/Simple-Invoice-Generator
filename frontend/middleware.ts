@@ -3,21 +3,23 @@ import { NextResponse, NextRequest } from "next/server";
 export async function middleware(request: NextRequest) {
   const publicRoutes = ["/login", "/signup", "/forgot-password"];
   const resetPasswordRegex = /^\/reset-password\/[^\/]+\/[^\/]+$/;
-  const onboardingRoute = "/onboarding"; // Add the onboarding route
+  const onboardingRoute = "/onboarding";
+  const authApiUrl = new URL(
+    "/api/v1/auth/current-user/",
+    process.env.NEXT_PUBLIC_API_URL
+  ).toString();
 
   try {
-    const response = await fetch(
-      `${process.env.NEXT_PUBLIC_API_URL}/api/v1/auth/current-user/`,
-      {
-        credentials: "include",
-        headers: {
-          Cookie: request.headers.get("Cookie") || "",
-        },
-      }
-    );
+    const response = await fetch(authApiUrl, {
+      credentials: "include",
+      headers: {
+        Cookie: request.headers.get("Cookie") || "",
+        "x-requested-with": "XMLHttpRequest", // Helps identify API calls
+      },
+    });
 
     if (!response.ok) {
-      // Allow access to public routes for unauthenticated users
+      // Allow public routes
       if (
         publicRoutes.includes(request.nextUrl.pathname) ||
         resetPasswordRegex.test(request.nextUrl.pathname)
@@ -25,57 +27,54 @@ export async function middleware(request: NextRequest) {
         return NextResponse.next();
       }
 
-      // Redirect unauthenticated users to /login
+      // Redirect to login with return URL
       const loginUrl = new URL("/login", request.url);
-      return NextResponse.redirect(loginUrl);
+      loginUrl.searchParams.set("from", request.nextUrl.pathname);
+      const response = NextResponse.redirect(loginUrl);
+      response.headers.set("Cache-Control", "no-store");
+      return response;
     }
 
     const user = await response.json();
 
-    // Prevent authenticated users from accessing public routes
+    // Block authenticated users from public routes
     if (
       publicRoutes.includes(request.nextUrl.pathname) ||
       resetPasswordRegex.test(request.nextUrl.pathname)
     ) {
-      const homeUrl = new URL("/", request.url);
-      return NextResponse.redirect(homeUrl);
+      const redirectUrl = new URL("/", request.url);
+      const response = NextResponse.redirect(redirectUrl);
+      response.headers.set("Cache-Control", "no-store");
+      return response;
     }
 
-    // Force non-onboarded users to the onboarding page
-    if (!user.is_onboarded && request.nextUrl.pathname !== onboardingRoute && !user.is_staff) {
-      const onboardingUrl = new URL(onboardingRoute, request.url);
-      return NextResponse.redirect(onboardingUrl);
-    }
-
-    // Prevent onboarded users from accessing the onboarding page
-    if (user.is_onboarded && request.nextUrl.pathname === onboardingRoute) {
-      // Get the referer (previous page) from the request headers
-      const referer = request.headers.get("referer");
-
-      // If there's a referer, redirect back to it
-      if (referer) {
-        const refererUrl = new URL(referer);
-        return NextResponse.redirect(refererUrl);
+    // Handle onboarding flow
+    if (!user.is_onboarded && !user.is_staff) {
+      if (!request.nextUrl.pathname.startsWith(onboardingRoute)) {
+        const onboardingUrl = new URL(onboardingRoute, request.url);
+        const response = NextResponse.redirect(onboardingUrl);
+        response.headers.set("Cache-Control", "no-store");
+        return response;
       }
-
-      // If no referer, redirect to the home page as a fallback
+    } else if (user.is_onboarded && request.nextUrl.pathname === onboardingRoute) {
       const homeUrl = new URL("/", request.url);
-      return NextResponse.redirect(homeUrl);
+      const response = NextResponse.redirect(homeUrl);
+      response.headers.set("Cache-Control", "no-store");
+      return response;
     }
 
-    // Allow access to other routes for authenticated and onboarded users
     return NextResponse.next();
   } catch (err) {
-    console.error("Error fetching current user in middleware:", err);
-
-    // Redirect to /login if there's an error
+    console.error("Middleware auth error:", err);
     const loginUrl = new URL("/login", request.url);
-    return NextResponse.redirect(loginUrl);
+    const response = NextResponse.redirect(loginUrl);
+    response.headers.set("Cache-Control", "no-store");
+    return response;
   }
 }
 
 export const config = {
   matcher: [
-    "/((?!_next/static|_next/image|favicon.ico|fonts/).*)",
+    "/((?!_next/static|_next/image|favicon.ico|fonts/|api/auth).*)",
   ],
 };
