@@ -3,24 +3,25 @@ from pathlib import Path
 from dotenv import load_dotenv
 from datetime import timedelta
 
-# Build paths
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+# Build paths (using pathlib.Path for consistency)
+BASE_DIR = Path(__file__).resolve().parent.parent
 
 # Load environment
 load_dotenv(os.path.join(BASE_DIR, '.env'))
 
 # Security
 SECRET_KEY = os.getenv("SECRET_KEY")
-DEBUG = os.getenv("DEBUG", "False").lower() == "true"  # Set DEBUG=True in .env for development
+DEBUG = os.getenv("DEBUG", "False").lower() == "true"
 
 # Domain settings
 ALLOWED_HOSTS = [
-    'simpleinvoice.pythonanywhere.com',          # Production
-    'simpleinvoicegenerator.vercel.app',         # Frontend
-    'localhost', '127.0.0.1',                    # Development
+    'simpleinvoice.pythonanywhere.com',
+    'simpleinvoicegenerator.vercel.app',
+    'localhost', 
+    '127.0.0.1',
 ]
 
-# HTTPS Settings (disabled in development)
+# HTTPS Settings
 SESSION_COOKIE_SECURE = not DEBUG
 CSRF_COOKIE_SECURE = not DEBUG
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
@@ -28,8 +29,8 @@ SECURE_SSL_REDIRECT = not DEBUG
 
 # CORS
 CORS_ALLOWED_ORIGINS = [
-    "https://simpleinvoicegenerator.vercel.app",  # Production frontend
-    "http://localhost:3000",                      # Development frontend
+    "https://simpleinvoicegenerator.vercel.app",
+    "http://localhost:3000",
     "http://127.0.0.1:3000",
 ]
 CORS_ALLOW_CREDENTIALS = True
@@ -64,7 +65,14 @@ MIDDLEWARE = [
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
+    'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
+
+# Key Fix: ROOT_URLCONF
+ROOT_URLCONF = 'simpleinvoice.urls'  # Replace 'simpleinvoice' with your project name
+
+# WSGI Application
+WSGI_APPLICATION = 'simpleinvoice.wsgi.application'  # Replace 'simpleinvoice' with your project name
 
 # Database
 if DEBUG:
@@ -86,13 +94,12 @@ else:
         }
     }
 
-STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
-
 # Static files
 STATIC_URL = '/static/'
-STATIC_ROOT = os.path.join(BASE_DIR, 'static')
+STATIC_ROOT = BASE_DIR / 'static'
 MEDIA_URL = '/media/'
-MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+MEDIA_ROOT = BASE_DIR / 'media'
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 # Django Ninja JWT
 NINJA_JWT = {
@@ -102,7 +109,7 @@ NINJA_JWT = {
     'AUTH_HEADER_TYPES': ('Bearer',),
 }
 
-# Email (development uses console backend)
+# Email
 if DEBUG:
     EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 else:
@@ -113,13 +120,24 @@ else:
     EMAIL_HOST_USER = os.getenv("EMAIL")
     EMAIL_HOST_PASSWORD = os.getenv('PASSWORD')
 
-# Development-specific settings
+# Templates (required for admin and error pages)
+TEMPLATES = [
+    {
+        'BACKEND': 'django.template.backends.django.DjangoTemplates',
+        'DIRS': [],
+        'APP_DIRS': True,
+        'OPTIONS': {
+            'context_processors': [
+                'django.template.context_processors.debug',
+                'django.template.context_processors.request',
+                'django.contrib.auth.context_processors.auth',
+                'django.contrib.messages.context_processors.messages',
+            ],
+        },
+    },
+]
+
+# Development overrides
 if DEBUG:
-    # Allow all hosts in development
     ALLOWED_HOSTS = ['*']
-    
-    # Disable SSL redirect for local testing
     SECURE_SSL_REDIRECT = False
-    
-    # Print emails to console
-    EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
