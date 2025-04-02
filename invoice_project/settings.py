@@ -69,10 +69,10 @@ MIDDLEWARE = [
 ]
 
 # Key Fix: ROOT_URLCONF
-ROOT_URLCONF = 'simpleinvoice.urls'  # Replace 'simpleinvoice' with your project name
+ROOT_URLCONF = 'invoice_project.urls'  # Replace 'simpleinvoice' with your project name
 
 # WSGI Application
-WSGI_APPLICATION = 'simpleinvoice.wsgi.application'  # Replace 'simpleinvoice' with your project name
+WSGI_APPLICATION = 'invoice_project.wsgi.application'  # Replace 'simpleinvoice' with your project name
 
 # Database
 if DEBUG:
