@@ -2,16 +2,24 @@ import os
 from pathlib import Path
 from dotenv import load_dotenv
 from datetime import timedelta
+import environ
+
+# Initialize environment variables
+env = environ.Env()
+environ.Env.read_env()
 
 # Build paths (using pathlib.Path for consistency)
 BASE_DIR = Path(__file__).resolve().parent.parent
+
+# Application name
+APP_NAME = 'Simple Invoice Generator'
 
 # Load environment
 load_dotenv(os.path.join(BASE_DIR, '.env'))
 
 # Security
-SECRET_KEY = os.getenv("SECRET_KEY")
-DEBUG = os.getenv("DEBUG", "False").lower() == "true"
+SECRET_KEY = os.getenv("SECRET_KEY") or env('SECRET_KEY')
+DEBUG = os.getenv("DEBUG", "False").lower() == "true" or True
 
 # Domain settings
 ALLOWED_HOSTS = [
@@ -20,6 +28,9 @@ ALLOWED_HOSTS = [
     'localhost', 
     '127.0.0.1',
 ]
+
+# Use our custom user model
+AUTH_USER_MODEL = "invoice_app.InvoiceOwner"
 
 # HTTPS Settings
 SESSION_COOKIE_SECURE = not DEBUG
@@ -51,10 +62,27 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django.contrib.humanize',
+    
+    # Third-party apps
+    'django_extensions',
+    'crispy_forms',
+    'crispy_bootstrap5',
     'corsheaders',
+    'imagekit',
     'ninja_jwt',
     'invoice_app',
+    
+    # Django cleanup should be in last  
+    'django_cleanup.apps.CleanupConfig',
 ]
+
+# Crispy forms configuration
+CRISPY_ALLOWED_TEMPLATE_PACKS = "bootstrap5"
+CRISPY_TEMPLATE_PACK = "bootstrap5"
+
+# Optional: if you're using taggit or similar packages
+TAGGIT_CASE_INSENSITIVE = True
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -65,6 +93,7 @@ MIDDLEWARE = [
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
+    'django.middleware.locale.LocaleMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
@@ -94,6 +123,31 @@ else:
         }
     }
 
+# Password validation
+AUTH_PASSWORD_VALIDATORS = [
+    {
+        'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
+    },
+    {
+        'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
+    },
+    {
+        'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
+    },
+    {
+        'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
+    },
+]
+
+# Internationalization settings
+LANGUAGE_CODE = 'en-us'
+DEFAULT_PHONE_REGION = 'PK'
+TIME_ZONE = 'Asia/Karachi'
+USE_I18N = True
+USE_L10N = True
+USE_THOUSAND_SEPARATOR = True
+USE_TZ = True
+
 # Static files
 STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR / 'static'
@@ -109,6 +163,26 @@ NINJA_JWT = {
     'AUTH_HEADER_TYPES': ('Bearer',),
 }
 
+# Authentication backends
+AUTHENTICATION_BACKENDS = (
+    'django.contrib.auth.backends.ModelBackend',
+)
+
+# Redirect URLs after login/logout
+LOGOUT_REDIRECT_URL = '/'
+LOGIN_REDIRECT_URL = '/'
+
+# Default primary key field type for Django 3.2+
+DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'
+
+# Caching Configuration
+CACHES = {
+    "default": {
+        "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
+        "LOCATION": "unique-snowflake",
+    }
+}
+
 # Email
 if DEBUG:
     EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
@@ -117,8 +191,12 @@ else:
     EMAIL_HOST = 'smtp.gmail.com'
     EMAIL_PORT = 587
     EMAIL_USE_TLS = True
-    EMAIL_HOST_USER = os.getenv("EMAIL")
-    EMAIL_HOST_PASSWORD = os.getenv('PASSWORD')
+    EMAIL_HOST_USER = os.getenv("EMAIL") or env('EMAIL')
+    EMAIL_HOST_PASSWORD = os.getenv('PASSWORD') or env('PASSWORD')
+
+PASSWORD_RESET_TIMEOUT = 300  # 300 seconds = 5 minutes
+# Frontend URL for Reset Link
+FRONTEND_URL = "http://localhost:3000"
 
 # Templates (required for admin and error pages)
 TEMPLATES = [
@@ -130,8 +208,10 @@ TEMPLATES = [
             'context_processors': [
                 'django.template.context_processors.debug',
                 'django.template.context_processors.request',
+                'django.template.context_processors.media',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'invoice_app.context_processors.settings',  # Your custom context processor
             ],
         },
     },
