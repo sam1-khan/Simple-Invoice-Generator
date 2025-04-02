@@ -4,7 +4,7 @@ from dotenv import load_dotenv
 from datetime import timedelta
 
 # Build paths
-BASE_DIR = Path(__file__).resolve().parent.parent
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 # Load environment
 load_dotenv(os.path.join(BASE_DIR, '.env'))
