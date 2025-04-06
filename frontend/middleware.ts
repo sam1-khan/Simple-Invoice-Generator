@@ -10,13 +10,12 @@ export async function middleware(request: NextRequest) {
   ).toString();
 
   try {
-    const response = await fetch(authApiUrl, {
-      credentials: "include",
-      headers: {
-        Cookie: request.headers.get("Cookie") || "",
-        "x-requested-with": "XMLHttpRequest", // Helps identify API calls
-      },
-    });
+    const response = await await fetch(
+      authApiUrl,
+      { 
+        credentials: "include",
+      }
+    );
 
     if (!response.ok) {
       // Allow public routes
