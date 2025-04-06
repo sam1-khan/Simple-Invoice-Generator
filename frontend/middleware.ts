@@ -31,7 +31,6 @@ export async function middleware(request: NextRequest) {
       const loginUrl = new URL("/login", request.url);
       loginUrl.searchParams.set("from", request.nextUrl.pathname);
       const response = NextResponse.redirect(loginUrl);
-      response.headers.set("Cache-Control", "no-store");
       return response;
     }
 
@@ -44,7 +43,6 @@ export async function middleware(request: NextRequest) {
     ) {
       const redirectUrl = new URL("/", request.url);
       const response = NextResponse.redirect(redirectUrl);
-      response.headers.set("Cache-Control", "no-store");
       return response;
     }
 
@@ -53,13 +51,11 @@ export async function middleware(request: NextRequest) {
       if (!request.nextUrl.pathname.startsWith(onboardingRoute)) {
         const onboardingUrl = new URL(onboardingRoute, request.url);
         const response = NextResponse.redirect(onboardingUrl);
-        response.headers.set("Cache-Control", "no-store");
         return response;
       }
     } else if (user.is_onboarded && request.nextUrl.pathname === onboardingRoute) {
       const homeUrl = new URL("/", request.url);
       const response = NextResponse.redirect(homeUrl);
-      response.headers.set("Cache-Control", "no-store");
       return response;
     }
 
@@ -68,7 +64,6 @@ export async function middleware(request: NextRequest) {
     console.error("Middleware auth error:", err);
     const loginUrl = new URL("/login", request.url);
     const response = NextResponse.redirect(loginUrl);
-    response.headers.set("Cache-Control", "no-store");
     return response;
   }
 }

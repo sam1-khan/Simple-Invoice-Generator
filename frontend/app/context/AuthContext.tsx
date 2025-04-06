@@ -36,9 +36,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         `${process.env.NEXT_PUBLIC_API_URL}/api/v1/auth/current-user/`,
         { 
           credentials: "include",
-          headers: {
-            "Cache-Control": "no-cache",
-          },
         }
       );
       
