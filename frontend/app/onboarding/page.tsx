@@ -3,7 +3,7 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/app/context/AuthContext";
 import { cn, logout } from "@/lib/utils";
@@ -80,7 +80,7 @@ const FileSvgDraw = () => {
 };
 
 export default function OnboardingPage() {
-  const { user, refreshUser } = useAuth();
+  const { user, refreshUser, loading } = useAuth();
   const router = useRouter();
 
   const {
@@ -95,6 +95,16 @@ export default function OnboardingPage() {
   });
 
   const [error, setError] = useState<string | string[] | null>(null);
+
+  useEffect(() => {
+    if (!loading) {
+      if (!user) {
+        router.push('/login')
+      } else if (user.is_onboarded) {
+        router.push('/')
+      }
+    }
+  }, [user, loading, router])
 
   const userId = user?.id;
 
