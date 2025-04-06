@@ -4,11 +4,16 @@ export async function middleware(request: NextRequest) {
   const publicRoutes = ["/login", "/signup", "/forgot-password"];
   const resetPasswordRegex = /^\/reset-password\/[^\/]+\/[^\/]+$/;
   const onboardingRoute = "/onboarding";
-    
+  const authApiUrl = new URL(
+    "/api/v1/auth/current-user/",
+    process.env.NEXT_PUBLIC_API_URL
+  ).toString();
+
   try {
-    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/auth/current-user/`, {
+    const response = await fetch(authApiUrl, {
       credentials: "include",
       headers: {
+        Cookie: request.headers.get("Cookie") || "",
         "x-requested-with": "XMLHttpRequest", // Helps identify API calls
       },
     });
