@@ -10,12 +10,15 @@ export async function middleware(request: NextRequest) {
   ).toString();
 
   try {
-    const response = await await fetch(
-      authApiUrl,
-      { 
-        credentials: "include",
-      }
-    );
+    // Get cookies from the incoming request
+    const cookies = request.cookies.toString();
+    
+    const response = await fetch(authApiUrl, { 
+      headers: {
+        Cookie: cookies
+      },
+      credentials: "include",
+    });
 
     if (!response.ok) {
       // Allow public routes
@@ -29,8 +32,7 @@ export async function middleware(request: NextRequest) {
       // Redirect to login with return URL
       const loginUrl = new URL("/login", request.url);
       loginUrl.searchParams.set("from", request.nextUrl.pathname);
-      const response = NextResponse.redirect(loginUrl);
-      return response;
+      return NextResponse.redirect(loginUrl);
     }
 
     const user = await response.json();
@@ -61,9 +63,7 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next();
   } catch (err) {
     console.error("Middleware auth error:", err);
-    const loginUrl = new URL("/login", request.url);
-    const response = NextResponse.redirect(loginUrl);
-    return response;
+    return NextResponse.redirect(new URL("/login", request.url));
   }
 }
 

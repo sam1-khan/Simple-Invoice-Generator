@@ -32,6 +32,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const refreshUser = async () => {
     setLoading(true);
     try {
+      console.log("Attempting to fetch user...");
       const res = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/api/v1/auth/current-user/`,
         { 
@@ -39,12 +40,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
       );
       
+      console.log("Auth response status:", res.status);
+      
       if (res.ok) {
         const data = await res.json();
+        console.log("User data received:", data);
         setUser(data);
       } else {
+        console.log("Auth failed, redirecting to login");
         setUser(null);
-        // If on a protected route, redirect client-side
         if (!window.location.pathname.startsWith("/login")) {
           window.location.href = `/login?from=${encodeURIComponent(window.location.pathname)}`;
         }
