@@ -40,7 +40,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
       );
       
-      console.log("Auth response status:", res.status);
+      console.log("Auth response:", res);
       
       if (res.ok) {
         const data = await res.json();
