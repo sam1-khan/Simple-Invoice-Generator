@@ -75,7 +75,8 @@ export default function ForgotPasswordPage() {
         setIsSubmitting(false);
       }, 2000);
 
-    } catch (err: unknown) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (err: any) {
       setError(err.message || "An error occurred");
       setIsSubmitting(false);
     }
