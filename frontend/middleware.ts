@@ -40,7 +40,7 @@ export async function middleware(request: NextRequest) {
         }
 
         if (isPublicRoute) {
-          return NextResponse.next()
+          return NextResponse.redirect(new URL("/", request.url))
         }
       } 
 
