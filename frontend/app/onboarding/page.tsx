@@ -3,7 +3,7 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/app/context/AuthContext";
 import { cn, logout } from "@/lib/utils";
@@ -80,7 +80,7 @@ const FileSvgDraw = () => {
 };
 
 export default function OnboardingPage() {
-  const { user, refreshUser } = useAuth();
+  const { user, refreshUser, loading } = useAuth();
   const router = useRouter();
 
   const {
@@ -95,6 +95,16 @@ export default function OnboardingPage() {
   });
 
   const [error, setError] = useState<string | string[] | null>(null);
+
+  useEffect(() => {
+    if (!loading) {
+      if (!user) {
+        router.push('/login')
+      } else if (user.is_onboarded) {
+        router.push('/')
+      }
+    }
+  }, [user, loading, router])
 
   const userId = user?.id;
 
@@ -226,6 +236,7 @@ export default function OnboardingPage() {
                 <Label htmlFor="logo">Upload Logo (PNG)</Label>
                 <FileUploader
                   value={watch("logo") ? [watch("logo")] : []}
+                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
                   onValueChange={(files: any) =>
                     setValue("logo", files ? files[0] : null)
                   }
@@ -260,6 +271,7 @@ export default function OnboardingPage() {
                 <Label htmlFor="signature">Upload Signature (PNG)</Label>
                 <FileUploader
                   value={watch("signature") ? [watch("signature")] : []}
+                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
                   onValueChange={(files: any) =>
                     setValue("signature", files ? files[0] : null)
                   }

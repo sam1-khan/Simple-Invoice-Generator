@@ -128,13 +128,26 @@ def login(request, payload: LoginSchema):
     user = authenticate(request, email=payload.email, password=payload.password)
     if user:
         django_login(request, user)
-        return 200, {"detail": "Successfully logged in.", "session_key": request.session.session_key, "is_onboarded": user.is_onboarded}
+        response_data = {"detail": "Successfully logged in."}
+        response = api.create_response(request, response_data, status=200)
+        # Set a client-readable auth flag (non-HttpOnly)
+        response.set_cookie(
+            "auth_ready",
+            "true",
+            secure=not settings.DEBUG,
+            samesite='None',
+            httponly=False,
+            max_age=30 * 24 * 60 * 60  # 30 days
+        )
+        return response
     return 401, {"detail": "Invalid credentials"}
 
 @api.post("/auth/logout/", response={200: dict}, auth=django_auth)
 def logout(request):
     django_logout(request)
-    return 200, {"detail": "Successfully logged out."}
+    response = api.create_response(request, {"detail": "Sucessfully Logged out"}, status=200)
+    response.delete_cookie("auth_ready")
+    return response
 
 @api.get("auth/current-user/", response=InvoiceOwnerOut, auth=django_auth)
 def current_user(request):
@@ -446,7 +459,7 @@ def reset_password(request, payload: ResetPasswordSchema):
         return 400, {"detail": e.messages}
     user.set_password(payload.new_password)
     user.save()
-    
+
     try:
         context = {"user": user, "settings": settings}
         html_message = render_to_string("emails/password_reset_successful.html", context)

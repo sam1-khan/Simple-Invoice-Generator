@@ -48,12 +48,14 @@ export default function Dashboard() {
   });
 
   const [currency, setCurrency] = useState<string>("PKR");
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [revenueData, setRevenueData] = useState<
     { name: string; value: number }[]
   >([]);
   const [invoiceData, setInvoiceData] = useState<
     { name: string; value: number }[]
   >([]);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [clientGrowthData, setClientGrowthData] = useState<
     { name: string; value: number }[]
   >([]);
@@ -66,6 +68,7 @@ export default function Dashboard() {
   }, []);
 
   const computeDashboardStats = useCallback(
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (invoices: any[], clients: any[]) => {
       const now = Date.now();
       const oneWeekAgo = now - 7 * 24 * 60 * 60 * 1000;
@@ -439,9 +442,9 @@ export default function Dashboard() {
               </CardHeader>
               <CardContent>
                 <LineChartComponent
-                  data={revenueData}
-                  xAxisKey="name"
-                  yAxisKey="value"
+                  // data={revenueData}
+                  // xAxisKey="name"
+                  // yAxisKey="value"
                 />
               </CardContent>
             </Card>
@@ -451,7 +454,9 @@ export default function Dashboard() {
                 <CardDescription>Current month</CardDescription>
               </CardHeader>
               <CardContent>
-                <PieChartComponent data={invoiceData} activeIndex={0} />
+                <PieChartComponent data={invoiceData}
+                //  activeIndex={0}
+                  />
               </CardContent>
             </Card>
             <Card>
@@ -461,9 +466,9 @@ export default function Dashboard() {
               </CardHeader>
               <CardContent>
                 <InteractiveAreaChartComponent
-                  data={clientGrowthData}
-                  xAxisKey="name"
-                  yAxisKey="value"
+                  // data={clientGrowthData}
+                  // xAxisKey="name"
+                  // yAxisKey="value"
                 />
               </CardContent>
             </Card>
@@ -485,9 +490,9 @@ export default function Dashboard() {
               </CardHeader>
               <CardContent>
                 <LineChartComponent
-                  data={revenueData}
-                  xAxisKey="name"
-                  yAxisKey="value"
+                  // data={revenueData}
+                  // xAxisKey="name"
+                  // yAxisKey="value"
                 />
               </CardContent>
             </Card>

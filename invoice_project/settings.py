@@ -1,26 +1,66 @@
 import os
-import environ
+from pathlib import Path
+from datetime import timedelta
 
-# Initialize environment variables
-env = environ.Env()
-environ.Env.read_env()
+from dotenv import load_dotenv
+load_dotenv()
 
-# Build paths inside the project like this: os.path.join(BASE_DIR, ...)
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-
+# Build paths (using pathlib.Path for consistency)
+BASE_DIR = Path(__file__).resolve().parent.parent
 # Application name
 APP_NAME = 'Simple Invoice Generator'
 
-# SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = env('SECRET_KEY')
+# Security
+SECRET_KEY = os.getenv("SECRET_KEY")
+DEBUG = eval(os.getenv("DEBUG"))
 
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
-
-ALLOWED_HOSTS = ['*']
+# Domain settings
+ALLOWED_HOSTS = [
+    'simpleinvoice.pythonanywhere.com',
+    'simpleinvoicegenerator.vercel.app',
+    'localhost',
+    '127.0.0.1',
+]
 
 # Use our custom user model
 AUTH_USER_MODEL = "invoice_app.InvoiceOwner"
+
+# HTTPS Settings
+SESSION_COOKIE_SAMESITE = 'None'
+CSRF_COOKIE_SAMESITE = 'None'
+SESSION_COOKIE_SECURE = not DEBUG
+CSRF_COOKIE_SECURE = not DEBUG
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+SECURE_SSL_REDIRECT = not DEBUG
+
+# CORS
+CORS_ALLOWED_ORIGINS = [
+    "https://simpleinvoicegenerator.vercel.app",
+    "http://localhost:3000",
+    "https://simpleinvoice.pythonanywhere.com",
+    "http://127.0.0.1:3000",
+]
+CORS_ALLOW_CREDENTIALS = True
+
+# CSRF
+CSRF_TRUSTED_ORIGINS = [
+    "https://simpleinvoice.pythonanywhere.com",
+    "https://simpleinvoicegenerator.vercel.app",
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
+]
+
+CORS_ALLOW_HEADERS = [
+    'accept',
+    'accept-encoding',
+    'authorization',
+    'content-type',
+    'dnt',
+    'origin',
+    'user-agent',
+    'x-csrftoken',
+    'x-requested-with',
+]
 
 # Application definition
 INSTALLED_APPS = [
@@ -38,14 +78,10 @@ INSTALLED_APPS = [
     'crispy_bootstrap5',
     'corsheaders',
     'imagekit',
-
-    # Your apps
-    'invoice_app.apps.InvoiceAppConfig',
-    
-    # If ninja_jwt requires adding an app, include it here (check its documentation)
     'ninja_jwt',
+    'invoice_app',
 
-    # Django cleanup should be in last  
+    # Django cleanup should be in last
     'django_cleanup.apps.CleanupConfig',
 ]
 
@@ -58,11 +94,9 @@ TAGGIT_CASE_INSENSITIVE = True
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
-    'django.contrib.sessions.middleware.SessionMiddleware',
-
-    # corsheaders should be placed as high as possible
     'corsheaders.middleware.CorsMiddleware',
-
+    'django.contrib.sessions.middleware.SessionMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
@@ -70,44 +104,32 @@ MIDDLEWARE = [
     'django.middleware.locale.LocaleMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
-CORS_ALLOW_CREDENTIALS = True
-# CORS configuration (allow requests from your frontend, e.g., Next.js)
-CORS_ALLOWED_ORIGINS = [
-    "http://localhost:3000",
-]
 
-CSRF_TRUSTED_ORIGINS = [
-    "http://localhost:3000",
-]
-ROOT_URLCONF = 'invoice_project.urls'
+# Key Fix: ROOT_URLCONF
+ROOT_URLCONF = 'invoice_project.urls'  # Replace 'simpleinvoice' with your project name
 
-TEMPLATES = [
-    {
-        'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],  # Add template directories here if needed.
-        'APP_DIRS': True,
-        'OPTIONS': {
-            'context_processors': [
-                'django.template.context_processors.debug',
-                'django.template.context_processors.request',
-                'django.template.context_processors.media',
-                'django.contrib.auth.context_processors.auth',
-                'django.contrib.messages.context_processors.messages',
-                'invoice_app.context_processors.settings',  # Your custom context processor, if any.
-            ],
-        },
-    },
-]
+# WSGI Application
+WSGI_APPLICATION = 'invoice_project.wsgi.application'  # Replace 'simpleinvoice' with your project name
 
-WSGI_APPLICATION = 'invoice_project.wsgi.application'
-
-# Database configuration (using SQLite for development)
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+# Database
+if DEBUG:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
     }
-}
+else:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.mysql',
+            'NAME': 'simpleinvoice$generator',
+            'USER': 'simpleinvoice',
+            'PASSWORD': os.getenv('MYSQL_PASSWORD'),
+            'HOST': 'simpleinvoice.mysql.pythonanywhere-services.com',
+            'OPTIONS': {'sql_mode': 'STRICT_TRANS_TABLES'},
+        }
+    }
 
 # Password validation
 AUTH_PASSWORD_VALIDATORS = [
@@ -134,10 +156,20 @@ USE_L10N = True
 USE_THOUSAND_SEPARATOR = True
 USE_TZ = True
 
-# Static and media files
+# Static files
 STATIC_URL = '/static/'
+STATIC_ROOT = BASE_DIR / 'static'
 MEDIA_URL = '/media/'
-STATIC_ROOT = os.path.join(BASE_DIR, "static")
+MEDIA_ROOT = BASE_DIR / 'media'
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+
+# Django Ninja JWT
+NINJA_JWT = {
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=60),
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=7),
+    'ALGORITHM': 'HS256',
+    'AUTH_HEADER_TYPES': ('Bearer',),
+}
 
 # Authentication backends
 AUTHENTICATION_BACKENDS = (
@@ -151,11 +183,7 @@ LOGIN_REDIRECT_URL = '/'
 # Default primary key field type for Django 3.2+
 DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'
 
-# -----------------------------------------------------------------------------
 # Caching Configuration
-# -----------------------------------------------------------------------------
-# Using Django’s local memory cache for development.
-# For production, consider a more robust backend (e.g. memcached, redis)
 CACHES = {
     "default": {
         "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
@@ -163,16 +191,39 @@ CACHES = {
     }
 }
 
-# -----------------------------------------------------------------------------
-# Email Configuration (Replace with your SMTP settings)
-# -----------------------------------------------------------------------------
-EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
-EMAIL_HOST = "smtp.gmail.com"
+# Email
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
-EMAIL_HOST_USER = env('EMAIL')
-EMAIL_HOST_PASSWORD = env('PASSWORD')
+EMAIL_HOST_USER = os.getenv("EMAIL")
+EMAIL_HOST_PASSWORD = os.getenv('PASSWORD')
 
 PASSWORD_RESET_TIMEOUT = 300  # 300 seconds = 5 minutes
 # Frontend URL for Reset Link
-FRONTEND_URL = "http://localhost:3000"
+
+FRONTEND_URL = os.getenv("FRONTEND_URL")
+
+# Templates (required for admin and error pages)
+TEMPLATES = [
+    {
+        'BACKEND': 'django.template.backends.django.DjangoTemplates',
+        'DIRS': [],
+        'APP_DIRS': True,
+        'OPTIONS': {
+            'context_processors': [
+                'django.template.context_processors.debug',
+                'django.template.context_processors.request',
+                'django.template.context_processors.media',
+                'django.contrib.auth.context_processors.auth',
+                'django.contrib.messages.context_processors.messages',
+                'invoice_app.context_processors.settings',  # Your custom context processor
+            ],
+        },
+    },
+]
+
+# Development overrides
+if DEBUG:
+    ALLOWED_HOSTS = ['*']
+    SECURE_SSL_REDIRECT = False

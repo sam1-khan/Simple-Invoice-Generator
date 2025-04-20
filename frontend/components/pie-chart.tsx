@@ -12,6 +12,7 @@ const COLORS = [
 ];
 
 // Custom active shape for hover effect
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const renderActiveShape = (props: any) => {
   const {
     cx,
@@ -53,6 +54,7 @@ const renderActiveShape = (props: any) => {
 export function PieChartComponent({ data }: { data: { name: string; value: number }[] }) {
   const [activeIndex, setActiveIndex] = useState<number | null>(null);
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const onPieEnter = (_: any, index: number) => {
     setActiveIndex(index);
   };
@@ -98,7 +100,7 @@ export function PieChartComponent({ data }: { data: { name: string; value: numbe
           Trending up by 5.2% this month <TrendingUp className="h-4 w-4" />
         </div>
         <div className="leading-none text-muted-foreground">
-          Showing payment status of this month's invoices
+          Showing payment status of this month&apos;s invoices
         </div>
         {/* Legend for colors */}
         <div className="flex justify-center space-x-4 mt-4">
